@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:5000/products";
+const API = "/products";  // relative path works with Render
 
 const form = document.getElementById("productForm");
 const tableBody = document.getElementById("tableBody");

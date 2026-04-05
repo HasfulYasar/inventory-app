@@ -1,17 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sqlite3
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# 📌 Create DB connection
+# 📌 Database connection
 def get_db():
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-# 📌 Create table (only once)
+# 📌 Create table if not exists
 def init_db():
     conn = get_db()
     conn.execute('''
@@ -33,21 +34,20 @@ init_db()
 def add_product():
     data = request.json
     conn = get_db()
-
     conn.execute(
         "INSERT INTO products (currency, buyingRate, sellingRate, quantity) VALUES (?, ?, ?, ?)",
         (data["currency"], data["buyingRate"], data["sellingRate"], data["quantity"])
     )
     conn.commit()
-
+    conn.close()
     return jsonify({"message": "Product added"})
-
 
 # 📦 READ
 @app.route('/products', methods=['GET'])
 def get_products():
     conn = get_db()
     products = conn.execute("SELECT * FROM products").fetchall()
+    conn.close()
 
     result = []
     for i, row in enumerate(products):
@@ -59,24 +59,20 @@ def get_products():
             "sellingRate": row["sellingRate"],
             "quantity": row["quantity"]
         })
-
     return jsonify(result)
-
 
 # ✏️ UPDATE
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_product(id):
     data = request.json
     conn = get_db()
-
     conn.execute(
         "UPDATE products SET currency=?, buyingRate=?, sellingRate=?, quantity=? WHERE id=?",
         (data["currency"], data["buyingRate"], data["sellingRate"], data["quantity"], id)
     )
     conn.commit()
-
+    conn.close()
     return jsonify({"message": "Updated"})
-
 
 # ❌ DELETE
 @app.route('/products/<int:id>', methods=['DELETE'])
@@ -84,10 +80,19 @@ def delete_product(id):
     conn = get_db()
     conn.execute("DELETE FROM products WHERE id=?", (id,))
     conn.commit()
-
+    conn.close()
     return jsonify({"message": "Deleted"})
 
+# 🌐 Serve frontend
+@app.route("/")
+def index():
+    return send_from_directory(".", "index.html")
 
-# ▶️ RUN
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route("/script.js")
+def script():
+    return send_from_directory(".", "script.js")
+
+# ▶️ Run
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
