@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory App</title>
+</head>
+<body>
+
+<h2>Inventory Form</h2>
+
+<form id="productForm">
+    
+    <select id="currency">
+        <option value="INR">INR</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+    </select>
+
+    <input type="number" id="buyingRate" placeholder="Buying Rate" required>
+    <input type="number" id="sellingRate" placeholder="Selling Rate" required>
+    <input type="number" id="quantity" placeholder="Quantity" required>
+
+    <button type="submit">Add</button>
+</form>
+
+<h2>Products</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>Currency</th>
+            <th>Buying</th>
+            <th>Selling</th>
+            <th>Qty</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+</table>
+
+<script src="script.js"></script>
+</body>
+</html>
