@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import sqlite3
-import os
+import sqlite3, os
 
 app = Flask(__name__)
 CORS(app)
@@ -12,7 +11,7 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 📌 Create table if not exists
+# 📌 Initialize table
 def init_db():
     conn = get_db()
     conn.execute('''
@@ -29,8 +28,17 @@ def init_db():
 
 init_db()
 
+# 🌐 Serve frontend from client folder
+@app.route("/")
+def index():
+    return send_from_directory("../client", "index.html")
+
+@app.route("/script.js")
+def script():
+    return send_from_directory("../client", "script.js")
+
 # ➕ CREATE
-@app.route('/products', methods=['POST'])
+@app.route("/products", methods=["POST"])
 def add_product():
     data = request.json
     conn = get_db()
@@ -43,7 +51,7 @@ def add_product():
     return jsonify({"message": "Product added"})
 
 # 📦 READ
-@app.route('/products', methods=['GET'])
+@app.route("/products", methods=["GET"])
 def get_products():
     conn = get_db()
     products = conn.execute("SELECT * FROM products").fetchall()
@@ -62,7 +70,7 @@ def get_products():
     return jsonify(result)
 
 # ✏️ UPDATE
-@app.route('/products/<int:id>', methods=['PUT'])
+@app.route("/products/<int:id>", methods=["PUT"])
 def update_product(id):
     data = request.json
     conn = get_db()
@@ -75,7 +83,7 @@ def update_product(id):
     return jsonify({"message": "Updated"})
 
 # ❌ DELETE
-@app.route('/products/<int:id>', methods=['DELETE'])
+@app.route("/products/<int:id>", methods=["DELETE"])
 def delete_product(id):
     conn = get_db()
     conn.execute("DELETE FROM products WHERE id=?", (id,))
@@ -83,16 +91,7 @@ def delete_product(id):
     conn.close()
     return jsonify({"message": "Deleted"})
 
-# 🌐 Serve frontend
-@app.route("/")
-def index():
-    return send_from_directory(".", "index.html")
-
-@app.route("/script.js")
-def script():
-    return send_from_directory(".", "script.js")
-
-# ▶️ Run
+# ▶️ Run Flask
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

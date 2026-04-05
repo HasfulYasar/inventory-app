@@ -1,4 +1,4 @@
-const API = "/products";  // relative path works with Render
+const API = "/products";  // relative path for Flask backend
 
 const form = document.getElementById("productForm");
 const tableBody = document.getElementById("tableBody");
