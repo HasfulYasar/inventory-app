@@ -1,9 +1,7 @@
-const API = "/products";  // relative path for Flask backend
+const API = "/products";
 
 const form = document.getElementById("productForm");
 const tableBody = document.getElementById("tableBody");
-
-let editId = null;
 
 // LOAD DATA
 async function loadProducts() {
@@ -29,7 +27,7 @@ async function loadProducts() {
     });
 }
 
-// ADD / UPDATE
+// ADD PRODUCT
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -40,44 +38,25 @@ form.addEventListener("submit", async (e) => {
         quantity: Number(document.getElementById("quantity").value)
     };
 
-    if (editId) {
-        await fetch(`${API}/${editId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(product)
-        });
-        editId = null;
-    } else {
-        await fetch(API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(product)
-        });
-    }
+    await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+    });
 
     form.reset();
     loadProducts();
 });
 
-// DELETE
+// DELETE PRODUCT
 async function deleteProduct(id) {
     await fetch(`${API}/${id}`, { method: "DELETE" });
     loadProducts();
 }
 
-// EDIT
-async function editProduct(id) {
-    const res = await fetch(API);
-    const data = await res.json();
-
-    const p = data.find(item => item.id === id);
-
-    document.getElementById("currency").value = p.currency;
-    document.getElementById("buyingRate").value = p.buyingRate;
-    document.getElementById("sellingRate").value = p.sellingRate;
-    document.getElementById("quantity").value = p.quantity;
-
-    editId = id;
+// EDIT → redirect to edit page
+function editProduct(id) {
+    window.location.href = `/edit?id=${id}`;
 }
 
 // INIT

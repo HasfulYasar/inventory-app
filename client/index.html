@@ -5,9 +5,28 @@
 </head>
 <body>
 
+<!-- 🔐 Login Protection -->
+<script>
+if (!localStorage.getItem("loggedIn")) {
+    window.location.href = "/login";
+}
+
+// 🚪 Logout function
+function logout() {
+    localStorage.removeItem("loggedIn");
+    window.location.href = "/login";
+}
+</script>
+
 <h2>Inventory Form</h2>
 
+<!-- Logout Button -->
+<button onclick="logout()">Logout</button>
+
+<br><br>
+
 <form id="productForm">
+    
     <select id="currency">
         <option value="INR">INR</option>
         <option value="USD">USD</option>
@@ -38,5 +57,6 @@
 </table>
 
 <script src="script.js"></script>
+
 </body>
 </html>
