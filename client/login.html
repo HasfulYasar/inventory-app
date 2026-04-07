@@ -12,17 +12,37 @@
 
 <button onclick="login()">Login</button>
 
+<p>No account? <a href="/signup">Sign up</a></p>
+
+<!-- ✅ NEW SCRIPT -->
 <script>
-function login() {
+async function login() {
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
 
-    // Simple login (hardcoded)
-    if (user === "admin" && pass === "1234") {
-        localStorage.setItem("loggedIn", "true");
-        window.location.href = "/";
-    } else {
-        alert("Invalid username or password");
+    try {
+        const res = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: user,
+                password: pass
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.setItem("loggedIn", "true");
+            window.location.href = "/";
+        } else {
+            alert(data.error || "Login failed");
+        }
+
+    } catch (err) {
+        alert("Server error. Try again.");
     }
 }
 </script>

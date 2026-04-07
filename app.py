@@ -15,9 +15,11 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 📌 Initialize table
+# 📌 Initialize tables
 def init_db():
     conn = get_db()
+
+    # Products table
     conn.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,41 +29,98 @@ def init_db():
             quantity INTEGER
         )
     ''')
+
+    # Users table
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
 init_db()
 
-# 🌐 ROUTES FOR PAGES
+# 🌐 PAGE ROUTES
 
 @app.route("/")
 def index():
     return send_from_directory(CLIENT_DIR, "index.html")
 
 @app.route("/login")
-def login():
+def login_page():
     return send_from_directory(CLIENT_DIR, "login.html")
+
+@app.route("/signup")
+def signup_page():
+    return send_from_directory(CLIENT_DIR, "signup.html")
 
 @app.route("/edit")
 def edit():
     return send_from_directory(CLIENT_DIR, "edit.html")
 
-# 🌐 Serve all static files (JS, CSS, etc.)
+# 🌐 STATIC FILES (JS, CSS)
 @app.route("/<path:path>")
 def serve_static(path):
     return send_from_directory(CLIENT_DIR, path)
+
+# 🔐 AUTH APIs
+
+# ➕ SIGNUP
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    data = request.json
+    conn = get_db()
+
+    try:
+        conn.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (data["username"], data["password"])
+        )
+        conn.commit()
+        return jsonify({"message": "User created"})
+    except:
+        return jsonify({"error": "User already exists"}), 400
+    finally:
+        conn.close()
+
+# 🔑 LOGIN
+@app.route("/api/login", methods=["POST"])
+def login_user():
+    data = request.json
+    conn = get_db()
+
+    user = conn.execute(
+        "SELECT * FROM users WHERE username=? AND password=?",
+        (data["username"], data["password"])
+    ).fetchone()
+
+    conn.close()
+
+    if user:
+        return jsonify({"message": "Login success"})
+    else:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+# 📦 PRODUCTS APIs
 
 # ➕ CREATE
 @app.route("/products", methods=["POST"])
 def add_product():
     data = request.json
     conn = get_db()
+
     conn.execute(
         "INSERT INTO products (currency, buyingRate, sellingRate, quantity) VALUES (?, ?, ?, ?)",
         (data["currency"], data["buyingRate"], data["sellingRate"], data["quantity"])
     )
+
     conn.commit()
     conn.close()
+
     return jsonify({"message": "Product added"})
 
 # 📦 READ
@@ -104,13 +163,15 @@ def update_product(id):
 @app.route("/products/<int:id>", methods=["DELETE"])
 def delete_product(id):
     conn = get_db()
+
     conn.execute("DELETE FROM products WHERE id=?", (id,))
+
     conn.commit()
     conn.close()
 
     return jsonify({"message": "Deleted"})
 
-# ▶️ Run Flask
+# ▶️ RUN
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

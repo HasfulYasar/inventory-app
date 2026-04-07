@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<input type="text" id="username" placeholder="Username"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<p>No account? <a href="/signup">Sign up</a></p>
+
+<script>
+async function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+
+    const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: user,
+            password: pass
+        })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "/";
+    } else {
+        alert(data.error);
+    }
+}
+</script>
+
+</body>
+</html>
