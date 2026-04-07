@@ -5,7 +5,7 @@ import sqlite3, os
 app = Flask(__name__)
 CORS(app)
 
-# ✅ SIMPLE PATH (no .. anymore)
+# ✅ Correct path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 
@@ -32,12 +32,21 @@ def init_db():
 
 init_db()
 
-# 🌐 Serve index
+# 🌐 ROUTES FOR PAGES
+
 @app.route("/")
 def index():
     return send_from_directory(CLIENT_DIR, "index.html")
 
-# 🌐 Serve ALL frontend files
+@app.route("/login")
+def login():
+    return send_from_directory(CLIENT_DIR, "login.html")
+
+@app.route("/edit")
+def edit():
+    return send_from_directory(CLIENT_DIR, "edit.html")
+
+# 🌐 Serve all static files (JS, CSS, etc.)
 @app.route("/<path:path>")
 def serve_static(path):
     return send_from_directory(CLIENT_DIR, path)
@@ -62,29 +71,33 @@ def get_products():
     products = conn.execute("SELECT * FROM products").fetchall()
     conn.close()
 
-    return jsonify([
-        {
+    result = []
+    for i, row in enumerate(products):
+        result.append({
             "id": row["id"],
             "serialNumber": i + 1,
             "currency": row["currency"],
             "buyingRate": row["buyingRate"],
             "sellingRate": row["sellingRate"],
             "quantity": row["quantity"]
-        }
-        for i, row in enumerate(products)
-    ])
+        })
+
+    return jsonify(result)
 
 # ✏️ UPDATE
 @app.route("/products/<int:id>", methods=["PUT"])
 def update_product(id):
     data = request.json
     conn = get_db()
+
     conn.execute(
         "UPDATE products SET currency=?, buyingRate=?, sellingRate=?, quantity=? WHERE id=?",
         (data["currency"], data["buyingRate"], data["sellingRate"], data["quantity"], id)
     )
+
     conn.commit()
     conn.close()
+
     return jsonify({"message": "Updated"})
 
 # ❌ DELETE
@@ -94,9 +107,10 @@ def delete_product(id):
     conn.execute("DELETE FROM products WHERE id=?", (id,))
     conn.commit()
     conn.close()
+
     return jsonify({"message": "Deleted"})
 
-# ▶️ Run (local only)
+# ▶️ Run Flask
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
