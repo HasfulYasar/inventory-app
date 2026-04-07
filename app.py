@@ -5,6 +5,10 @@ import sqlite3, os
 app = Flask(__name__)
 CORS(app)
 
+# ✅ SIMPLE PATH (no .. anymore)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLIENT_DIR = os.path.join(BASE_DIR, "client")
+
 # 📌 Database connection
 def get_db():
     conn = sqlite3.connect("database.db")
@@ -28,14 +32,15 @@ def init_db():
 
 init_db()
 
-# 🌐 Serve frontend from client folder
+# 🌐 Serve index
 @app.route("/")
 def index():
-    return send_from_directory("../client", "index.html")
+    return send_from_directory(CLIENT_DIR, "index.html")
 
-@app.route("/script.js")
-def script():
-    return send_from_directory("../client", "script.js")
+# 🌐 Serve ALL frontend files
+@app.route("/<path:path>")
+def serve_static(path):
+    return send_from_directory(CLIENT_DIR, path)
 
 # ➕ CREATE
 @app.route("/products", methods=["POST"])
@@ -57,17 +62,17 @@ def get_products():
     products = conn.execute("SELECT * FROM products").fetchall()
     conn.close()
 
-    result = []
-    for i, row in enumerate(products):
-        result.append({
+    return jsonify([
+        {
             "id": row["id"],
             "serialNumber": i + 1,
             "currency": row["currency"],
             "buyingRate": row["buyingRate"],
             "sellingRate": row["sellingRate"],
             "quantity": row["quantity"]
-        })
-    return jsonify(result)
+        }
+        for i, row in enumerate(products)
+    ])
 
 # ✏️ UPDATE
 @app.route("/products/<int:id>", methods=["PUT"])
@@ -91,7 +96,7 @@ def delete_product(id):
     conn.close()
     return jsonify({"message": "Deleted"})
 
-# ▶️ Run Flask
+# ▶️ Run (local only)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
