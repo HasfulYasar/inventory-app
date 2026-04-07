@@ -14,11 +14,16 @@
 
 <p>No account? <a href="/signup">Sign up</a></p>
 
-<!-- ✅ NEW SCRIPT -->
 <script>
 async function login() {
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
+
+    // ✅ Basic validation
+    if (!user || !pass) {
+        alert("Please enter username and password");
+        return;
+    }
 
     try {
         const res = await fetch("/api/login", {
@@ -35,7 +40,10 @@ async function login() {
         const data = await res.json();
 
         if (res.ok) {
+            // ✅ Save login state
             localStorage.setItem("loggedIn", "true");
+
+            // ✅ Redirect to main page
             window.location.href = "/";
         } else {
             alert(data.error || "Login failed");

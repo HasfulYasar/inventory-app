@@ -73,29 +73,44 @@ def serve_static(path):
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
     conn = get_db()
 
     try:
         conn.execute(
             "INSERT INTO users (username, password) VALUES (?, ?)",
-            (data["username"], data["password"])
+            (username, password)
         )
         conn.commit()
         return jsonify({"message": "User created"})
-    except:
-        return jsonify({"error": "User already exists"}), 400
+    
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Username already exists"}), 400
+    
     finally:
         conn.close()
+
 
 # 🔑 LOGIN
 @app.route("/api/login", methods=["POST"])
 def login_user():
     data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Missing credentials"}), 400
+
     conn = get_db()
 
     user = conn.execute(
         "SELECT * FROM users WHERE username=? AND password=?",
-        (data["username"], data["password"])
+        (username, password)
     ).fetchone()
 
     conn.close()
@@ -103,7 +118,8 @@ def login_user():
     if user:
         return jsonify({"message": "Login success"})
     else:
-        return jsonify({"error": "Invalid credentials"}), 401
+        return jsonify({"error": "Invalid username or password"}), 401
+
 
 # 📦 PRODUCTS APIs
 
@@ -122,6 +138,7 @@ def add_product():
     conn.close()
 
     return jsonify({"message": "Product added"})
+
 
 # 📦 READ
 @app.route("/products", methods=["GET"])
@@ -143,6 +160,7 @@ def get_products():
 
     return jsonify(result)
 
+
 # ✏️ UPDATE
 @app.route("/products/<int:id>", methods=["PUT"])
 def update_product(id):
@@ -159,6 +177,7 @@ def update_product(id):
 
     return jsonify({"message": "Updated"})
 
+
 # ❌ DELETE
 @app.route("/products/<int:id>", methods=["DELETE"])
 def delete_product(id):
@@ -170,6 +189,7 @@ def delete_product(id):
     conn.close()
 
     return jsonify({"message": "Deleted"})
+
 
 # ▶️ RUN
 if __name__ == "__main__":
