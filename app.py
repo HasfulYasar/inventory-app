@@ -73,8 +73,9 @@ def serve_static(path):
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.json
-    username = data.get("username")
-    password = data.get("password")
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
 
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
@@ -92,6 +93,9 @@ def signup():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username already exists"}), 400
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
     finally:
         conn.close()
 
@@ -100,8 +104,9 @@ def signup():
 @app.route("/api/login", methods=["POST"])
 def login_user():
     data = request.json
-    username = data.get("username")
-    password = data.get("password")
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
 
     if not username or not password:
         return jsonify({"error": "Missing credentials"}), 400
