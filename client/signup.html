@@ -1,53 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Create Account</h2>
-
-<input type="text" id="username" placeholder="Username"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
-
-<button onclick="signup()">Sign Up</button>
-
-<p>Already have an account? <a href="/login">Login</a></p>
+<div class="auth-container">
+    <div class="card">
+        <h2>Create Account</h2>
+        <form id="signupForm" onsubmit="signup(event)">
+            <input class="input" type="text" id="username" placeholder="Username" required>
+            <input class="input" type="password" id="password" placeholder="Password (min 6 chars)" required minlength="6">
+            <button class="btn btn-primary full-width" type="submit">Sign Up</button>
+            <div id="error-msg" class="error-msg" style="display:none;"></div>
+        </form>
+        <p class="auth-link">Already have an account? <a href="/login">Login</a></p>
+    </div>
+</div>
 
 <script>
-async function signup() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
+async function signup(e) {
+    e.preventDefault();
+    const errorEl = document.getElementById("error-msg");
+    errorEl.style.display = "none";
 
-    // ✅ basic validation
-    if (!user || !pass) {
-        alert("Please enter username and password");
-        return;
-    }
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
     try {
         const res = await fetch("/api/signup", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username: user,
-                password: pass
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
         });
 
         const data = await res.json();
 
         if (res.ok) {
-            alert("Account created successfully!");
             window.location.href = "/login";
         } else {
-            alert(data.error || "Signup failed");
+            errorEl.textContent = data.error || "Signup failed";
+            errorEl.style.display = "block";
         }
-
     } catch (err) {
-        alert("Server error. Try again.");
+        errorEl.textContent = "Could not reach server. Please try again.";
+        errorEl.style.display = "block";
     }
 }
 </script>

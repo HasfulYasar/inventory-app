@@ -1,62 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- 🔐 Login Protection -->
-<script>
-if (!localStorage.getItem("loggedIn")) {
-    window.location.href = "/login";
-}
+<div class="container">
+    <div class="header">
+        <h2>Inventory</h2>
+        <div>
+            <span id="welcome-msg" class="welcome"></span>
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </div>
 
-// 🚪 Logout function
-function logout() {
-    localStorage.removeItem("loggedIn");
-    window.location.href = "/login";
-}
-</script>
+    <div class="card">
+        <h3>Add Product</h3>
+        <form id="productForm" class="form-row">
+            <select id="currency" class="input">
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+            </select>
+            <input class="input" type="number" id="buyingRate" placeholder="Buying Rate" step="0.01" required>
+            <input class="input" type="number" id="sellingRate" placeholder="Selling Rate" step="0.01" required>
+            <input class="input" type="number" id="quantity" placeholder="Quantity" required>
+            <button class="btn btn-primary" type="submit">Add</button>
+        </form>
+    </div>
 
-<h2>Inventory Form</h2>
-
-<!-- Logout Button -->
-<button onclick="logout()">Logout</button>
-
-<br><br>
-
-<form id="productForm">
-    
-    <select id="currency">
-        <option value="INR">INR</option>
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-    </select>
-
-    <input type="number" id="buyingRate" placeholder="Buying Rate" required>
-    <input type="number" id="sellingRate" placeholder="Selling Rate" required>
-    <input type="number" id="quantity" placeholder="Quantity" required>
-
-    <button type="submit">Add</button>
-</form>
-
-<h2>Products</h2>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>S.No</th>
-            <th>Currency</th>
-            <th>Buying</th>
-            <th>Selling</th>
-            <th>Qty</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-</table>
+    <div class="card">
+        <h3>Products</h3>
+        <div id="error-msg" class="error-msg" style="display:none;"></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Currency</th>
+                        <th>Buying Rate</th>
+                        <th>Selling Rate</th>
+                        <th>Qty</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
