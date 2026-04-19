@@ -48,6 +48,15 @@ def init_db():
                 password TEXT NOT NULL
             )
         ''')
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS currencies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                currency TEXT NOT NULL,
+                buying_rate REAL NOT NULL,
+                selling_rate REAL NOT NULL,
+                quantity INTEGER NOT NULL
+            )
+        ''')
         db.commit()
 
 
@@ -80,6 +89,18 @@ def signup_page():
 @app.route("/edit")
 def edit_page():
     return send_from_directory(CLIENT_DIR, "edit.html")
+
+@app.route("/add-currency")
+def add_currency_page():
+    return send_from_directory(CLIENT_DIR, "add-currency.html")
+
+@app.route("/currency-list")
+def currency_list_page():
+    return send_from_directory(CLIENT_DIR, "currency-list.html")
+
+@app.route("/edit-currency")
+def edit_currency_page():
+    return send_from_directory(CLIENT_DIR, "edit-currency.html")
 
 @app.route("/<path:path>")
 def serve_static(path):
@@ -155,7 +176,6 @@ def me():
 def get_products():
     db = get_db()
     rows = db.execute("SELECT * FROM products").fetchall()
-
     result = []
     for i, row in enumerate(rows):
         result.append({
@@ -166,7 +186,6 @@ def get_products():
             "sellingRate": row["selling_rate"],
             "quantity": row["quantity"]
         })
-
     return jsonify(result)
 
 
@@ -174,13 +193,9 @@ def get_products():
 @login_required
 def get_product(product_id):
     db = get_db()
-    row = db.execute(
-        "SELECT * FROM products WHERE id = ?", (product_id,)
-    ).fetchone()
-
+    row = db.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
     if not row:
         return jsonify({"error": "Product not found"}), 404
-
     return jsonify({
         "id": row["id"],
         "currency": row["currency"],
@@ -253,6 +268,107 @@ def delete_product(product_id):
     db.execute("DELETE FROM products WHERE id = ?", (product_id,))
     db.commit()
     return jsonify({"message": "Product deleted"})
+
+
+# --- Currencies API ---
+
+@app.route("/api/currencies", methods=["GET"])
+@login_required
+def get_currencies():
+    db = get_db()
+    rows = db.execute("SELECT * FROM currencies").fetchall()
+    result = []
+    for i, row in enumerate(rows):
+        result.append({
+            "id": row["id"],
+            "serialNumber": i + 1,
+            "currency": row["currency"],
+            "buyingRate": row["buying_rate"],
+            "sellingRate": row["selling_rate"],
+            "quantity": row["quantity"]
+        })
+    return jsonify(result)
+
+
+@app.route("/api/currencies/<int:currency_id>", methods=["GET"])
+@login_required
+def get_currency(currency_id):
+    db = get_db()
+    row = db.execute("SELECT * FROM currencies WHERE id = ?", (currency_id,)).fetchone()
+    if not row:
+        return jsonify({"error": "Currency not found"}), 404
+    return jsonify({
+        "id": row["id"],
+        "currency": row["currency"],
+        "buyingRate": row["buying_rate"],
+        "sellingRate": row["selling_rate"],
+        "quantity": row["quantity"]
+    })
+
+
+@app.route("/api/currencies", methods=["POST"])
+@login_required
+def add_currency():
+    data = request.json or {}
+    currency = data.get("currency", "").strip()
+    buying_rate = data.get("buyingRate")
+    selling_rate = data.get("sellingRate")
+    quantity = data.get("quantity")
+
+    if not currency or buying_rate is None or selling_rate is None or quantity is None:
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        buying_rate = float(buying_rate)
+        selling_rate = float(selling_rate)
+        quantity = int(quantity)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid numeric values"}), 400
+
+    db = get_db()
+    db.execute(
+        "INSERT INTO currencies (currency, buying_rate, selling_rate, quantity) VALUES (?, ?, ?, ?)",
+        (currency, buying_rate, selling_rate, quantity)
+    )
+    db.commit()
+    return jsonify({"message": "Currency added"}), 201
+
+
+@app.route("/api/currencies/<int:currency_id>", methods=["PUT"])
+@login_required
+def update_currency(currency_id):
+    data = request.json or {}
+    currency = data.get("currency", "").strip()
+    buying_rate = data.get("buyingRate")
+    selling_rate = data.get("sellingRate")
+    quantity = data.get("quantity")
+
+    if not currency or buying_rate is None or selling_rate is None or quantity is None:
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        buying_rate = float(buying_rate)
+        selling_rate = float(selling_rate)
+        quantity = int(quantity)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid numeric values"}), 400
+
+    db = get_db()
+    db.execute(
+        "UPDATE currencies SET currency=?, buying_rate=?, selling_rate=?, quantity=? WHERE id=?",
+        (currency, buying_rate, selling_rate, quantity, currency_id)
+    )
+    db.commit()
+    return jsonify({"message": "Currency updated"})
+
+
+@app.route("/api/currencies/<int:currency_id>", methods=["DELETE"])
+@login_required
+def delete_currency(currency_id):
+    db = get_db()
+    db.execute("DELETE FROM currencies WHERE id = ?", (currency_id,))
+    db.commit()
+    return jsonify({"message": "Currency deleted"})
 
 
 # --- Run ---

@@ -12,6 +12,67 @@ body {
     line-height: 1.6;
 }
 
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #e2e4e8;
+    padding: 0 1.5rem;
+    height: 54px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    font-size: 15px;
+    font-weight: 700;
+    color: #4f6ef7;
+    margin-right: 1rem;
+    white-space: nowrap;
+}
+
+.nav-links {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+}
+
+.nav-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    text-decoration: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+    background: #f3f4f6;
+    color: #1a1a2e;
+}
+
+.nav-link.active {
+    background: #eef1fe;
+    color: #4f6ef7;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.nav-user {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+}
+
 /* Layout */
 .container {
     max-width: 900px;
@@ -32,23 +93,20 @@ body {
     max-width: 380px;
 }
 
-/* Header */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* Page header */
+.page-header {
     margin-bottom: 1.5rem;
 }
 
-.header h2 {
-    font-size: 1.4rem;
+.page-header h2 {
+    font-size: 1.3rem;
     font-weight: 600;
 }
 
-.welcome {
-    font-size: 14px;
-    color: #555;
-    margin-right: 10px;
+.page-header p {
+    font-size: 13px;
+    color: #666;
+    margin-top: 2px;
 }
 
 /* Card */
@@ -84,6 +142,18 @@ body {
 .input:focus {
     border-color: #4f6ef7;
     box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+}
+
+label.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 4px;
+}
+
+.field {
+    margin-bottom: 14px;
 }
 
 /* Form row */
@@ -147,6 +217,18 @@ body {
     margin-top: 4px;
 }
 
+/* Success message */
+.success-msg {
+    font-size: 13px;
+    color: #1a7f4b;
+    background: #edfaf3;
+    border: 1px solid #a8e6c5;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    display: none;
+}
+
 /* Table */
 .table-wrap {
     overflow-x: auto;
@@ -175,6 +257,13 @@ td {
 
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #fafbff; }
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+    font-size: 14px;
+}
 
 /* Error message */
 .error-msg {

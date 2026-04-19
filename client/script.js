@@ -4,21 +4,6 @@ const form = document.getElementById("productForm");
 const tableBody = document.getElementById("tableBody");
 const errorMsg = document.getElementById("error-msg");
 
-// Check auth via server on page load
-async function checkAuth() {
-    try {
-        const res = await fetch("/api/me", { credentials: "include" });
-        if (!res.ok) {
-            window.location.href = "/login";
-            return;
-        }
-        const data = await res.json();
-        document.getElementById("welcome-msg").textContent = "Hi, " + data.username;
-    } catch {
-        window.location.href = "/login";
-    }
-}
-
 function showError(msg) {
     errorMsg.textContent = msg;
     errorMsg.style.display = "block";
@@ -28,18 +13,19 @@ function hideError() {
     errorMsg.style.display = "none";
 }
 
-// Load all products
 async function loadProducts() {
     try {
         const res = await fetch(API, { credentials: "include" });
-        if (res.status === 401) {
-            window.location.href = "/login";
-            return;
-        }
-        if (!res.ok) throw new Error("Failed to load products");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (!res.ok) throw new Error();
 
         const data = await res.json();
         hideError();
+
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No products yet. Add one above.</td></tr>`;
+            return;
+        }
 
         let rows = "";
         data.forEach(p => {
@@ -51,19 +37,18 @@ async function loadProducts() {
                     <td>${p.sellingRate}</td>
                     <td>${p.quantity}</td>
                     <td>
-                        <button class="btn btn-small" onclick="editProduct(${p.id})">Edit</button>
+                        <button class="btn btn-small btn-secondary" onclick="editProduct(${p.id})">Edit</button>
                         <button class="btn btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
                     </td>
                 </tr>
             `;
         });
         tableBody.innerHTML = rows;
-    } catch (err) {
+    } catch {
         showError("Could not load products. Please refresh.");
     }
 }
 
-// Add product
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     hideError();
@@ -96,16 +81,10 @@ form.addEventListener("submit", async (e) => {
     }
 });
 
-// Delete product
 async function deleteProduct(id) {
     if (!confirm("Delete this product?")) return;
-
     try {
-        const res = await fetch(`${API}/${id}`, {
-            method: "DELETE",
-            credentials: "include"
-        });
-
+        const res = await fetch(`${API}/${id}`, { method: "DELETE", credentials: "include" });
         if (!res.ok) throw new Error();
         loadProducts();
     } catch {
@@ -113,16 +92,8 @@ async function deleteProduct(id) {
     }
 }
 
-// Edit — go to edit page
 function editProduct(id) {
     window.location.href = `/edit?id=${id}`;
 }
 
-// Logout
-async function logout() {
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
-    window.location.href = "/login";
-}
-
-// Init
-checkAuth().then(() => loadProducts());
+loadProducts();

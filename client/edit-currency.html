@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Currency — Inventory App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="page-header">
+        <h2>Edit Currency</h2>
+        <p>Update the exchange rate details</p>
+    </div>
+
+    <div class="card" style="max-width: 480px;">
+        <div id="error-msg" class="error-msg" style="display:none;"></div>
+
+        <form id="editForm" onsubmit="saveCurrency(event)">
+            <div class="field">
+                <label class="field-label" for="currency">Currency</label>
+                <select id="currency" class="input">
+                    <option value="USD">USD — US Dollar</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option value="GBP">GBP — British Pound</option>
+                    <option value="JPY">JPY — Japanese Yen</option>
+                    <option value="AED">AED — UAE Dirham</option>
+                    <option value="SGD">SGD — Singapore Dollar</option>
+                    <option value="AUD">AUD — Australian Dollar</option>
+                    <option value="CAD">CAD — Canadian Dollar</option>
+                    <option value="CHF">CHF — Swiss Franc</option>
+                    <option value="INR">INR — Indian Rupee</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field-label" for="buyingRate">Buying Rate</label>
+                <input class="input" type="number" id="buyingRate" step="0.01" min="0" required>
+            </div>
+            <div class="field">
+                <label class="field-label" for="sellingRate">Selling Rate</label>
+                <input class="input" type="number" id="sellingRate" step="0.01" min="0" required>
+            </div>
+            <div class="field">
+                <label class="field-label" for="quantity">Quantity</label>
+                <input class="input" type="number" id="quantity" min="1" required>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:4px;">
+                <button class="btn btn-secondary" type="button" onclick="window.location.href='/currency-list'">Cancel</button>
+                <button class="btn btn-primary" type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="navbar.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+const errorEl = document.getElementById("error-msg");
+
+async function loadCurrency() {
+    if (!id) { window.location.href = "/currency-list"; return; }
+    try {
+        const res = await fetch(`/api/currencies/${id}`, { credentials: "include" });
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (res.status === 404) { errorEl.textContent = "Currency not found."; errorEl.style.display = "block"; return; }
+        if (!res.ok) throw new Error();
+
+        const c = await res.json();
+        document.getElementById("currency").value = c.currency;
+        document.getElementById("buyingRate").value = c.buyingRate;
+        document.getElementById("sellingRate").value = c.sellingRate;
+        document.getElementById("quantity").value = c.quantity;
+    } catch {
+        errorEl.textContent = "Could not load currency. Please try again.";
+        errorEl.style.display = "block";
+    }
+}
+
+async function saveCurrency(e) {
+    e.preventDefault();
+    errorEl.style.display = "none";
+
+    const updated = {
+        currency: document.getElementById("currency").value,
+        buyingRate: Number(document.getElementById("buyingRate").value),
+        sellingRate: Number(document.getElementById("sellingRate").value),
+        quantity: Number(document.getElementById("quantity").value)
+    };
+
+    try {
+        const res = await fetch(`/api/currencies/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(updated)
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            errorEl.textContent = data.error || "Failed to save changes";
+            errorEl.style.display = "block";
+            return;
+        }
+        window.location.href = "/currency-list";
+    } catch {
+        errorEl.textContent = "Could not save changes. Please try again.";
+        errorEl.style.display = "block";
+    }
+}
+
+loadCurrency();
+</script>
+</body>
+</html>

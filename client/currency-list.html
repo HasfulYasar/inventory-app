@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency List — Inventory App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <h2>Currency List</h2>
+            <p>All added currency exchange records</p>
+        </div>
+        <a href="/add-currency" class="btn btn-primary btn-small">+ Add Currency</a>
+    </div>
+
+    <div class="card">
+        <div id="error-msg" class="error-msg" style="display:none;"></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Currency</th>
+                        <th>Buying Rate</th>
+                        <th>Selling Rate</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="navbar.js"></script>
+<script>
+const errorMsg = document.getElementById("error-msg");
+
+async function loadCurrencies() {
+    try {
+        const res = await fetch("/api/currencies", { credentials: "include" });
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+        const tbody = document.getElementById("tableBody");
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No currencies added yet. <a href="/add-currency">Add one</a>.</td></tr>`;
+            return;
+        }
+
+        let rows = "";
+        data.forEach(c => {
+            rows += `
+                <tr>
+                    <td>${c.serialNumber}</td>
+                    <td><strong>${c.currency}</strong></td>
+                    <td>${c.buyingRate}</td>
+                    <td>${c.sellingRate}</td>
+                    <td>${c.quantity}</td>
+                    <td>
+                        <button class="btn btn-small btn-secondary" onclick="editCurrency(${c.id})">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteCurrency(${c.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = rows;
+    } catch {
+        errorMsg.textContent = "Could not load currencies. Please refresh.";
+        errorMsg.style.display = "block";
+    }
+}
+
+async function deleteCurrency(id) {
+    if (!confirm("Delete this currency record?")) return;
+    try {
+        const res = await fetch(`/api/currencies/${id}`, { method: "DELETE", credentials: "include" });
+        if (!res.ok) throw new Error();
+        loadCurrencies();
+    } catch {
+        errorMsg.textContent = "Could not delete. Please try again.";
+        errorMsg.style.display = "block";
+    }
+}
+
+function editCurrency(id) {
+    window.location.href = `/edit-currency?id=${id}`;
+}
+
+loadCurrencies();
+</script>
+</body>
+</html>
