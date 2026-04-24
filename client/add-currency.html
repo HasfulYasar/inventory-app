@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Currency — Inventory App</title>
+    <title>Add Currency — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="container">
     <div class="page-header">
-        <h2>Add Currency</h2>
-        <p>Enter the exchange rate details for a currency</p>
+        <div class="page-header-text">
+            <h2>Add Currency</h2>
+            <p>Add a new currency exchange rate</p>
+        </div>
+        <a href="/" class="btn btn-secondary">← Dashboard</a>
     </div>
 
-    <div class="card" style="max-width: 480px;">
+    <div class="card" style="max-width:500px;">
         <div id="error-msg" class="error-msg" style="display:none;"></div>
         <div id="success-msg" class="success-msg"></div>
 
         <form id="currencyForm" onsubmit="addCurrency(event)">
             <div class="field">
-                <label class="field-label" for="currency">Currency</label>
+                <label class="field-label">Currency</label>
                 <select id="currency" class="input">
                     <option value="USD">USD — US Dollar</option>
                     <option value="EUR">EUR — Euro</option>
@@ -32,23 +34,36 @@
                     <option value="CAD">CAD — Canadian Dollar</option>
                     <option value="CHF">CHF — Swiss Franc</option>
                     <option value="INR">INR — Indian Rupee</option>
+                    <option value="SAR">SAR — Saudi Riyal</option>
+                    <option value="KWD">KWD — Kuwaiti Dinar</option>
+                    <option value="BHD">BHD — Bahraini Dinar</option>
+                    <option value="QAR">QAR — Qatari Riyal</option>
+                    <option value="OMR">OMR — Omani Rial</option>
+                    <option value="MYR">MYR — Malaysian Ringgit</option>
+                    <option value="HKD">HKD — Hong Kong Dollar</option>
+                    <option value="CNY">CNY — Chinese Yuan</option>
                 </select>
             </div>
             <div class="field">
-                <label class="field-label" for="buyingRate">Buying Rate</label>
-                <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="0.01" min="0" required>
+                <label class="field-label">Buying Rate</label>
+                <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0" required>
             </div>
             <div class="field">
-                <label class="field-label" for="sellingRate">Selling Rate</label>
-                <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="0.01" min="0" required>
+                <label class="field-label">Selling Rate</label>
+                <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="any" min="0" required>
             </div>
             <div class="field">
-                <label class="field-label" for="quantity">Quantity</label>
-                <input class="input" type="number" id="quantity" placeholder="e.g. 1000" min="1" required>
+                <label class="field-label">Decimal Places</label>
+                <select id="decimals" class="input">
+                    <option value="0">0 — e.g. 84</option>
+                    <option value="1">1 — e.g. 84.2</option>
+                    <option value="2" selected>2 — e.g. 84.20</option>
+                    <option value="3">3 — e.g. 84.200</option>
+                    <option value="4">4 — e.g. 84.2000</option>
+                </select>
             </div>
-            <div style="display:flex; gap:8px; margin-top:4px;">
-                <button class="btn btn-secondary" type="button" onclick="window.location.href='/currency-list'">View List</button>
-                <button class="btn btn-primary" type="submit">Add Currency</button>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+                <button class="btn btn-gold full-width" type="submit">Add Currency</button>
             </div>
         </form>
     </div>
@@ -65,9 +80,9 @@ async function addCurrency(e) {
 
     const payload = {
         currency: document.getElementById("currency").value,
-        buyingRate: Number(document.getElementById("buyingRate").value),
-        sellingRate: Number(document.getElementById("sellingRate").value),
-        quantity: Number(document.getElementById("quantity").value)
+        buyingRate: parseFloat(document.getElementById("buyingRate").value),
+        sellingRate: parseFloat(document.getElementById("sellingRate").value),
+        decimals: parseInt(document.getElementById("decimals").value)
     };
 
     try {
@@ -79,7 +94,7 @@ async function addCurrency(e) {
         });
         const data = await res.json();
         if (res.ok) {
-            successEl.textContent = "Currency added successfully!";
+            successEl.textContent = `${payload.currency} added successfully!`;
             successEl.style.display = "block";
             document.getElementById("currencyForm").reset();
         } else {

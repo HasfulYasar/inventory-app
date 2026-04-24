@@ -3,21 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Sign Up — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="auth-container">
     <div class="card">
-        <h2>Create Account</h2>
+        <div style="text-align:center;margin-bottom:1.5rem;">
+            <div style="font-size:2rem;font-weight:900;color:#f0c040;letter-spacing:2px;">SHOWCASH</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Create your admin account</div>
+        </div>
+
         <form id="signupForm" onsubmit="signup(event)">
-            <input class="input" type="text" id="username" placeholder="Username" required>
-            <input class="input" type="password" id="password" placeholder="Password (min 6 chars)" required minlength="6">
-            <button class="btn btn-primary full-width" type="submit">Sign Up</button>
-            <div id="error-msg" class="error-msg" style="display:none;"></div>
+            <div class="field">
+                <label class="field-label">Username</label>
+                <input class="input" type="text" id="username" placeholder="Choose a username" required>
+            </div>
+            <div class="field">
+                <label class="field-label">Password</label>
+                <input class="input" type="password" id="password" placeholder="Min 6 characters" required minlength="6">
+            </div>
+            <div id="error-msg" class="error-msg" style="display:none;margin-bottom:10px;"></div>
+            <button class="btn btn-gold full-width" type="submit">Create Account</button>
         </form>
-        <p class="auth-link">Already have an account? <a href="/login">Login</a></p>
+        <p class="auth-link">Already have an account? <a href="/login">Sign in</a></p>
     </div>
 </div>
 
@@ -27,30 +36,23 @@ async function signup(e) {
     const errorEl = document.getElementById("error-msg");
     errorEl.style.display = "none";
 
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-
     try {
         const res = await fetch("/api/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({
+                username: document.getElementById("username").value.trim(),
+                password: document.getElementById("password").value.trim()
+            })
         });
-
         const data = await res.json();
-
-        if (res.ok) {
-            window.location.href = "/login";
-        } else {
-            errorEl.textContent = data.error || "Signup failed";
-            errorEl.style.display = "block";
-        }
-    } catch (err) {
+        if (res.ok) { window.location.href = "/login"; }
+        else { errorEl.textContent = data.error || "Signup failed"; errorEl.style.display = "block"; }
+    } catch {
         errorEl.textContent = "Could not reach server. Please try again.";
         errorEl.style.display = "block";
     }
 }
 </script>
-
 </body>
 </html>

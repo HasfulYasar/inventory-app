@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHOWCASH — Live Exchange Rates</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d0d0d;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .board-header {
+            background: linear-gradient(135deg, #1a1200 0%, #1a1a2e 100%);
+            border-bottom: 2px solid #f0c040;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: #f0c040;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 900;
+            color: #1a1a2e;
+        }
+
+        .brand-name {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #f0c040;
+            letter-spacing: 2px;
+        }
+
+        .brand-tagline {
+            font-size: 12px;
+            color: #aaa;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(240,192,64,0.1);
+            border: 1px solid rgba(240,192,64,0.3);
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Column headers */
+        .rate-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 0.9rem 2rem;
+            background: #1a1200;
+            border-bottom: 1px solid #2a2000;
+        }
+
+        .rate-header span {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #888;
+        }
+
+        .rate-header span:last-child,
+        .rate-header span:nth-child(2) {
+            text-align: right;
+        }
+
+        /* Currency rows */
+        .currency-list { padding: 0.5rem 0; }
+
+        .currency-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            padding: 1.1rem 2rem;
+            border-bottom: 1px solid #1e1e1e;
+            transition: background 0.2s;
+            animation: fadeIn 0.4s ease both;
+        }
+
+        .currency-row:hover { background: #161616; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .currency-name {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .currency-flag {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1a1a2e;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .currency-code {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .currency-full {
+            font-size: 12px;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .rate-value {
+            text-align: right;
+        }
+
+        .rate-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f0c040;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rate-label {
+            font-size: 11px;
+            color: #555;
+            margin-top: 1px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Empty / loading */
+        .board-empty {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: #444;
+        }
+
+        .board-empty h3 { font-size: 1.2rem; color: #666; margin-bottom: 0.5rem; }
+
+        /* Footer */
+        .board-footer {
+            background: #0a0a0a;
+            border-top: 1px solid #1e1e1e;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .footer-note { font-size: 12px; color: #444; }
+        .footer-time { font-size: 12px; color: #555; }
+
+        /* Divider line between buy and sell */
+        .rate-divider {
+            width: 1px;
+            height: 28px;
+            background: #2a2a2a;
+            margin: 0 auto;
+        }
+
+        /* Scrolling ticker at top (optional flair) */
+        .ticker-bar {
+            background: #f0c040;
+            color: #1a1a2e;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+            padding-left: 100%;
+        }
+
+        @keyframes ticker {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="board-header">
+    <div class="brand">
+        <div class="brand-icon">SC</div>
+        <div>
+            <div class="brand-name">SHOWCASH</div>
+            <div class="brand-tagline">Live Exchange Rates</div>
+        </div>
+    </div>
+    <div class="live-badge">
+        <div class="live-dot"></div>
+        Live Rates
+    </div>
+</div>
+
+<div class="rate-header">
+    <span>Currency</span>
+    <span>We Buy</span>
+    <span>We Sell</span>
+</div>
+
+<div class="currency-list" id="currencyList">
+    <div class="board-empty"><h3>Loading rates...</h3></div>
+</div>
+
+<div class="board-footer">
+    <span class="footer-note">All rates are indicative. Subject to change without notice.</span>
+    <span class="footer-time" id="lastUpdated"></span>
+</div>
+
+<script>
+const CURRENCY_NAMES = {
+    USD: "US Dollar", EUR: "Euro", GBP: "British Pound",
+    JPY: "Japanese Yen", AED: "UAE Dirham", SGD: "Singapore Dollar",
+    AUD: "Australian Dollar", CAD: "Canadian Dollar", CHF: "Swiss Franc",
+    INR: "Indian Rupee", SAR: "Saudi Riyal", KWD: "Kuwaiti Dinar",
+    BHD: "Bahraini Dinar", QAR: "Qatari Riyal", OMR: "Omani Rial",
+    MYR: "Malaysian Ringgit", HKD: "Hong Kong Dollar",
+    CNY: "Chinese Yuan", ZAR: "South African Rand", THB: "Thai Baht"
+};
+
+async function loadRates() {
+    try {
+        const res = await fetch("/api/currencies/public");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        render(data);
+        document.getElementById("lastUpdated").textContent =
+            "Last updated: " + new Date().toLocaleTimeString();
+    } catch {
+        document.getElementById("currencyList").innerHTML =
+            `<div class="board-empty"><h3>Unable to load rates</h3><p>Please try again later.</p></div>`;
+    }
+}
+
+function render(data) {
+    const list = document.getElementById("currencyList");
+
+    if (data.length === 0) {
+        list.innerHTML = `<div class="board-empty"><h3>No rates available</h3><p>Check back soon.</p></div>`;
+        return;
+    }
+
+    list.innerHTML = data.map((c, i) => `
+        <div class="currency-row" style="animation-delay:${i * 0.05}s">
+            <div class="currency-name">
+                <div class="currency-flag">${c.currency.slice(0,3)}</div>
+                <div>
+                    <div class="currency-code">${c.currency}</div>
+                    <div class="currency-full">${CURRENCY_NAMES[c.currency] || ''}</div>
+                </div>
+            </div>
+            <div class="rate-value">
+                <div class="rate-number">${c.buyingRate.toFixed(c.decimals)}</div>
+                <div class="rate-label">We Buy</div>
+            </div>
+            <div class="rate-value">
+                <div class="rate-number">${c.sellingRate.toFixed(c.decimals)}</div>
+                <div class="rate-label">We Sell</div>
+            </div>
+        </div>
+    `).join("");
+}
+
+loadRates();
+// Auto-refresh every 60 seconds
+setInterval(loadRates, 60000);
+</script>
+</body>
+</html>

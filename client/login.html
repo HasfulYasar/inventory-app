@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="auth-container">
     <div class="card">
-        <h2>Login</h2>
+        <div style="text-align:center;margin-bottom:1.5rem;">
+            <div style="font-size:2rem;font-weight:900;color:#f0c040;letter-spacing:2px;">SHOWCASH</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Sign in to manage rates</div>
+        </div>
+
         <form id="loginForm" onsubmit="login(event)">
-            <input class="input" type="text" id="username" placeholder="Username" required>
-            <input class="input" type="password" id="password" placeholder="Password" required>
-            <button class="btn btn-primary full-width" type="submit">Login</button>
-            <div id="error-msg" class="error-msg" style="display:none;"></div>
+            <div class="field">
+                <label class="field-label">Username</label>
+                <input class="input" type="text" id="username" placeholder="Enter username" required>
+            </div>
+            <div class="field">
+                <label class="field-label">Password</label>
+                <input class="input" type="password" id="password" placeholder="Enter password" required>
+            </div>
+            <div id="error-msg" class="error-msg" style="display:none;margin-bottom:10px;"></div>
+            <button class="btn btn-gold full-width" type="submit">Sign In</button>
         </form>
         <p class="auth-link">No account? <a href="/signup">Sign up</a></p>
     </div>
@@ -27,31 +36,24 @@ async function login(e) {
     const errorEl = document.getElementById("error-msg");
     errorEl.style.display = "none";
 
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-
     try {
         const res = await fetch("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({
+                username: document.getElementById("username").value.trim(),
+                password: document.getElementById("password").value.trim()
+            })
         });
-
         const data = await res.json();
-
-        if (res.ok) {
-            window.location.href = "/";
-        } else {
-            errorEl.textContent = data.error || "Login failed";
-            errorEl.style.display = "block";
-        }
-    } catch (err) {
+        if (res.ok) { window.location.href = "/"; }
+        else { errorEl.textContent = data.error || "Login failed"; errorEl.style.display = "block"; }
+    } catch {
         errorEl.textContent = "Could not reach server. Please try again.";
         errorEl.style.display = "block";
     }
 }
 </script>
-
 </body>
 </html>

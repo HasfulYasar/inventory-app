@@ -3,44 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — Inventory App</title>
+    <title>Dashboard — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="container">
     <div class="page-header">
-        <h2>Dashboard</h2>
-        <p>Manage your inventory products</p>
+        <div class="page-header-text">
+            <h2>Dashboard</h2>
+            <p>Manage and control your currency rates</p>
+        </div>
+        <a href="/add-currency" class="btn btn-gold">+ Add Currency</a>
     </div>
 
     <div class="card">
-        <h3>Add Product</h3>
-        <form id="productForm" class="form-row">
-            <select id="currency" class="input">
-                <option value="INR">INR</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-            </select>
-            <input class="input" type="number" id="buyingRate" placeholder="Buying Rate" step="0.01" required>
-            <input class="input" type="number" id="sellingRate" placeholder="Selling Rate" step="0.01" required>
-            <input class="input" type="number" id="quantity" placeholder="Quantity" required>
-            <button class="btn btn-primary" type="submit">Add</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h3>Products</h3>
         <div id="error-msg" class="error-msg" style="display:none;"></div>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>S.No</th>
+                        <th>#</th>
                         <th>Currency</th>
                         <th>Buying Rate</th>
                         <th>Selling Rate</th>
-                        <th>Qty</th>
+                        <th>Decimals</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -51,6 +38,144 @@
 </div>
 
 <script src="navbar.js"></script>
-<script src="script.js"></script>
+<script>
+const errorMsg = document.getElementById("error-msg");
+let editingId = null;
+
+function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
+function hideError() { errorMsg.style.display = "none"; }
+
+async function loadCurrencies() {
+    try {
+        const res = await fetch("/api/currencies", { credentials: "include" });
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+        hideError();
+        renderTable(data);
+    } catch {
+        showError("Could not load currencies. Please refresh.");
+    }
+}
+
+function renderTable(data) {
+    const tbody = document.getElementById("tableBody");
+
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet. <a href="/add-currency">Add one →</a></td></tr>`;
+        return;
+    }
+
+    let rows = "";
+    data.forEach((c, i) => {
+        if (editingId === c.id) {
+            rows += `
+            <tr class="edit-row" id="edit-row-${c.id}">
+                <td>${i + 1}</td>
+                <td>
+                    <select id="e-currency" class="input" style="min-width:90px;">
+                        ${currencyOptions(c.currency)}
+                    </select>
+                </td>
+                <td><input class="input" id="e-buying" type="number" value="${c.buyingRate}" step="any" min="0"></td>
+                <td><input class="input" id="e-selling" type="number" value="${c.sellingRate}" step="any" min="0"></td>
+                <td>
+                    <select id="e-decimals" class="input" style="min-width:70px;">
+                        ${[0,1,2,3,4].map(d => `<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
+                    </select>
+                </td>
+                <td><span class="${c.active ? 'badge-on' : 'badge-off'}">${c.active ? 'ON' : 'OFF'}</span></td>
+                <td style="display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px;">
+                    <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id})">Save Changes</button>
+                    <button class="btn btn-secondary btn-xs" onclick="cancelEdit()">Cancel</button>
+                </td>
+            </tr>`;
+        } else {
+            const dec = c.decimals;
+            rows += `
+            <tr id="row-${c.id}">
+                <td>${i + 1}</td>
+                <td><strong>${c.currency}</strong></td>
+                <td>${c.buyingRate.toFixed(dec)}</td>
+                <td>${c.sellingRate.toFixed(dec)}</td>
+                <td>${dec}</td>
+                <td><span class="${c.active ? 'badge-on' : 'badge-off'}">${c.active ? 'ON' : 'OFF'}</span></td>
+                <td style="display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px;">
+                    <button class="btn btn-secondary btn-xs" onclick="startEdit(${c.id})">Edit</button>
+                    <button class="btn btn-xs toggle-btn ${c.active ? 'on' : 'off'}" onclick="toggleCurrency(${c.id})">${c.active ? 'Turn OFF' : 'Turn ON'}</button>
+                    <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
+                </td>
+            </tr>`;
+        }
+    });
+
+    tbody.innerHTML = rows;
+}
+
+function currencyOptions(selected) {
+    const list = ["USD","EUR","GBP","JPY","AED","SGD","AUD","CAD","CHF","INR","SAR","KWD","BHD","QAR","OMR","MYR","THB","HKD","CNY","ZAR"];
+    return list.map(c => `<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
+}
+
+function startEdit(id) {
+    editingId = id;
+    loadCurrencies();
+}
+
+function cancelEdit() {
+    editingId = null;
+    loadCurrencies();
+}
+
+async function saveEdit(id) {
+    const currency = document.getElementById("e-currency").value;
+    const buyingRate = parseFloat(document.getElementById("e-buying").value);
+    const sellingRate = parseFloat(document.getElementById("e-selling").value);
+    const decimals = parseInt(document.getElementById("e-decimals").value);
+
+    if (!currency || isNaN(buyingRate) || isNaN(sellingRate)) {
+        showError("Please fill in all fields correctly.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/currencies/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ currency, buyingRate, sellingRate, decimals })
+        });
+        if (!res.ok) { const d = await res.json(); showError(d.error || "Failed to save"); return; }
+        editingId = null;
+        loadCurrencies();
+    } catch {
+        showError("Could not save changes. Please try again.");
+    }
+}
+
+async function toggleCurrency(id) {
+    try {
+        const res = await fetch(`/api/currencies/${id}/toggle`, { method: "POST", credentials: "include" });
+        if (!res.ok) throw new Error();
+        loadCurrencies();
+    } catch {
+        showError("Could not toggle currency. Please try again.");
+    }
+}
+
+async function deleteCurrency(id) {
+    if (!confirm("Delete this currency?")) return;
+    try {
+        const res = await fetch(`/api/currencies/${id}`, { method: "DELETE", credentials: "include" });
+        if (!res.ok) throw new Error();
+        loadCurrencies();
+    } catch {
+        showError("Could not delete. Please try again.");
+    }
+}
+
+loadCurrencies();
+</script>
 </body>
 </html>
