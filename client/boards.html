@@ -1,84 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHOWCASH — Live Exchange Rates</title>
     <style>
+        :root {
+            --bg: #0d0d0d;
+            --bg2: #1a1200;
+            --bg3: #161616;
+            --border: #1e1e1e;
+            --border2: #2a2000;
+            --header-bg: linear-gradient(135deg, #1a1200 0%, #1a1a2e 100%);
+            --text: #fff;
+            --text2: #aaa;
+            --text3: #666;
+            --text4: #555;
+            --code: #fff;
+            --rate: #f0c040;
+            --rate-label: #555;
+            --row-hover: #161616;
+            --footer-bg: #0a0a0a;
+            --footer-border: #1e1e1e;
+            --col-bg: #1a1200;
+            --col-border: #2a2000;
+            --col-text: #888;
+            --flag-bg: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
+            --flag-text: #1a1a2e;
+            --toggle-bg: rgba(255,255,255,0.08);
+            --toggle-text: #f0c040;
+            --ticker-bg: #f0c040;
+            --ticker-text: #1a1a2e;
+            --back-bg: rgba(240,192,64,0.12);
+            --back-border: rgba(240,192,64,0.3);
+            --back-text: #f0c040;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f0;
+            --bg2: #fff8e7;
+            --bg3: #f9f9f6;
+            --border: #e0ddd0;
+            --border2: #e8e0c0;
+            --header-bg: linear-gradient(135deg, #fff8e7 0%, #f0f0ff 100%);
+            --text: #1a1a2e;
+            --text2: #555;
+            --text3: #888;
+            --text4: #999;
+            --code: #1a1a2e;
+            --rate: #b8860b;
+            --rate-label: #999;
+            --row-hover: #fffdf0;
+            --footer-bg: #fff8e7;
+            --footer-border: #e0ddd0;
+            --col-bg: #fff8e7;
+            --col-border: #e8e0c0;
+            --col-text: #888;
+            --flag-bg: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
+            --flag-text: #1a1a2e;
+            --toggle-bg: rgba(0,0,0,0.06);
+            --toggle-text: #b8860b;
+            --ticker-bg: #1a1a2e;
+            --ticker-text: #f0c040;
+            --back-bg: rgba(184,134,11,0.1);
+            --back-border: rgba(184,134,11,0.3);
+            --back-text: #b8860b;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0d0d0d;
-            color: #fff;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
         }
 
         /* Header */
         .board-header {
-            background: linear-gradient(135deg, #1a1200 0%, #1a1a2e 100%);
+            background: var(--header-bg);
             border-bottom: 2px solid #f0c040;
-            padding: 1.5rem 2rem;
+            padding: 1rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 10px;
         }
+
+        .header-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--back-bg);
+            border: 1px solid var(--back-border);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--back-text);
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.15s;
+            cursor: pointer;
+        }
+        .back-btn:hover { opacity: 0.8; }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .brand-icon {
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             background: #f0c040;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 14px;
             font-weight: 900;
             color: #1a1a2e;
+            flex-shrink: 0;
         }
 
         .brand-name {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 900;
             color: #f0c040;
             letter-spacing: 2px;
         }
 
         .brand-tagline {
-            font-size: 12px;
-            color: #aaa;
+            font-size: 11px;
+            color: var(--text2);
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin-top: 2px;
+            margin-top: 1px;
         }
+
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--toggle-bg);
+            border: 1px solid rgba(240,192,64,0.2);
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--toggle-text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .theme-toggle:hover { opacity: 0.85; }
 
         .live-badge {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             background: rgba(240,192,64,0.1);
             border: 1px solid rgba(240,192,64,0.3);
             border-radius: 30px;
-            padding: 6px 16px;
+            padding: 6px 14px;
             font-size: 13px;
             color: #f0c040;
             font-weight: 600;
         }
 
         .live-dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: #4caf50;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
+            flex-shrink: 0;
         }
 
         @keyframes pulse {
@@ -90,9 +193,9 @@
         .rate-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            padding: 0.9rem 2rem;
-            background: #1a1200;
-            border-bottom: 1px solid #2a2000;
+            padding: 0.75rem 1.5rem;
+            background: var(--col-bg);
+            border-bottom: 1px solid var(--col-border);
         }
 
         .rate-header span {
@@ -100,81 +203,77 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: #888;
+            color: var(--col-text);
         }
 
-        .rate-header span:last-child,
-        .rate-header span:nth-child(2) {
-            text-align: right;
-        }
+        .rate-header span:nth-child(2),
+        .rate-header span:last-child { text-align: right; }
 
         /* Currency rows */
-        .currency-list { padding: 0.5rem 0; }
+        .currency-list { padding: 0.25rem 0; }
 
         .currency-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
-            padding: 1.1rem 2rem;
-            border-bottom: 1px solid #1e1e1e;
+            padding: 0.9rem 1.5rem;
+            border-bottom: 1px solid var(--border);
             transition: background 0.2s;
             animation: fadeIn 0.4s ease both;
         }
 
-        .currency-row:hover { background: #161616; }
+        .currency-row:hover { background: var(--row-hover); }
+        .currency-row:last-child { border-bottom: none; }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .currency-name {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .currency-flag {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
+            width: 40px; height: 40px;
+            border-radius: 9px;
+            background: var(--flag-bg);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
-            color: #1a1a2e;
+            color: var(--flag-text);
             letter-spacing: 0.5px;
             flex-shrink: 0;
         }
 
         .currency-code {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            color: #fff;
+            color: var(--code);
         }
 
         .currency-full {
-            font-size: 12px;
-            color: #666;
+            font-size: 11px;
+            color: var(--text3);
             margin-top: 1px;
         }
 
-        .rate-value {
-            text-align: right;
-        }
+        .rate-value { text-align: right; }
 
         .rate-number {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            color: #f0c040;
+            color: var(--rate);
             font-variant-numeric: tabular-nums;
         }
 
         .rate-label {
-            font-size: 11px;
-            color: #555;
+            font-size: 10px;
+            color: var(--rate-label);
             margin-top: 1px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -183,71 +282,83 @@
         /* Empty / loading */
         .board-empty {
             text-align: center;
-            padding: 5rem 2rem;
-            color: #444;
+            padding: 4rem 2rem;
+            color: var(--text3);
         }
-
-        .board-empty h3 { font-size: 1.2rem; color: #666; margin-bottom: 0.5rem; }
+        .board-empty h3 { font-size: 1.1rem; color: var(--text2); margin-bottom: 0.4rem; }
 
         /* Footer */
         .board-footer {
-            background: #0a0a0a;
-            border-top: 1px solid #1e1e1e;
-            padding: 1rem 2rem;
+            background: var(--footer-bg);
+            border-top: 1px solid var(--footer-border);
+            padding: 0.9rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .footer-note { font-size: 12px; color: #444; }
-        .footer-time { font-size: 12px; color: #555; }
+        .footer-note { font-size: 12px; color: var(--text4); }
+        .footer-time { font-size: 12px; color: var(--text3); }
 
-        /* Divider line between buy and sell */
-        .rate-divider {
-            width: 1px;
-            height: 28px;
-            background: #2a2a2a;
-            margin: 0 auto;
+        /* Responsive */
+        @media (max-width: 600px) {
+            .board-header { padding: 0.85rem 1rem; }
+            .brand-name { font-size: 1.3rem; }
+            .brand-icon { width: 36px; height: 36px; font-size: 12px; }
+
+            .rate-header { padding: 0.6rem 1rem; }
+            .rate-header span { font-size: 10px; letter-spacing: 0.8px; }
+
+            .currency-row { padding: 0.75rem 1rem; grid-template-columns: 1fr 1fr 1fr; }
+
+            .currency-flag { width: 34px; height: 34px; font-size: 10px; border-radius: 7px; }
+            .currency-code { font-size: 0.92rem; }
+            .currency-full { display: none; }
+            .currency-name { gap: 8px; }
+
+            .rate-number { font-size: 1rem; }
+            .rate-label { font-size: 9px; }
+
+            .live-badge span { display: none; }
+            .live-badge { padding: 6px 10px; }
+            .theme-toggle span { display: none; }
+            .theme-toggle { padding: 6px 10px; }
+
+            .board-footer { padding: 0.75rem 1rem; }
+            .footer-note { font-size: 11px; }
         }
 
-        /* Scrolling ticker at top (optional flair) */
-        .ticker-bar {
-            background: #f0c040;
-            color: #1a1a2e;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 5px 0;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .ticker-content {
-            display: inline-block;
-            animation: ticker 30s linear infinite;
-            padding-left: 100%;
-        }
-
-        @keyframes ticker {
-            from { transform: translateX(0); }
-            to { transform: translateX(-100%); }
+        @media (max-width: 380px) {
+            .currency-flag { display: none; }
+            .rate-number { font-size: 0.95rem; }
+            .back-btn span { display: none; }
+            .back-btn { padding: 6px 10px; }
         }
     </style>
 </head>
 <body>
 
 <div class="board-header">
-    <div class="brand">
-        <div class="brand-icon">SC</div>
-        <div>
-            <div class="brand-name">SHOWCASH</div>
-            <div class="brand-tagline">Live Exchange Rates</div>
+    <div class="header-left">
+        <a class="back-btn" href="/">&#8592; <span>Back</span></a>
+        <div class="brand">
+            <div class="brand-icon">SC</div>
+            <div>
+                <div class="brand-name">SHOWCASH</div>
+                <div class="brand-tagline">Live Exchange Rates</div>
+            </div>
         </div>
     </div>
-    <div class="live-badge">
-        <div class="live-dot"></div>
-        Live Rates
+    <div class="header-right">
+        <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+            🌙 <span>Dark Mode</span>
+        </div>
+        <div class="live-badge">
+            <div class="live-dot"></div>
+            <span>Live Rates</span>
+        </div>
     </div>
 </div>
 
@@ -277,6 +388,22 @@ const CURRENCY_NAMES = {
     CNY: "Chinese Yuan", ZAR: "South African Rand", THB: "Thai Baht"
 };
 
+// Theme
+let theme = localStorage.getItem("boards-theme") || "dark";
+applyTheme(theme);
+
+function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("boards-theme", t);
+    const btn = document.getElementById("themeBtn");
+    if (btn) btn.innerHTML = t === "dark" ? '☀️ <span>Light Mode</span>' : '🌙 <span>Dark Mode</span>';
+}
+
+function toggleTheme() {
+    applyTheme(theme === "dark" ? "light" : "dark");
+}
+
 async function loadRates() {
     try {
         const res = await fetch("/api/currencies/public");
@@ -284,7 +411,7 @@ async function loadRates() {
         const data = await res.json();
         render(data);
         document.getElementById("lastUpdated").textContent =
-            "Last updated: " + new Date().toLocaleTimeString();
+            "Updated: " + new Date().toLocaleTimeString();
     } catch {
         document.getElementById("currencyList").innerHTML =
             `<div class="board-empty"><h3>Unable to load rates</h3><p>Please try again later.</p></div>`;
@@ -295,7 +422,7 @@ function render(data) {
     const list = document.getElementById("currencyList");
 
     if (data.length === 0) {
-        list.innerHTML = `<div class="board-empty"><h3>No rates available</h3><p>Check back soon.</p></div>`;
+        list.innerHTML = `<div class="board-empty"><h3>No rates available yet</h3><p>Check back soon.</p></div>`;
         return;
     }
 
@@ -321,7 +448,6 @@ function render(data) {
 }
 
 loadRates();
-// Auto-refresh every 60 seconds
 setInterval(loadRates, 60000);
 </script>
 </body>

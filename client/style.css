@@ -29,6 +29,8 @@ body {
     letter-spacing: 1px;
     margin-right: 1rem;
     white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .nav-links { display: flex; gap: 4px; flex: 1; }

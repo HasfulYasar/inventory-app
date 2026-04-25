@@ -1,5 +1,5 @@
 const NAV_LINKS = [
-    { href: "/", label: "Dashboard" },
+    { href: "/", label: "Home" },
     { href: "/add-currency", label: "Add Currency" },
     { href: "/boards", label: "Boards" },
 ];
@@ -18,7 +18,7 @@ async function initPage() {
         const nav = document.createElement("nav");
         nav.className = "navbar";
         nav.innerHTML = `
-            <div class="nav-brand">SHOWCASH</div>
+            <a href="/" class="nav-brand">SHOWCASH</a>
             <div class="nav-links">${links}</div>
             <div class="nav-right">
                 <span class="nav-user">Hi, ${data.username}</span>
