@@ -391,15 +391,12 @@ function render(data) {
             </div>
             <div style="text-align:right;">
                 <div class="rate-val">${c.unit || 1}</div>
-                <div class="rate-label-small">Unit</div>
             </div>
             <div>
                 <div class="rate-val">${c.buyingRate.toFixed(c.decimals)}</div>
-                <div class="rate-label-small">Buy</div>
             </div>
             <div>
                 <div class="rate-val">${c.sellingRate.toFixed(c.decimals)}</div>
-                <div class="rate-label-small">Sell</div>
             </div>
         </div>`;
     }).join("");
