@@ -23,32 +23,7 @@
         <form id="currencyForm" onsubmit="addCurrency(event)">
             <div class="field">
                 <label class="field-label">Currency</label>
-                <select id="currency" class="input">
-                    <option value="USD">🇺🇸 USD — US Dollar</option>
-                    <option value="EUR">🇪🇺 EUR — Euro</option>
-                    <option value="GBP">🇬🇧 GBP — British Pound</option>
-                    <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
-                    <option value="AED">🇦🇪 AED — UAE Dirham</option>
-                    <option value="SGD">🇸🇬 SGD — Singapore Dollar</option>
-                    <option value="AUD">🇦🇺 AUD — Australian Dollar</option>
-                    <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
-                    <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
-                    <option value="INR">🇮🇳 INR — Indian Rupee</option>
-                    <option value="SAR">🇸🇦 SAR — Saudi Riyal</option>
-                    <option value="KWD">🇰🇼 KWD — Kuwaiti Dinar</option>
-                    <option value="BHD">🇧🇭 BHD — Bahraini Dinar</option>
-                    <option value="QAR">🇶🇦 QAR — Qatari Riyal</option>
-                    <option value="OMR">🇴🇲 OMR — Omani Rial</option>
-                    <option value="MYR">🇲🇾 MYR — Malaysian Ringgit</option>
-                    <option value="HKD">🇭🇰 HKD — Hong Kong Dollar</option>
-                    <option value="CNY">🇨🇳 CNY — Chinese Yuan</option>
-                    <option value="ZAR">🇿🇦 ZAR — South African Rand</option>
-                    <option value="THB">🇹🇭 THB — Thai Baht</option>
-                    <option value="NZD">🇳🇿 NZD — New Zealand Dollar</option>
-                    <option value="NOK">🇳🇴 NOK — Norwegian Krone</option>
-                    <option value="SEK">🇸🇪 SEK — Swedish Krona</option>
-                    <option value="DKK">🇩🇰 DKK — Danish Krone</option>
-                </select>
+                <select id="currency" class="input"></select>
             </div>
             <div class="field">
                 <label class="field-label">Unit <span style="color:#999;font-weight:400;">(e.g. 1, 10, 100)</span></label>
@@ -81,19 +56,72 @@
 
 <script src="navbar.js"></script>
 <script>
+// Full currency list with correct country codes for flags
+const CURRENCIES = [
+    { code: "USD", name: "US Dollar",            cc: "us" },
+    { code: "GBP", name: "British Pound",         cc: "gb" },
+    { code: "JPY", name: "Japanese Yen",          cc: "jp" },
+    { code: "EUR", name: "Euro",                  cc: "eu" },
+    { code: "AUD", name: "Australian Dollar",     cc: "au" },
+    { code: "SGD", name: "Singapore Dollar",      cc: "sg" },
+    { code: "HKD", name: "Hong Kong Dollar",      cc: "hk" },
+    { code: "CAD", name: "Canadian Dollar",       cc: "ca" },
+    { code: "CHF", name: "Swiss Franc",           cc: "ch" },
+    { code: "NZD", name: "New Zealand Dollar",    cc: "nz" },
+    { code: "TWD", name: "Taiwan Dollar",         cc: "tw" },
+    { code: "KRW", name: "South Korean Won",      cc: "kr" },
+    { code: "INR", name: "Indian Rupee",          cc: "in" },
+    { code: "DKK", name: "Danish Krone",          cc: "dk" },
+    { code: "SEK", name: "Swedish Krona",         cc: "se" },
+    { code: "NOK", name: "Norwegian Krone",       cc: "no" },
+    { code: "ZAR", name: "South African Rand",    cc: "za" },
+    { code: "THB", name: "Thai Baht",             cc: "th" },
+    { code: "CNY", name: "Chinese Yuan",          cc: "cn" },
+    { code: "IDR", name: "Indonesian Rupiah",     cc: "id" },
+    { code: "SAR", name: "Saudi Riyal",           cc: "sa" },
+    { code: "MYR", name: "Malaysian Ringgit",     cc: "my" },
+    { code: "PHP", name: "Philippine Peso",       cc: "ph" },
+    { code: "PKR", name: "Pakistani Rupee",       cc: "pk" },
+    { code: "VND", name: "Vietnamese Dong",       cc: "vn" },
+    { code: "OMR", name: "Omani Rial",            cc: "om" },
+    { code: "JOD", name: "Jordanian Dinar",       cc: "jo" },
+    { code: "AED", name: "UAE Dirham",            cc: "ae" },
+    { code: "BHD", name: "Bahraini Dinar",        cc: "bh" },
+    { code: "BND", name: "Brunei Dollar",         cc: "bn" },
+    { code: "EGP", name: "Egyptian Pound",        cc: "eg" },
+    { code: "QAR", name: "Qatari Riyal",          cc: "qa" },
+    { code: "KWD", name: "Kuwaiti Dinar",         cc: "kw" },
+    { code: "LKR", name: "Sri Lankan Rupee",      cc: "lk" },
+    { code: "BDT", name: "Bangladeshi Taka",      cc: "bd" },
+    { code: "MOP", name: "Macanese Pataca",       cc: "mo" },
+    { code: "SCR", name: "Seychellois Rupee",     cc: "sc" },
+    { code: "IQD", name: "Iraqi Dinar",           cc: "iq" },
+    { code: "TRY", name: "Turkish Lira",          cc: "tr" },
+    { code: "RUB", name: "Russian Ruble",         cc: "ru" },
+];
+
+// Populate dropdown with flag images
+const select = document.getElementById("currency");
+CURRENCIES.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.code;
+    opt.textContent = `${c.code} — ${c.name}`;
+    select.appendChild(opt);
+});
+
 async function addCurrency(e) {
     e.preventDefault();
-    const errorEl = document.getElementById("error-msg");
+    const errorEl   = document.getElementById("error-msg");
     const successEl = document.getElementById("success-msg");
-    errorEl.style.display = "none";
+    errorEl.style.display   = "none";
     successEl.style.display = "none";
 
     const payload = {
-        currency: document.getElementById("currency").value,
-        unit: parseInt(document.getElementById("unit").value) || 1,
-        buyingRate: parseFloat(document.getElementById("buyingRate").value),
+        currency:    document.getElementById("currency").value,
+        unit:        parseInt(document.getElementById("unit").value) || 1,
+        buyingRate:  parseFloat(document.getElementById("buyingRate").value),
         sellingRate: parseFloat(document.getElementById("sellingRate").value),
-        decimals: parseInt(document.getElementById("decimals").value)
+        decimals:    parseInt(document.getElementById("decimals").value)
     };
 
     try {
@@ -105,16 +133,16 @@ async function addCurrency(e) {
         });
         const data = await res.json();
         if (res.ok) {
-            successEl.textContent = `${payload.currency} (Unit: ${payload.unit}) added successfully!`;
+            successEl.textContent   = `${payload.currency} added successfully!`;
             successEl.style.display = "block";
             document.getElementById("currencyForm").reset();
             document.getElementById("unit").value = "1";
         } else {
-            errorEl.textContent = data.error || "Failed to add currency";
+            errorEl.textContent   = data.error || "Failed to add currency";
             errorEl.style.display = "block";
         }
     } catch {
-        errorEl.textContent = "Could not reach server. Please try again.";
+        errorEl.textContent   = "Could not reach server. Please try again.";
         errorEl.style.display = "block";
     }
 }

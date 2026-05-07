@@ -64,16 +64,20 @@
 <script src="navbar.js"></script>
 <script>
 const CURRENCY_COUNTRY = {
-    USD:"us", EUR:"eu", GBP:"gb", JPY:"jp", AED:"ae",
-    SGD:"sg", AUD:"au", CAD:"ca", CHF:"ch", INR:"in",
-    SAR:"sa", KWD:"kw", BHD:"bh", QAR:"qa", OMR:"om",
-    MYR:"my", HKD:"hk", CNY:"cn", ZAR:"za", THB:"th",
-    NZD:"nz", NOK:"no", SEK:"se", DKK:"dk"
+    USD:"us", GBP:"gb", JPY:"jp", EUR:"eu", AUD:"au", SGD:"sg",
+    HKD:"hk", CAD:"ca", CHF:"ch", NZD:"nz", TWD:"tw", KRW:"kr",
+    INR:"in", DKK:"dk", SEK:"se", NOK:"no", ZAR:"za", THB:"th",
+    CNY:"cn", IDR:"id", SAR:"sa", MYR:"my", PHP:"ph", PKR:"pk",
+    VND:"vn", OMR:"om", JOD:"jo", AED:"ae", BHD:"bh", BND:"bn",
+    EGP:"eg", QAR:"qa", KWD:"kw", LKR:"lk", BDT:"bd", MOP:"mo",
+    SCR:"sc", IQD:"iq", TRY:"tr", RUB:"ru"
 };
 
 const CURRENCY_LIST = [
-    "USD","EUR","GBP","JPY","AED","SGD","AUD","CAD","CHF","INR",
-    "SAR","KWD","BHD","QAR","OMR","MYR","HKD","CNY","ZAR","THB","NZD","NOK","SEK","DKK"
+    "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
+    "TWD","KRW","INR","DKK","SEK","NOK","ZAR","THB","CNY","IDR",
+    "SAR","MYR","PHP","PKR","VND","OMR","JOD","AED","BHD","BND",
+    "EGP","QAR","KWD","LKR","BDT","MOP","SCR","IQD","TRY","RUB"
 ];
 
 const errorMsg = document.getElementById("error-msg");
