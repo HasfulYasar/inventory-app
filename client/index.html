@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .flag-img {
+            width: 28px;
+            height: 20px;
+            border-radius: 3px;
+            object-fit: cover;
+            vertical-align: middle;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .currency-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .actions-cell {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -39,15 +61,14 @@
     </div>
 </div>
 
-<!-- navbar.js handles auth check. After it confirms login, we load data. -->
 <script src="navbar.js"></script>
 <script>
-const CURRENCY_FLAGS = {
-    USD:"🇺🇸", EUR:"🇪🇺", GBP:"🇬🇧", JPY:"🇯🇵", AED:"🇦🇪",
-    SGD:"🇸🇬", AUD:"🇦🇺", CAD:"🇨🇦", CHF:"🇨🇭", INR:"🇮🇳",
-    SAR:"🇸🇦", KWD:"🇰🇼", BHD:"🇧🇭", QAR:"🇶🇦", OMR:"🇴🇲",
-    MYR:"🇲🇾", HKD:"🇭🇰", CNY:"🇨🇳", ZAR:"🇿🇦", THB:"🇹🇭",
-    NZD:"🇳🇿", NOK:"🇳🇴", SEK:"🇸🇪", DKK:"🇩🇰"
+const CURRENCY_COUNTRY = {
+    USD:"us", EUR:"eu", GBP:"gb", JPY:"jp", AED:"ae",
+    SGD:"sg", AUD:"au", CAD:"ca", CHF:"ch", INR:"in",
+    SAR:"sa", KWD:"kw", BHD:"bh", QAR:"qa", OMR:"om",
+    MYR:"my", HKD:"hk", CNY:"cn", ZAR:"za", THB:"th",
+    NZD:"nz", NOK:"no", SEK:"se", DKK:"dk"
 };
 
 const CURRENCY_LIST = [
@@ -57,14 +78,29 @@ const CURRENCY_LIST = [
 
 const errorMsg = document.getElementById("error-msg");
 let editingId = null;
-let loaded = false; // prevent double load
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
 
+function flagCell(code) {
+    const cc = CURRENCY_COUNTRY[code] || "un";
+    return `
+        <div class="currency-cell">
+            <img class="flag-img"
+                src="https://flagcdn.com/w40/${cc}.png"
+                alt="${code}"
+                onerror="this.style.display='none'">
+            <strong>${code}</strong>
+        </div>`;
+}
+
+function currencyOptions(selected) {
+    return CURRENCY_LIST.map(c =>
+        `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`
+    ).join('');
+}
+
 async function loadCurrencies() {
-    if (loaded && editingId === null) return; // guard against double calls
-    loaded = true;
     try {
         const res = await fetch("/api/currencies", { credentials: "include" });
         if (res.status === 401) { window.location.href = "/login"; return; }
@@ -75,17 +111,6 @@ async function loadCurrencies() {
     } catch {
         showError("Could not load currencies. Please refresh.");
     }
-}
-
-function flagCell(code) {
-    const flag = CURRENCY_FLAGS[code] || "🏳️";
-    return `<span style="font-size:1.3rem;vertical-align:middle;margin-right:7px;">${flag}</span><strong>${code}</strong>`;
-}
-
-function currencyOptions(selected) {
-    return CURRENCY_LIST.map(c =>
-        `<option value="${c}" ${c === selected ? 'selected' : ''}>${CURRENCY_FLAGS[c] || ''} ${c}</option>`
-    ).join('');
 }
 
 function renderTable(data) {
@@ -102,21 +127,23 @@ function renderTable(data) {
             <tr class="edit-row">
                 <td>${i + 1}</td>
                 <td>
-                    <select id="e-currency" class="input" style="min-width:100px;">
+                    <select id="e-currency" class="input" style="min-width:90px;">
                         ${currencyOptions(c.currency)}
                     </select>
                 </td>
                 <td><input class="input" id="e-buying" type="number" value="${c.buyingRate}" step="any" min="0"></td>
                 <td><input class="input" id="e-selling" type="number" value="${c.sellingRate}" step="any" min="0"></td>
                 <td>
-                    <select id="e-decimals" class="input" style="min-width:70px;">
-                        ${[0,1,2,3,4].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
+                    <select id="e-decimals" class="input" style="min-width:65px;">
+                        ${[0,1,2,3,4].map(d => `<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td style="display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px;">
-                    <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id})">Save Changes</button>
-                    <button class="btn btn-secondary btn-xs" onclick="cancelEdit()">Cancel</button>
+                <td>
+                    <div class="actions-cell">
+                        <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id})">Save</button>
+                        <button class="btn btn-secondary btn-xs" onclick="cancelEdit()">Cancel</button>
+                    </div>
                 </td>
             </tr>`;
         } else {
@@ -128,10 +155,12 @@ function renderTable(data) {
                 <td>${c.sellingRate.toFixed(c.decimals)}</td>
                 <td>${c.decimals}</td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td style="display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px;">
-                    <button class="btn btn-secondary btn-xs" onclick="startEdit(${c.id})">Edit</button>
-                    <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
-                    <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
+                <td>
+                    <div class="actions-cell">
+                        <button class="btn btn-secondary btn-xs" onclick="startEdit(${c.id})">Edit</button>
+                        <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
+                        <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
+                    </div>
                 </td>
             </tr>`;
         }
@@ -139,24 +168,26 @@ function renderTable(data) {
     tbody.innerHTML = rows;
 }
 
-function startEdit(id) { editingId = id; loaded = false; loadCurrencies(); }
-function cancelEdit()  { editingId = null; loaded = false; loadCurrencies(); }
+function startEdit(id) { editingId = id; loadCurrencies(); }
+function cancelEdit()  { editingId = null; loadCurrencies(); }
 
 async function saveEdit(id) {
     const currency    = document.getElementById("e-currency").value;
     const buyingRate  = parseFloat(document.getElementById("e-buying").value);
     const sellingRate = parseFloat(document.getElementById("e-selling").value);
     const decimals    = parseInt(document.getElementById("e-decimals").value);
-    if (!currency || isNaN(buyingRate) || isNaN(sellingRate)) { showError("Please fill in all fields correctly."); return; }
+    if (!currency || isNaN(buyingRate) || isNaN(sellingRate)) {
+        showError("Please fill in all fields correctly."); return;
+    }
     try {
         const res = await fetch(`/api/currencies/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ currency, buyingRate, sellingRate, decimals })
+            body: JSON.stringify({ currency, unit: 1, buyingRate, sellingRate, decimals })
         });
         if (!res.ok) { const d = await res.json(); showError(d.error || "Failed to save"); return; }
-        editingId = null; loaded = false; loadCurrencies();
+        editingId = null; loadCurrencies();
     } catch { showError("Could not save changes. Please try again."); }
 }
 
@@ -164,7 +195,7 @@ async function toggleCurrency(id) {
     try {
         const res = await fetch(`/api/currencies/${id}/toggle`, { method: "POST", credentials: "include" });
         if (!res.ok) throw new Error();
-        loaded = false; loadCurrencies();
+        loadCurrencies();
     } catch { showError("Could not toggle currency."); }
 }
 
@@ -173,15 +204,11 @@ async function deleteCurrency(id) {
     try {
         const res = await fetch(`/api/currencies/${id}`, { method: "DELETE", credentials: "include" });
         if (!res.ok) throw new Error();
-        loaded = false; loadCurrencies();
+        loadCurrencies();
     } catch { showError("Could not delete. Please try again."); }
 }
 
-// Wait for navbar auth to complete, then load once
-window.addEventListener("DOMContentLoaded", () => {
-    // Small delay so navbar.js auth fetch completes first
-    setTimeout(loadCurrencies, 300);
-});
+loadCurrencies();
 </script>
 </body>
 </html>

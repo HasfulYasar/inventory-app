@@ -13,8 +13,6 @@ CLIENT_DIR = os.path.join(BASE_DIR, "client")
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 
-# --- Database helpers ---
-
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH)
@@ -43,16 +41,20 @@ def init_db():
             CREATE TABLE IF NOT EXISTS currencies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 currency TEXT NOT NULL,
+                unit INTEGER NOT NULL DEFAULT 1,
                 buying_rate REAL NOT NULL,
                 selling_rate REAL NOT NULL,
                 decimals INTEGER NOT NULL DEFAULT 2,
                 active INTEGER NOT NULL DEFAULT 1
             )
         ''')
+        # Add unit column if it doesn't exist (for existing databases)
+        try:
+            db.execute("ALTER TABLE currencies ADD COLUMN unit INTEGER NOT NULL DEFAULT 1")
+        except Exception:
+            pass
         db.commit()
 
-
-# --- Auth helper ---
 
 def login_required(f):
     from functools import wraps
@@ -98,15 +100,12 @@ def signup():
     data = request.json or {}
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
-
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
-
     hashed = generate_password_hash(password)
     db = get_db()
-
     try:
         db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
         db.commit()
@@ -120,19 +119,15 @@ def login_user():
     data = request.json or {}
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
-
     if not username or not password:
         return jsonify({"error": "Missing credentials"}), 400
-
     db = get_db()
     user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-
     if user and check_password_hash(user["password"], password):
         session["user_id"] = user["id"]
         session["username"] = user["username"]
         return jsonify({"message": "Login successful"})
-    else:
-        return jsonify({"error": "Invalid username or password"}), 401
+    return jsonify({"error": "Invalid username or password"}), 401
 
 
 @app.route("/api/logout", methods=["POST"])
@@ -150,56 +145,44 @@ def me():
 
 # --- Currencies API ---
 
+def row_to_dict(row, i=None):
+    d = {
+        "id": row["id"],
+        "currency": row["currency"],
+        "unit": row["unit"] if row["unit"] else 1,
+        "buyingRate": row["buying_rate"],
+        "sellingRate": row["selling_rate"],
+        "decimals": row["decimals"],
+        "active": bool(row["active"])
+    }
+    if i is not None:
+        d["serialNumber"] = i + 1
+    return d
+
+
 @app.route("/api/currencies", methods=["GET"])
 @login_required
 def get_currencies():
     db = get_db()
     rows = db.execute("SELECT * FROM currencies").fetchall()
-    result = []
-    for i, row in enumerate(rows):
-        result.append({
-            "id": row["id"],
-            "serialNumber": i + 1,
-            "currency": row["currency"],
-            "buyingRate": row["buying_rate"],
-            "sellingRate": row["selling_rate"],
-            "decimals": row["decimals"],
-            "active": bool(row["active"])
-        })
-    return jsonify(result)
+    return jsonify([row_to_dict(r, i) for i, r in enumerate(rows)])
 
 
 @app.route("/api/currencies/public", methods=["GET"])
 def get_public_currencies():
     db = get_db()
     rows = db.execute("SELECT * FROM currencies WHERE active = 1").fetchall()
-    result = []
-    for row in rows:
-        result.append({
-            "id": row["id"],
-            "currency": row["currency"],
-            "buyingRate": row["buying_rate"],
-            "sellingRate": row["selling_rate"],
-            "decimals": row["decimals"]
-        })
-    return jsonify(result)
+    return jsonify([row_to_dict(r) for r in rows])
 
 
-@app.route("/api/currencies/<int:currency_id>", methods=["GET"])
+@app.route("/api/currencies/<int:cid>", methods=["GET"])
 @login_required
-def get_currency(currency_id):
+def get_currency(cid):
     db = get_db()
-    row = db.execute("SELECT * FROM currencies WHERE id = ?", (currency_id,)).fetchone()
+    row = db.execute("SELECT * FROM currencies WHERE id = ?", (cid,)).fetchone()
     if not row:
-        return jsonify({"error": "Currency not found"}), 404
-    return jsonify({
-        "id": row["id"],
-        "currency": row["currency"],
-        "buyingRate": row["buying_rate"],
-        "sellingRate": row["selling_rate"],
-        "decimals": row["decimals"],
-        "active": bool(row["active"])
-    })
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(row_to_dict(row))
 
 
 @app.route("/api/currencies", methods=["POST"])
@@ -207,82 +190,80 @@ def get_currency(currency_id):
 def add_currency():
     data = request.json or {}
     currency = data.get("currency", "").strip()
+    unit = data.get("unit", 1)
     buying_rate = data.get("buyingRate")
     selling_rate = data.get("sellingRate")
     decimals = data.get("decimals", 2)
-
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
-
     try:
+        unit = int(unit)
         buying_rate = float(buying_rate)
         selling_rate = float(selling_rate)
         decimals = int(decimals)
-        if decimals < 0 or decimals > 6:
+        if unit < 1:
             raise ValueError
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
-
     db = get_db()
     db.execute(
-        "INSERT INTO currencies (currency, buying_rate, selling_rate, decimals, active) VALUES (?, ?, ?, ?, 1)",
-        (currency, buying_rate, selling_rate, decimals)
+        "INSERT INTO currencies (currency, unit, buying_rate, selling_rate, decimals, active) VALUES (?, ?, ?, ?, ?, 1)",
+        (currency, unit, buying_rate, selling_rate, decimals)
     )
     db.commit()
     return jsonify({"message": "Currency added"}), 201
 
 
-@app.route("/api/currencies/<int:currency_id>", methods=["PUT"])
+@app.route("/api/currencies/<int:cid>", methods=["PUT"])
 @login_required
-def update_currency(currency_id):
+def update_currency(cid):
     data = request.json or {}
     currency = data.get("currency", "").strip()
+    unit = data.get("unit", 1)
     buying_rate = data.get("buyingRate")
     selling_rate = data.get("sellingRate")
     decimals = data.get("decimals", 2)
-
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
-
     try:
+        unit = int(unit)
         buying_rate = float(buying_rate)
         selling_rate = float(selling_rate)
         decimals = int(decimals)
+        if unit < 1:
+            raise ValueError
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
-
     db = get_db()
     db.execute(
-        "UPDATE currencies SET currency=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=?",
-        (currency, buying_rate, selling_rate, decimals, currency_id)
+        "UPDATE currencies SET currency=?, unit=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=?",
+        (currency, unit, buying_rate, selling_rate, decimals, cid)
     )
     db.commit()
-    return jsonify({"message": "Currency updated"})
+    return jsonify({"message": "Updated"})
 
 
-@app.route("/api/currencies/<int:currency_id>/toggle", methods=["POST"])
+@app.route("/api/currencies/<int:cid>/toggle", methods=["POST"])
 @login_required
-def toggle_currency(currency_id):
+def toggle_currency(cid):
     db = get_db()
-    row = db.execute("SELECT active FROM currencies WHERE id = ?", (currency_id,)).fetchone()
+    row = db.execute("SELECT active FROM currencies WHERE id = ?", (cid,)).fetchone()
     if not row:
         return jsonify({"error": "Not found"}), 404
     new_state = 0 if row["active"] else 1
-    db.execute("UPDATE currencies SET active=? WHERE id=?", (new_state, currency_id))
+    db.execute("UPDATE currencies SET active=? WHERE id=?", (new_state, cid))
     db.commit()
     return jsonify({"active": bool(new_state)})
 
 
-@app.route("/api/currencies/<int:currency_id>", methods=["DELETE"])
+@app.route("/api/currencies/<int:cid>", methods=["DELETE"])
 @login_required
-def delete_currency(currency_id):
+def delete_currency(cid):
     db = get_db()
-    db.execute("DELETE FROM currencies WHERE id = ?", (currency_id,))
+    db.execute("DELETE FROM currencies WHERE id = ?", (cid,))
     db.commit()
-    return jsonify({"message": "Currency deleted"})
+    return jsonify({"message": "Deleted"})
 
-
-# --- Run ---
 
 if __name__ == "__main__":
     init_db()

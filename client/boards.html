@@ -270,10 +270,10 @@
 
 <div class="col-header">
     <div class="col-header-half">
-        <span>Currency</span><span class="right">Qty</span><span class="right">We Buy</span><span class="right">We Sell</span>
+        <span>Currency</span><span class="right">Unit</span><span class="right">We Buy</span><span class="right">We Sell</span>
     </div>
     <div class="col-header-half">
-        <span>Currency</span><span class="right">Qty</span><span class="right">We Buy</span><span class="right">We Sell</span>
+        <span>Currency</span><span class="right">Unit</span><span class="right">We Buy</span><span class="right">We Sell</span>
     </div>
 </div>
 
@@ -374,9 +374,8 @@ function render(data) {
                 </div>
             </div>
             <div style="text-align:right;">
-                <input class="qty-input" type="number" min="1" step="1" value="1"
-                    onkeypress="return event.charCode>=48&&event.charCode<=57"
-                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                <div class="rate-val">${c.unit || 1}</div>
+                <div class="rate-label-small">Unit</div>
             </div>
             <div>
                 <div class="rate-val">${c.buyingRate.toFixed(c.decimals)}</div>

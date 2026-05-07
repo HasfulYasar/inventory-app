@@ -51,6 +51,12 @@
                 </select>
             </div>
             <div class="field">
+                <label class="field-label">Unit <span style="color:#999;font-weight:400;">(e.g. 1, 10, 100)</span></label>
+                <input class="input" type="number" id="unit" placeholder="e.g. 1" min="1" step="1" value="1" required
+                    onkeypress="return event.charCode>=48&&event.charCode<=57"
+                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+            <div class="field">
                 <label class="field-label">Buying Rate</label>
                 <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0" required>
             </div>
@@ -84,6 +90,7 @@ async function addCurrency(e) {
 
     const payload = {
         currency: document.getElementById("currency").value,
+        unit: parseInt(document.getElementById("unit").value) || 1,
         buyingRate: parseFloat(document.getElementById("buyingRate").value),
         sellingRate: parseFloat(document.getElementById("sellingRate").value),
         decimals: parseInt(document.getElementById("decimals").value)
@@ -98,9 +105,10 @@ async function addCurrency(e) {
         });
         const data = await res.json();
         if (res.ok) {
-            successEl.textContent = `${payload.currency} added successfully!`;
+            successEl.textContent = `${payload.currency} (Unit: ${payload.unit}) added successfully!`;
             successEl.style.display = "block";
             document.getElementById("currencyForm").reset();
+            document.getElementById("unit").value = "1";
         } else {
             errorEl.textContent = data.error || "Failed to add currency";
             errorEl.style.display = "block";
