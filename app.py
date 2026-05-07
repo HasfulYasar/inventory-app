@@ -40,19 +40,25 @@ def init_db():
         db.execute('''
             CREATE TABLE IF NOT EXISTS currencies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL DEFAULT 0,
                 currency TEXT NOT NULL,
                 unit INTEGER NOT NULL DEFAULT 1,
                 buying_rate REAL NOT NULL,
                 selling_rate REAL NOT NULL,
                 decimals INTEGER NOT NULL DEFAULT 2,
-                active INTEGER NOT NULL DEFAULT 1
+                active INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
-        # Add unit column if it doesn't exist (for existing databases)
-        try:
-            db.execute("ALTER TABLE currencies ADD COLUMN unit INTEGER NOT NULL DEFAULT 1")
-        except Exception:
-            pass
+        # Migrate existing DB — add columns if missing
+        for col, definition in [
+            ("unit",    "INTEGER NOT NULL DEFAULT 1"),
+            ("user_id", "INTEGER NOT NULL DEFAULT 0"),
+        ]:
+            try:
+                db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {definition}")
+            except Exception:
+                pass
         db.commit()
 
 
@@ -64,6 +70,10 @@ def login_required(f):
             return jsonify({"error": "Unauthorised"}), 401
         return f(*args, **kwargs)
     return decorated
+
+
+def current_user_id():
+    return session.get("user_id")
 
 
 # --- Page routes ---
@@ -139,7 +149,7 @@ def logout():
 @app.route("/api/me")
 def me():
     if session.get("user_id"):
-        return jsonify({"username": session["username"]})
+        return jsonify({"id": session["user_id"], "username": session["username"]})
     return jsonify({"error": "Not logged in"}), 401
 
 
@@ -147,13 +157,13 @@ def me():
 
 def row_to_dict(row, i=None):
     d = {
-        "id": row["id"],
-        "currency": row["currency"],
-        "unit": row["unit"] if row["unit"] else 1,
+        "id":         row["id"],
+        "currency":   row["currency"],
+        "unit":       row["unit"] if row["unit"] else 1,
         "buyingRate": row["buying_rate"],
-        "sellingRate": row["selling_rate"],
-        "decimals": row["decimals"],
-        "active": bool(row["active"])
+        "sellingRate":row["selling_rate"],
+        "decimals":   row["decimals"],
+        "active":     bool(row["active"])
     }
     if i is not None:
         d["serialNumber"] = i + 1
@@ -164,14 +174,25 @@ def row_to_dict(row, i=None):
 @login_required
 def get_currencies():
     db = get_db()
-    rows = db.execute("SELECT * FROM currencies").fetchall()
+    rows = db.execute(
+        "SELECT * FROM currencies WHERE user_id = ?",
+        (current_user_id(),)
+    ).fetchall()
     return jsonify([row_to_dict(r, i) for i, r in enumerate(rows)])
 
 
 @app.route("/api/currencies/public", methods=["GET"])
 def get_public_currencies():
+    # Public boards requires user_id passed as query param
+    # so each user has their own public board URL: /boards?user=<id>
+    user_id = request.args.get("user")
+    if not user_id:
+        return jsonify([])
     db = get_db()
-    rows = db.execute("SELECT * FROM currencies WHERE active = 1").fetchall()
+    rows = db.execute(
+        "SELECT * FROM currencies WHERE user_id = ? AND active = 1",
+        (user_id,)
+    ).fetchall()
     return jsonify([row_to_dict(r) for r in rows])
 
 
@@ -179,7 +200,10 @@ def get_public_currencies():
 @login_required
 def get_currency(cid):
     db = get_db()
-    row = db.execute("SELECT * FROM currencies WHERE id = ?", (cid,)).fetchone()
+    row = db.execute(
+        "SELECT * FROM currencies WHERE id = ? AND user_id = ?",
+        (cid, current_user_id())
+    ).fetchone()
     if not row:
         return jsonify({"error": "Not found"}), 404
     return jsonify(row_to_dict(row))
@@ -189,26 +213,27 @@ def get_currency(cid):
 @login_required
 def add_currency():
     data = request.json or {}
-    currency = data.get("currency", "").strip()
-    unit = data.get("unit", 1)
+    currency    = data.get("currency", "").strip()
+    unit        = data.get("unit", 1)
     buying_rate = data.get("buyingRate")
-    selling_rate = data.get("sellingRate")
-    decimals = data.get("decimals", 2)
+    selling_rate= data.get("sellingRate")
+    decimals    = data.get("decimals", 2)
+
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
     try:
-        unit = int(unit)
-        buying_rate = float(buying_rate)
+        unit         = int(unit)
+        buying_rate  = float(buying_rate)
         selling_rate = float(selling_rate)
-        decimals = int(decimals)
-        if unit < 1:
-            raise ValueError
+        decimals     = int(decimals)
+        if unit < 1: raise ValueError
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
+
     db = get_db()
     db.execute(
-        "INSERT INTO currencies (currency, unit, buying_rate, selling_rate, decimals, active) VALUES (?, ?, ?, ?, ?, 1)",
-        (currency, unit, buying_rate, selling_rate, decimals)
+        "INSERT INTO currencies (user_id, currency, unit, buying_rate, selling_rate, decimals, active) VALUES (?, ?, ?, ?, ?, ?, 1)",
+        (current_user_id(), currency, unit, buying_rate, selling_rate, decimals)
     )
     db.commit()
     return jsonify({"message": "Currency added"}), 201
@@ -218,26 +243,26 @@ def add_currency():
 @login_required
 def update_currency(cid):
     data = request.json or {}
-    currency = data.get("currency", "").strip()
-    unit = data.get("unit", 1)
+    currency    = data.get("currency", "").strip()
+    unit        = data.get("unit", 1)
     buying_rate = data.get("buyingRate")
-    selling_rate = data.get("sellingRate")
-    decimals = data.get("decimals", 2)
+    selling_rate= data.get("sellingRate")
+    decimals    = data.get("decimals", 2)
+
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
     try:
-        unit = int(unit)
-        buying_rate = float(buying_rate)
+        unit         = int(unit)
+        buying_rate  = float(buying_rate)
         selling_rate = float(selling_rate)
-        decimals = int(decimals)
-        if unit < 1:
-            raise ValueError
+        decimals     = int(decimals)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
+
     db = get_db()
     db.execute(
-        "UPDATE currencies SET currency=?, unit=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=?",
-        (currency, unit, buying_rate, selling_rate, decimals, cid)
+        "UPDATE currencies SET currency=?, unit=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=? AND user_id=?",
+        (currency, unit, buying_rate, selling_rate, decimals, cid, current_user_id())
     )
     db.commit()
     return jsonify({"message": "Updated"})
@@ -247,11 +272,17 @@ def update_currency(cid):
 @login_required
 def toggle_currency(cid):
     db = get_db()
-    row = db.execute("SELECT active FROM currencies WHERE id = ?", (cid,)).fetchone()
+    row = db.execute(
+        "SELECT active FROM currencies WHERE id = ? AND user_id = ?",
+        (cid, current_user_id())
+    ).fetchone()
     if not row:
         return jsonify({"error": "Not found"}), 404
     new_state = 0 if row["active"] else 1
-    db.execute("UPDATE currencies SET active=? WHERE id=?", (new_state, cid))
+    db.execute(
+        "UPDATE currencies SET active=? WHERE id=? AND user_id=?",
+        (new_state, cid, current_user_id())
+    )
     db.commit()
     return jsonify({"active": bool(new_state)})
 
@@ -260,7 +291,10 @@ def toggle_currency(cid):
 @login_required
 def delete_currency(cid):
     db = get_db()
-    db.execute("DELETE FROM currencies WHERE id = ?", (cid,))
+    db.execute(
+        "DELETE FROM currencies WHERE id = ? AND user_id = ?",
+        (cid, current_user_id())
+    )
     db.commit()
     return jsonify({"message": "Deleted"})
 

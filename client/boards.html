@@ -350,8 +350,15 @@ function applyTheme(t) {
 function toggleTheme() { applyTheme(theme === "dark" ? "light" : "dark"); }
 
 async function loadRates() {
+    // Get user id from URL: /boards?user=123
+    const userId = new URLSearchParams(window.location.search).get("user");
+    if (!userId) {
+        document.getElementById("currencyGrid").innerHTML =
+            `<div class="board-empty"><h3>No board found</h3><p>Use the link from your dashboard.</p></div>`;
+        return;
+    }
     try {
-        const res = await fetch("/api/currencies/public");
+        const res = await fetch(`/api/currencies/public?user=${userId}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         render(data);

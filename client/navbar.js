@@ -1,7 +1,6 @@
 const NAV_LINKS = [
     { href: "/", label: "Home" },
     { href: "/add-currency", label: "Add Currency" },
-    { href: "/boards", label: "Boards" },
 ];
 
 async function initPage() {
@@ -15,11 +14,15 @@ async function initPage() {
             `<a href="${l.href}" class="nav-link ${current === l.href ? 'active' : ''}">${l.label}</a>`
         ).join("");
 
+        // Boards link includes user id so the board is user-specific
+        const boardsActive = current === "/boards" ? 'active' : '';
+        const boardsLink = `<a href="/boards?user=${data.id}" class="nav-link ${boardsActive}">Boards</a>`;
+
         const nav = document.createElement("nav");
         nav.className = "navbar";
         nav.innerHTML = `
             <a href="/" class="nav-brand">SHOWCASH</a>
-            <div class="nav-links">${links}</div>
+            <div class="nav-links">${links}${boardsLink}</div>
             <div class="nav-right">
                 <span class="nav-user">Hi, ${data.username}</span>
                 <button class="btn btn-small" style="background:#f0c040;color:#1a1a2e;border:none;font-weight:700;" onclick="doLogout()">Logout</button>
