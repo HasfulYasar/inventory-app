@@ -7,73 +7,63 @@
     <style>
         :root {
             --bg: #0d0d0d;
-            --bg2: #1a1200;
-            --bg3: #161616;
-            --border: #1e1e1e;
-            --border2: #2a2000;
             --header-bg: linear-gradient(135deg, #1a1200 0%, #1a1a2e 100%);
+            --col-bg: #1a1200;
+            --col-border: #2a2000;
+            --col-text: #777;
+            --border: #222;
             --text: #fff;
             --text2: #aaa;
             --text3: #666;
-            --text4: #555;
-            --code: #fff;
+            --text4: #444;
             --rate: #f0c040;
             --rate-label: #555;
-            --row-hover: #161616;
             --footer-bg: #0a0a0a;
             --footer-border: #1e1e1e;
-            --col-bg: #1a1200;
-            --col-border: #2a2000;
-            --col-text: #888;
-            --flag-bg: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
-            --flag-text: #1a1a2e;
-            --toggle-bg: rgba(255,255,255,0.08);
+            --row-bg: #141414;
+            --row-alt-bg: #111;
+            --row-hover: #1c1c1c;
+            --divider: #2a2a2a;
+            --toggle-bg: rgba(255,255,255,0.07);
             --toggle-text: #f0c040;
-            --ticker-bg: #f0c040;
-            --ticker-text: #1a1a2e;
             --back-bg: rgba(240,192,64,0.12);
             --back-border: rgba(240,192,64,0.3);
             --back-text: #f0c040;
+            --gbp-color: #f0c040;
+            --gbp-glow: rgba(240,192,64,0.06);
         }
-
         [data-theme="light"] {
-            --bg: #f5f5f0;
-            --bg2: #fff8e7;
-            --bg3: #f9f9f6;
-            --border: #e0ddd0;
-            --border2: #e8e0c0;
-            --header-bg: linear-gradient(135deg, #fff8e7 0%, #f0f0ff 100%);
+            --bg: #f5f4ef;
+            --header-bg: linear-gradient(135deg, #fff8e7 0%, #eeeeff 100%);
+            --col-bg: #fff8e7;
+            --col-border: #e8ddb0;
+            --col-text: #999;
+            --border: #e5e0d0;
             --text: #1a1a2e;
             --text2: #555;
             --text3: #888;
-            --text4: #999;
-            --code: #1a1a2e;
-            --rate: #b8860b;
-            --rate-label: #999;
-            --row-hover: #fffdf0;
+            --text4: #aaa;
+            --rate: #96700a;
+            --rate-label: #bbb;
             --footer-bg: #fff8e7;
-            --footer-border: #e0ddd0;
-            --col-bg: #fff8e7;
-            --col-border: #e8e0c0;
-            --col-text: #888;
-            --flag-bg: linear-gradient(135deg, #f0c040 0%, #c89000 100%);
-            --flag-text: #1a1a2e;
+            --footer-border: #e8ddb0;
+            --row-bg: #fff;
+            --row-alt-bg: #faf9f5;
+            --row-hover: #fffdf0;
+            --divider: #d0c898;
             --toggle-bg: rgba(0,0,0,0.06);
-            --toggle-text: #b8860b;
-            --ticker-bg: #1a1a2e;
-            --ticker-text: #f0c040;
-            --back-bg: rgba(184,134,11,0.1);
-            --back-border: rgba(184,134,11,0.3);
-            --back-text: #b8860b;
+            --toggle-text: #96700a;
+            --back-bg: rgba(150,112,10,0.1);
+            --back-border: rgba(150,112,10,0.3);
+            --back-text: #96700a;
+            --gbp-color: #96700a;
+            --gbp-glow: rgba(150,112,10,0.06);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            background: var(--bg); color: var(--text); min-height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
 
@@ -82,259 +72,175 @@
             background: var(--header-bg);
             border-bottom: 2px solid #f0c040;
             padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: flex; align-items: center;
+            justify-content: space-between; flex-wrap: wrap; gap: 10px;
         }
-
-        .header-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--back-bg);
-            border: 1px solid var(--back-border);
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 13px;
-            color: var(--back-text);
-            font-weight: 600;
-            text-decoration: none;
-            transition: opacity 0.15s;
-            cursor: pointer;
-        }
-        .back-btn:hover { opacity: 0.8; }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            background: #f0c040;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 900;
-            color: #1a1a2e;
-            flex-shrink: 0;
-        }
-
-        .brand-name {
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: #f0c040;
-            letter-spacing: 2px;
-        }
-
-        .brand-tagline {
-            font-size: 11px;
-            color: var(--text2);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-top: 1px;
-        }
-
+        .header-left  { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-        /* Theme toggle */
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--toggle-bg);
-            border: 1px solid rgba(240,192,64,0.2);
-            border-radius: 30px;
-            padding: 6px 14px;
-            font-size: 13px;
-            color: var(--toggle-text);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--back-bg); border: 1px solid var(--back-border);
+            border-radius: 8px; padding: 6px 14px;
+            font-size: 13px; color: var(--back-text); font-weight: 600;
+            text-decoration: none; transition: opacity 0.15s;
         }
-        .theme-toggle:hover { opacity: 0.85; }
+        .back-btn:hover { opacity: 0.75; }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon {
+            width: 40px; height: 40px; background: #f0c040;
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 13px; font-weight: 900;
+            color: #1a1a2e; flex-shrink: 0;
+        }
+        .brand-name { font-size: 1.5rem; font-weight: 900; color: #f0c040; letter-spacing: 2px; }
+        .brand-tagline { font-size: 11px; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+
+        .theme-toggle {
+            display: flex; align-items: center; gap: 7px;
+            background: var(--toggle-bg); border: 1px solid rgba(240,192,64,0.2);
+            border-radius: 30px; padding: 6px 14px;
+            font-size: 13px; color: var(--toggle-text); font-weight: 600;
+            cursor: pointer; user-select: none; transition: opacity 0.2s;
+        }
+        .theme-toggle:hover { opacity: 0.8; }
 
         .live-badge {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(240,192,64,0.1);
-            border: 1px solid rgba(240,192,64,0.3);
-            border-radius: 30px;
-            padding: 6px 14px;
-            font-size: 13px;
-            color: #f0c040;
-            font-weight: 600;
+            display: flex; align-items: center; gap: 7px;
+            background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.3);
+            border-radius: 30px; padding: 6px 14px;
+            font-size: 13px; color: #f0c040; font-weight: 600;
         }
-
         .live-dot {
-            width: 8px; height: 8px;
-            background: #4caf50;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-            flex-shrink: 0;
+            width: 8px; height: 8px; background: #4caf50;
+            border-radius: 50%; animation: pulse 1.5s infinite; flex-shrink: 0;
         }
-
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+            0%,100% { opacity:1; transform:scale(1); }
+            50% { opacity:0.4; transform:scale(0.75); }
         }
 
-        /* Column headers */
-        .rate-header {
+        /* Subtitle */
+        .subtitle-bar {
+            background: var(--col-bg); border-bottom: 1px solid var(--col-border);
+            padding: 0.5rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .subtitle-bar span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--col-text); }
+
+        /* Column header — split into 2 halves */
+        .col-header {
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: var(--col-bg); border-bottom: 1px solid var(--col-border);
+        }
+        .col-header-half {
+            display: grid; grid-template-columns: 2fr 0.8fr 1fr 1fr;
+            padding: 0.6rem 1.2rem; gap: 0;
+        }
+        .col-header-half:first-child { border-right: 2px solid var(--divider); }
+        .col-header span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--col-text); }
+        .col-header span.right { text-align: right; }
+
+        /* 2-column list */
+        .currency-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            padding: 0.75rem 1.5rem;
-            background: var(--col-bg);
-            border-bottom: 1px solid var(--col-border);
+            grid-template-columns: 1fr 1fr;
         }
-
-        .rate-header span {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--col-text);
-        }
-
-        .rate-header span:nth-child(2),
-        .rate-header span:last-child { text-align: right; }
-
-        /* Currency rows */
-        .currency-list { padding: 0.25rem 0; }
 
         .currency-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 2fr 0.8fr 1fr 1fr;
             align-items: center;
-            padding: 0.9rem 1.5rem;
+            padding: 0.85rem 1.2rem;
             border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
-            animation: fadeIn 0.4s ease both;
+            background: var(--row-bg);
+            transition: background 0.15s;
+            animation: fadeIn 0.3s ease both;
         }
+        /* alternate row shading */
+        .currency-row:nth-child(4n+3),
+        .currency-row:nth-child(4n+4) { background: var(--row-alt-bg); }
+        .currency-row:hover { background: var(--row-hover) !important; }
 
-        .currency-row:hover { background: var(--row-hover); }
-        .currency-row:last-child { border-bottom: none; }
+        /* vertical divider between left and right column */
+        .currency-row.left-col { border-right: 2px solid var(--divider); }
+
+        /* GBP highlight */
+        .currency-row.gbp-row { background: var(--gbp-glow) !important; }
+        .currency-row.gbp-row .currency-code { color: var(--gbp-color); font-weight: 900; }
+        .currency-row.gbp-row .rate-val { color: var(--gbp-color); font-weight: 800; }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity:0; transform:translateY(4px); }
+            to   { opacity:1; transform:translateY(0); }
         }
 
-        .currency-name {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .currency-name-cell { display: flex; align-items: center; gap: 10px; }
 
-        .currency-flag {
-            width: 40px; height: 40px;
-            border-radius: 9px;
-            background: var(--flag-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--flag-text);
-            letter-spacing: 0.5px;
+        .flag-img {
+            width: 30px; height: 22px;
+            border-radius: 3px; object-fit: cover;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
             flex-shrink: 0;
         }
 
-        .currency-code {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--code);
+        .currency-code { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .currency-full { font-size: 11px; font-weight: 700; color: var(--text2); margin-top: 1px; }
+
+        /* Editable qty column */
+        .qty-input {
+            width: 64px;
+            background: transparent;
+            border: 1px solid var(--divider);
+            border-radius: 5px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 4px 6px;
+            text-align: right;
+            outline: none;
+            transition: border-color 0.15s;
+            -moz-appearance: textfield;
+        }
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .qty-input:focus { border-color: #f0c040; }
+        [data-theme="light"] .qty-input { color: var(--text); }
+
+        .rate-val {
+            font-size: 1rem; font-weight: 700; color: var(--rate);
+            font-variant-numeric: tabular-nums; text-align: right;
+        }
+        .rate-label-small {
+            font-size: 10px; color: var(--rate-label);
+            text-align: right; text-transform: uppercase;
+            letter-spacing: 0.4px; margin-top: 1px;
         }
 
-        .currency-full {
-            font-size: 11px;
-            color: var(--text3);
-            margin-top: 1px;
-        }
-
-        .rate-value { text-align: right; }
-
-        .rate-number {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--rate);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .rate-label {
-            font-size: 10px;
-            color: var(--rate-label);
-            margin-top: 1px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Empty / loading */
-        .board-empty {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text3);
-        }
+        /* Empty */
+        .board-empty { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--text3); }
         .board-empty h3 { font-size: 1.1rem; color: var(--text2); margin-bottom: 0.4rem; }
 
         /* Footer */
         .board-footer {
-            background: var(--footer-bg);
-            border-top: 1px solid var(--footer-border);
-            padding: 0.9rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
+            background: var(--footer-bg); border-top: 1px solid var(--footer-border);
+            padding: 0.85rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
         }
-
         .footer-note { font-size: 12px; color: var(--text4); }
         .footer-time { font-size: 12px; color: var(--text3); }
 
         /* Responsive */
         @media (max-width: 600px) {
             .board-header { padding: 0.85rem 1rem; }
-            .brand-name { font-size: 1.3rem; }
-            .brand-icon { width: 36px; height: 36px; font-size: 12px; }
-
-            .rate-header { padding: 0.6rem 1rem; }
-            .rate-header span { font-size: 10px; letter-spacing: 0.8px; }
-
-            .currency-row { padding: 0.75rem 1rem; grid-template-columns: 1fr 1fr 1fr; }
-
-            .currency-flag { width: 34px; height: 34px; font-size: 10px; border-radius: 7px; }
-            .currency-code { font-size: 0.92rem; }
+            .brand-name { font-size: 1.2rem; }
+            .currency-grid { grid-template-columns: 1fr; }
+            .currency-row.left-col { border-right: none; }
+            .col-header { grid-template-columns: 1fr; }
+            .col-header-half:first-child { border-right: none; border-bottom: 1px solid var(--col-border); }
             .currency-full { display: none; }
-            .currency-name { gap: 8px; }
-
-            .rate-number { font-size: 1rem; }
-            .rate-label { font-size: 9px; }
-
-            .live-badge span { display: none; }
-            .live-badge { padding: 6px 10px; }
-            .theme-toggle span { display: none; }
-            .theme-toggle { padding: 6px 10px; }
-
-            .board-footer { padding: 0.75rem 1rem; }
-            .footer-note { font-size: 11px; }
-        }
-
-        @media (max-width: 380px) {
-            .currency-flag { display: none; }
-            .rate-number { font-size: 0.95rem; }
-            .back-btn span { display: none; }
-            .back-btn { padding: 6px 10px; }
+            .live-badge span, .theme-toggle span, .back-btn span { display: none; }
         }
     </style>
 </head>
@@ -352,23 +258,26 @@
         </div>
     </div>
     <div class="header-right">
-        <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
-            🌙 <span>Dark Mode</span>
-        </div>
-        <div class="live-badge">
-            <div class="live-dot"></div>
-            <span>Live Rates</span>
-        </div>
+        <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ <span>Light Mode</span></div>
+        <div class="live-badge"><div class="live-dot"></div><span>Live Rates</span></div>
     </div>
 </div>
 
-<div class="rate-header">
-    <span>Currency</span>
-    <span>We Buy</span>
-    <span>We Sell</span>
+<div class="subtitle-bar">
+    <span>Today's Rates</span>
+    <span id="rateCount"></span>
 </div>
 
-<div class="currency-list" id="currencyList">
+<div class="col-header">
+    <div class="col-header-half">
+        <span>Currency</span><span class="right">Qty</span><span class="right">We Buy</span><span class="right">We Sell</span>
+    </div>
+    <div class="col-header-half">
+        <span>Currency</span><span class="right">Qty</span><span class="right">We Buy</span><span class="right">We Sell</span>
+    </div>
+</div>
+
+<div class="currency-grid" id="currencyGrid">
     <div class="board-empty"><h3>Loading rates...</h3></div>
 </div>
 
@@ -378,15 +287,38 @@
 </div>
 
 <script>
-const CURRENCY_NAMES = {
-    USD: "US Dollar", EUR: "Euro", GBP: "British Pound",
-    JPY: "Japanese Yen", AED: "UAE Dirham", SGD: "Singapore Dollar",
-    AUD: "Australian Dollar", CAD: "Canadian Dollar", CHF: "Swiss Franc",
-    INR: "Indian Rupee", SAR: "Saudi Riyal", KWD: "Kuwaiti Dinar",
-    BHD: "Bahraini Dinar", QAR: "Qatari Riyal", OMR: "Omani Rial",
-    MYR: "Malaysian Ringgit", HKD: "Hong Kong Dollar",
-    CNY: "Chinese Yuan", ZAR: "South African Rand", THB: "Thai Baht"
+const CURRENCY_INFO = {
+    USD:{name:"US Dollar",        cc:"us"},
+    EUR:{name:"Euro",             cc:"eu"},
+    GBP:{name:"British Pound",    cc:"gb"},
+    JPY:{name:"Japanese Yen",     cc:"jp"},
+    AED:{name:"UAE Dirham",       cc:"ae"},
+    SGD:{name:"Singapore Dollar", cc:"sg"},
+    AUD:{name:"Australian Dollar",cc:"au"},
+    CAD:{name:"Canadian Dollar",  cc:"ca"},
+    CHF:{name:"Swiss Franc",      cc:"ch"},
+    INR:{name:"Indian Rupee",     cc:"in"},
+    SAR:{name:"Saudi Riyal",      cc:"sa"},
+    KWD:{name:"Kuwaiti Dinar",    cc:"kw"},
+    BHD:{name:"Bahraini Dinar",   cc:"bh"},
+    QAR:{name:"Qatari Riyal",     cc:"qa"},
+    OMR:{name:"Omani Rial",       cc:"om"},
+    MYR:{name:"Malaysian Ringgit",cc:"my"},
+    HKD:{name:"Hong Kong Dollar", cc:"hk"},
+    CNY:{name:"Chinese Yuan",     cc:"cn"},
+    ZAR:{name:"South African Rand",cc:"za"},
+    THB:{name:"Thai Baht",        cc:"th"},
+    NZD:{name:"New Zealand Dollar",cc:"nz"},
+    NOK:{name:"Norwegian Krone",  cc:"no"},
+    SEK:{name:"Swedish Krona",    cc:"se"},
+    DKK:{name:"Danish Krone",     cc:"dk"},
 };
+
+function flagImg(code) {
+    const info = CURRENCY_INFO[code];
+    const cc = info ? info.cc : "un";
+    return `<img class="flag-img" src="https://flagcdn.com/w40/${cc}.png" alt="${code}" onerror="this.style.display='none'">`;
+}
 
 // Theme
 let theme = localStorage.getItem("boards-theme") || "dark";
@@ -399,10 +331,7 @@ function applyTheme(t) {
     const btn = document.getElementById("themeBtn");
     if (btn) btn.innerHTML = t === "dark" ? '☀️ <span>Light Mode</span>' : '🌙 <span>Dark Mode</span>';
 }
-
-function toggleTheme() {
-    applyTheme(theme === "dark" ? "light" : "dark");
-}
+function toggleTheme() { applyTheme(theme === "dark" ? "light" : "dark"); }
 
 async function loadRates() {
     try {
@@ -410,41 +339,55 @@ async function loadRates() {
         if (!res.ok) throw new Error();
         const data = await res.json();
         render(data);
-        document.getElementById("lastUpdated").textContent =
-            "Updated: " + new Date().toLocaleTimeString();
+        document.getElementById("lastUpdated").textContent = "Updated: " + new Date().toLocaleTimeString();
+        document.getElementById("rateCount").textContent = data.length + " Currenc" + (data.length === 1 ? "y" : "ies");
     } catch {
-        document.getElementById("currencyList").innerHTML =
-            `<div class="board-empty"><h3>Unable to load rates</h3><p>Please try again later.</p></div>`;
+        document.getElementById("currencyGrid").innerHTML =
+            `<div class="board-empty"><h3>Unable to load rates</h3></div>`;
     }
 }
 
 function render(data) {
-    const list = document.getElementById("currencyList");
-
+    const grid = document.getElementById("currencyGrid");
     if (data.length === 0) {
-        list.innerHTML = `<div class="board-empty"><h3>No rates available yet</h3><p>Check back soon.</p></div>`;
+        grid.innerHTML = `<div class="board-empty"><h3>No rates available yet</h3></div>`;
         return;
     }
 
-    list.innerHTML = data.map((c, i) => `
-        <div class="currency-row" style="animation-delay:${i * 0.05}s">
-            <div class="currency-name">
-                <div class="currency-flag">${c.currency.slice(0,3)}</div>
+    // Items fill left col first then right col:
+    // index 0 → left row1, index 1 → right row1, index 2 → left row2 ...
+    // CSS grid auto-fills left-to-right so this is natural.
+    const half = Math.ceil(data.length / 2);
+
+    grid.innerHTML = data.map((c, i) => {
+        const info = CURRENCY_INFO[c.currency] || { name: c.currency, cc: "un" };
+        const isGBP = c.currency === "GBP";
+        // left column items: indices 0,2,4... → add left-col class for right border
+        const isLeft = i % 2 === 0;
+        return `
+        <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}" style="animation-delay:${i*0.04}s">
+            <div class="currency-name-cell">
+                ${flagImg(c.currency)}
                 <div>
                     <div class="currency-code">${c.currency}</div>
-                    <div class="currency-full">${CURRENCY_NAMES[c.currency] || ''}</div>
+                    <div class="currency-full">${info.name}</div>
                 </div>
             </div>
-            <div class="rate-value">
-                <div class="rate-number">${c.buyingRate.toFixed(c.decimals)}</div>
-                <div class="rate-label">We Buy</div>
+            <div style="text-align:right;">
+                <input class="qty-input" type="number" min="1" step="1" value="1"
+                    onkeypress="return event.charCode>=48&&event.charCode<=57"
+                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
             </div>
-            <div class="rate-value">
-                <div class="rate-number">${c.sellingRate.toFixed(c.decimals)}</div>
-                <div class="rate-label">We Sell</div>
+            <div>
+                <div class="rate-val">${c.buyingRate.toFixed(c.decimals)}</div>
+                <div class="rate-label-small">Buy</div>
             </div>
-        </div>
-    `).join("");
+            <div>
+                <div class="rate-val">${c.sellingRate.toFixed(c.decimals)}</div>
+                <div class="rate-label-small">Sell</div>
+            </div>
+        </div>`;
+    }).join("");
 }
 
 loadRates();
