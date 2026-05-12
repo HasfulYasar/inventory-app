@@ -8,34 +8,25 @@
 </head>
 <body>
 <div class="auth-container">
-    <div class="card">
-        <div style="text-align:center;margin-bottom:1.5rem;">
-            <div style="font-size:2rem;font-weight:900;color:#f0c040;letter-spacing:2px;">SHOWCASH</div>
-            <div style="font-size:13px;color:#888;margin-top:4px;">Sign in to manage rates</div>
+    <div class="auth-box">
+        <img src="/logo.png" alt="SHOWCASH" class="auth-logo">
+        <div class="auth-card">
+            <h2>Sign in to your account</h2>
+            <form onsubmit="login(event)">
+                <input class="input" type="text" id="username" placeholder="Username" required>
+                <input class="input" type="password" id="password" placeholder="Password" required>
+                <div id="error-msg" class="error-msg" style="display:none;"></div>
+                <button class="btn-gold-full" type="submit">Login</button>
+            </form>
+            <p class="auth-link">No account? <a href="/signup">Sign up</a></p>
         </div>
-
-        <form id="loginForm" onsubmit="login(event)">
-            <div class="field">
-                <label class="field-label">Username</label>
-                <input class="input" type="text" id="username" placeholder="Enter username" required>
-            </div>
-            <div class="field">
-                <label class="field-label">Password</label>
-                <input class="input" type="password" id="password" placeholder="Enter password" required>
-            </div>
-            <div id="error-msg" class="error-msg" style="display:none;margin-bottom:10px;"></div>
-            <button class="btn btn-gold full-width" type="submit">Sign In</button>
-        </form>
-        <p class="auth-link">No account? <a href="/signup">Sign up</a></p>
     </div>
 </div>
-
 <script>
 async function login(e) {
     e.preventDefault();
     const errorEl = document.getElementById("error-msg");
     errorEl.style.display = "none";
-
     try {
         const res = await fetch("/api/login", {
             method: "POST",

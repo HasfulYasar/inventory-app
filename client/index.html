@@ -5,28 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .flag-img {
-            width: 28px;
-            height: 20px;
-            border-radius: 3px;
-            object-fit: cover;
-            vertical-align: middle;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
-        .currency-cell {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .actions-cell {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            flex-wrap: nowrap;
-        }
-    </style>
 </head>
 <body>
 <div class="container">
@@ -64,44 +42,27 @@
 <script src="navbar.js"></script>
 <script>
 const CURRENCY_COUNTRY = {
-    USD:"us", GBP:"gb", JPY:"jp", EUR:"eu", AUD:"au", SGD:"sg",
-    HKD:"hk", CAD:"ca", CHF:"ch", NZD:"nz", TWD:"tw", KRW:"kr",
-    INR:"in", DKK:"dk", SEK:"se", NOK:"no", ZAR:"za", THB:"th",
-    CNY:"cn", IDR:"id", SAR:"sa", MYR:"my", PHP:"ph", PKR:"pk",
-    VND:"vn", OMR:"om", JOD:"jo", AED:"ae", BHD:"bh", BND:"bn",
-    EGP:"eg", QAR:"qa", KWD:"kw", LKR:"lk", BDT:"bd", MOP:"mo",
-    SCR:"sc", IQD:"iq", TRY:"tr", RUB:"ru"
+    USD:"us",GBP:"gb",JPY:"jp",EUR:"eu",AUD:"au",SGD:"sg",HKD:"hk",
+    CAD:"ca",CHF:"ch",NZD:"nz",TWD:"tw",KRW:"kr",INR:"in",THB:"th",
+    CNY:"cn",IDR:"id",SAR:"sa",MYR:"my",PHP:"ph",VND:"vn",AED:"ae",
+    BND:"bn",TRY:"tr",DKK:"dk",SEK:"se",NOK:"no",ZAR:"za",PKR:"pk",
+    OMR:"om",JOD:"jo",BHD:"bh",EGP:"eg",QAR:"qa",KWD:"kw",LKR:"lk",
+    BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru"
 };
-
-const CURRENCY_LIST = [
-    "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
-    "TWD","KRW","INR","DKK","SEK","NOK","ZAR","THB","CNY","IDR",
-    "SAR","MYR","PHP","PKR","VND","OMR","JOD","AED","BHD","BND",
-    "EGP","QAR","KWD","LKR","BDT","MOP","SCR","IQD","TRY","RUB"
-];
 
 const errorMsg = document.getElementById("error-msg");
 let editingId = null;
+let allData = [];
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
 
-function flagCell(code) {
+function flagImg(code) {
     const cc = CURRENCY_COUNTRY[code] || "un";
-    return `
-        <div class="currency-cell">
-            <img class="flag-img"
-                src="https://flagcdn.com/w40/${cc}.png"
-                alt="${code}"
-                onerror="this.style.display='none'">
-            <strong>${code}</strong>
-        </div>`;
+    return `<img class="flag-img" src="https://flagcdn.com/w40/${cc}.png" alt="${code}" onerror="this.style.display='none'">`;
 }
-
-function currencyOptions(selected) {
-    return CURRENCY_LIST.map(c =>
-        `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`
-    ).join('');
+function flagCell(code) {
+    return `<div class="currency-cell">${flagImg(code)}<strong>${code}</strong></div>`;
 }
 
 async function loadCurrencies() {
@@ -109,43 +70,39 @@ async function loadCurrencies() {
         const res = await fetch("/api/currencies", { credentials: "include" });
         if (res.status === 401) { window.location.href = "/login"; return; }
         if (!res.ok) throw new Error();
-        const data = await res.json();
+        allData = await res.json();
         hideError();
-        renderTable(data);
+        renderTable();
     } catch {
         showError("Could not load currencies. Please refresh.");
     }
 }
 
-function renderTable(data) {
+function renderTable() {
     const tbody = document.getElementById("tableBody");
-    if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet. <a href="/add-currency">Add one →</a></td></tr>`;
+    if (allData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
         return;
     }
 
     let rows = "";
-    data.forEach((c, i) => {
+    allData.forEach((c, i) => {
         if (editingId === c.id) {
             rows += `
             <tr class="edit-row">
                 <td>${i + 1}</td>
-                <td>
-                    <select id="e-currency" class="input" style="min-width:90px;">
-                        ${currencyOptions(c.currency)}
-                    </select>
-                </td>
+                <td>${flagCell(c.currency)}</td>
                 <td><input class="input" id="e-buying" type="number" value="${c.buyingRate}" step="any" min="0"></td>
                 <td><input class="input" id="e-selling" type="number" value="${c.sellingRate}" step="any" min="0"></td>
                 <td>
                     <select id="e-decimals" class="input" style="min-width:65px;">
-                        ${[0,1,2,3,4].map(d => `<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
+                        ${[0,1,2,3,4].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
                 <td>
                     <div class="actions-cell">
-                        <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id})">Save</button>
+                        <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id},'${c.currency}',${c.unit})">Save</button>
                         <button class="btn btn-secondary btn-xs" onclick="cancelEdit()">Cancel</button>
                     </div>
                 </td>
@@ -172,27 +129,24 @@ function renderTable(data) {
     tbody.innerHTML = rows;
 }
 
-function startEdit(id) { editingId = id; loadCurrencies(); }
-function cancelEdit()  { editingId = null; loadCurrencies(); }
+function startEdit(id) { editingId = id; renderTable(); }
+function cancelEdit()  { editingId = null; renderTable(); }
 
-async function saveEdit(id) {
-    const currency    = document.getElementById("e-currency").value;
+async function saveEdit(id, currency, unit) {
     const buyingRate  = parseFloat(document.getElementById("e-buying").value);
     const sellingRate = parseFloat(document.getElementById("e-selling").value);
     const decimals    = parseInt(document.getElementById("e-decimals").value);
-    if (!currency || isNaN(buyingRate) || isNaN(sellingRate)) {
-        showError("Please fill in all fields correctly."); return;
-    }
+    if (isNaN(buyingRate) || isNaN(sellingRate)) { showError("Please fill in all fields."); return; }
     try {
         const res = await fetch(`/api/currencies/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ currency, unit: 1, buyingRate, sellingRate, decimals })
+            body: JSON.stringify({ currency, unit, buyingRate, sellingRate, decimals })
         });
-        if (!res.ok) { const d = await res.json(); showError(d.error || "Failed to save"); return; }
+        if (!res.ok) { const d = await res.json(); showError(d.error || "Failed"); return; }
         editingId = null; loadCurrencies();
-    } catch { showError("Could not save changes. Please try again."); }
+    } catch { showError("Could not save. Please try again."); }
 }
 
 async function toggleCurrency(id) {
@@ -200,7 +154,7 @@ async function toggleCurrency(id) {
         const res = await fetch(`/api/currencies/${id}/toggle`, { method: "POST", credentials: "include" });
         if (!res.ok) throw new Error();
         loadCurrencies();
-    } catch { showError("Could not toggle currency."); }
+    } catch { showError("Could not toggle."); }
 }
 
 async function deleteCurrency(id) {
@@ -209,7 +163,7 @@ async function deleteCurrency(id) {
         const res = await fetch(`/api/currencies/${id}`, { method: "DELETE", credentials: "include" });
         if (!res.ok) throw new Error();
         loadCurrencies();
-    } catch { showError("Could not delete. Please try again."); }
+    } catch { showError("Could not delete."); }
 }
 
 loadCurrencies();

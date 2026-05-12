@@ -21,7 +21,9 @@ async function initPage() {
         const nav = document.createElement("nav");
         nav.className = "navbar";
         nav.innerHTML = `
-            <a href="/" class="nav-brand">SHOWCASH</a>
+            <a href="/" class="nav-brand">
+                <img src="/logo.png" alt="SHOWCASH" class="nav-logo">
+            </a>
             <div class="nav-links">${links}${boardsLink}</div>
             <div class="nav-right">
                 <span class="nav-user">Hi, ${data.username}</span>

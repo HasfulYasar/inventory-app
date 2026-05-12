@@ -8,34 +8,25 @@
 </head>
 <body>
 <div class="auth-container">
-    <div class="card">
-        <div style="text-align:center;margin-bottom:1.5rem;">
-            <div style="font-size:2rem;font-weight:900;color:#f0c040;letter-spacing:2px;">SHOWCASH</div>
-            <div style="font-size:13px;color:#888;margin-top:4px;">Create your admin account</div>
+    <div class="auth-box">
+        <img src="/logo.png" alt="SHOWCASH" class="auth-logo">
+        <div class="auth-card">
+            <h2>Create your account</h2>
+            <form onsubmit="signup(event)">
+                <input class="input" type="text" id="username" placeholder="Username" required>
+                <input class="input" type="password" id="password" placeholder="Password (min 6 chars)" required minlength="6">
+                <div id="error-msg" class="error-msg" style="display:none;"></div>
+                <button class="btn-gold-full" type="submit">Sign Up</button>
+            </form>
+            <p class="auth-link">Already have an account? <a href="/login">Sign in</a></p>
         </div>
-
-        <form id="signupForm" onsubmit="signup(event)">
-            <div class="field">
-                <label class="field-label">Username</label>
-                <input class="input" type="text" id="username" placeholder="Choose a username" required>
-            </div>
-            <div class="field">
-                <label class="field-label">Password</label>
-                <input class="input" type="password" id="password" placeholder="Min 6 characters" required minlength="6">
-            </div>
-            <div id="error-msg" class="error-msg" style="display:none;margin-bottom:10px;"></div>
-            <button class="btn btn-gold full-width" type="submit">Create Account</button>
-        </form>
-        <p class="auth-link">Already have an account? <a href="/login">Sign in</a></p>
     </div>
 </div>
-
 <script>
 async function signup(e) {
     e.preventDefault();
     const errorEl = document.getElementById("error-msg");
     errorEl.style.display = "none";
-
     try {
         const res = await fetch("/api/signup", {
             method: "POST",
