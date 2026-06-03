@@ -12,63 +12,31 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-# Primary 23 currencies always shown in main table
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
     "TWD","KRW","INR","THB","CNY","IDR","SAR","MYR","PHP","VND",
     "AED","BND","TRY","RUB"
 ]
 
-# All remaining currencies shown in carousel
 ALL_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
     "TWD","KRW","INR","THB","CNY","IDR","SAR","MYR","PHP","VND",
-    "AED","BND","TRY",
+    "AED","BND","TRY","RUB",
     "DKK","SEK","NOK","ZAR","PKR","OMR","JOD","BHD","EGP","QAR",
-    "KWD","LKR","BDT","MOP","SCR","IQD","RUB"
+    "KWD","LKR","BDT","MOP","SCR","IQD"
 ]
 
 DEFAULT_RATES = {
-    "USD": (1,   0.00, 0.00, 2),
-    "GBP": (1,   0.00, 0.00, 2),
-    "JPY": (100, 0.00, 0.00, 2),
-    "EUR": (1,   0.00, 0.00, 2),
-    "AUD": (1,   0.00, 0.00, 2),
-    "SGD": (1,   0.00, 0.00, 2),
-    "HKD": (10,  0.00, 0.00, 2),
-    "CAD": (1,   0.00, 0.00, 2),
-    "CHF": (1,   0.00, 0.00, 2),
-    "NZD": (1,   0.00, 0.00, 2),
-    "TWD": (100, 0.00, 0.00, 2),
-    "KRW": (100, 0.00, 0.00, 2),
-    "INR": (1,   0.00, 0.00, 2),
-    "THB": (100, 0.00, 0.00, 2),
-    "CNY": (10,  0.00, 0.00, 2),
-    "IDR": (100, 0.00, 0.00, 2),
-    "SAR": (1,   0.00, 0.00, 2),
-    "MYR": (1,   0.00, 0.00, 2),
-    "PHP": (100, 0.00, 0.00, 2),
-    "VND": (100, 0.00, 0.00, 2),
-    "AED": (1,   0.00, 0.00, 2),
-    "BND": (1,   0.00, 0.00, 2),
-    "TRY": (1,   0.00, 0.00, 2),
-    "DKK": (10,  0.00, 0.00, 2),
-    "SEK": (10,  0.00, 0.00, 2),
-    "NOK": (10,  0.00, 0.00, 2),
-    "ZAR": (10,  0.00, 0.00, 2),
-    "PKR": (100, 0.00, 0.00, 2),
-    "OMR": (1,   0.00, 0.00, 2),
-    "JOD": (1,   0.00, 0.00, 2),
-    "BHD": (1,   0.00, 0.00, 2),
-    "EGP": (10,  0.00, 0.00, 2),
-    "QAR": (1,   0.00, 0.00, 2),
-    "KWD": (1,   0.00, 0.00, 2),
-    "LKR": (100, 0.00, 0.00, 2),
-    "BDT": (100, 0.00, 0.00, 2),
-    "MOP": (10,  0.00, 0.00, 2),
-    "SCR": (10,  0.00, 0.00, 2),
-    "IQD": (100, 0.00, 0.00, 2),
-    "RUB": (100, 0.00, 0.00, 2),
+    "USD":(1,0,0,2),"GBP":(1,0,0,2),"JPY":(100,0,0,2),"EUR":(1,0,0,2),
+    "AUD":(1,0,0,2),"SGD":(1,0,0,2),"HKD":(10,0,0,2),"CAD":(1,0,0,2),
+    "CHF":(1,0,0,2),"NZD":(1,0,0,2),"TWD":(100,0,0,2),"KRW":(100,0,0,2),
+    "INR":(1,0,0,2),"THB":(100,0,0,2),"CNY":(10,0,0,2),"IDR":(100,0,0,2),
+    "SAR":(1,0,0,2),"MYR":(1,0,0,2),"PHP":(100,0,0,2),"VND":(100,0,0,2),
+    "AED":(1,0,0,2),"BND":(1,0,0,2),"TRY":(1,0,0,2),"RUB":(100,0,0,2),
+    "DKK":(10,0,0,2),"SEK":(10,0,0,2),"NOK":(10,0,0,2),"ZAR":(10,0,0,2),
+    "PKR":(100,0,0,2),"OMR":(1,0,0,2),"JOD":(1,0,0,2),"BHD":(1,0,0,2),
+    "EGP":(10,0,0,2),"QAR":(1,0,0,2),"KWD":(1,0,0,2),"LKR":(100,0,0,2),
+    "BDT":(100,0,0,2),"MOP":(10,0,0,2),"SCR":(10,0,0,2),"IQD":(100,0,0,2),
 }
 
 
@@ -93,7 +61,9 @@ def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                email TEXT NOT NULL DEFAULT '',
+                display_name TEXT NOT NULL DEFAULT ''
             )
         ''')
         db.execute('''
@@ -110,25 +80,33 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
+        # Migrations for existing DBs
         for col, defn in [
-            ("unit",       "INTEGER NOT NULL DEFAULT 1"),
-            ("user_id",    "INTEGER NOT NULL DEFAULT 0"),
-            ("sort_order", "INTEGER NOT NULL DEFAULT 999"),
+            ("unit",         "INTEGER NOT NULL DEFAULT 1"),
+            ("user_id",      "INTEGER NOT NULL DEFAULT 0"),
+            ("sort_order",   "INTEGER NOT NULL DEFAULT 999"),
         ]:
             try:
                 db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
+            except Exception:
+                pass
+        for col, defn in [
+            ("email",        "TEXT NOT NULL DEFAULT ''"),
+            ("display_name", "TEXT NOT NULL DEFAULT ''"),
+        ]:
+            try:
+                db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
             except Exception:
                 pass
         db.commit()
 
 
 def seed_currencies(user_id):
-    """Insert all default currencies for a new user."""
     db = get_db()
     for i, code in enumerate(ALL_CURRENCIES):
-        unit, buy, sell, dec = DEFAULT_RATES.get(code, (1, 0.00, 0.00, 2))
+        unit, buy, sell, dec = DEFAULT_RATES.get(code, (1,0,0,2))
         db.execute(
-            "INSERT INTO currencies (user_id, currency, unit, buying_rate, selling_rate, decimals, active, sort_order) VALUES (?,?,?,?,?,?,1,?)",
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,?)",
             (user_id, code, unit, buy, sell, dec, i)
         )
     db.commit()
@@ -170,6 +148,10 @@ def add_currency_page():
 def boards_page():
     return send_from_directory(CLIENT_DIR, "boards.html")
 
+@app.route("/account")
+def account_page():
+    return send_from_directory(CLIENT_DIR, "account.html")
+
 @app.route("/<path:path>")
 def serve_static(path):
     return send_from_directory(CLIENT_DIR, path)
@@ -191,8 +173,7 @@ def signup():
     try:
         cur = db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
         db.commit()
-        new_user_id = cur.lastrowid
-        seed_currencies(new_user_id)
+        seed_currencies(cur.lastrowid)
         return jsonify({"message": "Account created"})
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username already exists"}), 400
@@ -210,7 +191,6 @@ def login_user():
     if user and check_password_hash(user["password"], password):
         session["user_id"] = user["id"]
         session["username"] = user["username"]
-        # Seed currencies if user has none (existing accounts)
         count = db.execute("SELECT COUNT(*) FROM currencies WHERE user_id=?", (user["id"],)).fetchone()[0]
         if count == 0:
             seed_currencies(user["id"])
@@ -227,8 +207,55 @@ def logout():
 @app.route("/api/me")
 def me():
     if session.get("user_id"):
-        return jsonify({"id": session["user_id"], "username": session["username"]})
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
+        return jsonify({
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"] if user["email"] else "",
+            "displayName": user["display_name"] if user["display_name"] else ""
+        })
     return jsonify({"error": "Not logged in"}), 401
+
+
+# ── Account API ──
+
+@app.route("/api/account/profile", methods=["PUT"])
+@login_required
+def update_profile():
+    data = request.json or {}
+    email        = data.get("email", "").strip()
+    display_name = data.get("displayName", "").strip()
+    db = get_db()
+    db.execute(
+        "UPDATE users SET email=?, display_name=? WHERE id=?",
+        (email, display_name, current_user_id())
+    )
+    db.commit()
+    return jsonify({"message": "Profile updated"})
+
+
+@app.route("/api/account/password", methods=["PUT"])
+@login_required
+def change_password():
+    data = request.json or {}
+    current  = data.get("currentPassword", "").strip()
+    new_pass = data.get("newPassword", "").strip()
+    confirm  = data.get("confirmPassword", "").strip()
+    if not current or not new_pass or not confirm:
+        return jsonify({"error": "All fields are required"}), 400
+    if new_pass != confirm:
+        return jsonify({"error": "New passwords do not match"}), 400
+    if len(new_pass) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id=?", (current_user_id(),)).fetchone()
+    if not check_password_hash(user["password"], current):
+        return jsonify({"error": "Current password is incorrect"}), 401
+    db.execute("UPDATE users SET password=? WHERE id=?",
+               (generate_password_hash(new_pass), current_user_id()))
+    db.commit()
+    return jsonify({"message": "Password changed successfully"})
 
 
 # ── Currencies API ──
@@ -273,6 +300,42 @@ def get_public_currencies():
     return jsonify([row_to_dict(r) for r in rows])
 
 
+@app.route("/api/currencies", methods=["POST"])
+@login_required
+def add_currency():
+    data = request.json or {}
+    currency     = data.get("currency", "").strip()
+    unit         = data.get("unit", 1)
+    buying_rate  = data.get("buyingRate")
+    selling_rate = data.get("sellingRate")
+    decimals     = data.get("decimals", 2)
+    if not currency or buying_rate is None or selling_rate is None:
+        return jsonify({"error": "All fields are required"}), 400
+    try:
+        unit = int(unit); buying_rate = float(buying_rate)
+        selling_rate = float(selling_rate); decimals = int(decimals)
+        if unit < 1: raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid values"}), 400
+    db = get_db()
+    existing = db.execute(
+        "SELECT id FROM currencies WHERE user_id=? AND currency=?",
+        (current_user_id(), currency)
+    ).fetchone()
+    if existing:
+        db.execute(
+            "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=? AND user_id=?",
+            (unit, buying_rate, selling_rate, decimals, existing["id"], current_user_id())
+        )
+    else:
+        db.execute(
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,999)",
+            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals)
+        )
+    db.commit()
+    return jsonify({"message": "Currency saved"}), 201
+
+
 @app.route("/api/currencies/<int:cid>", methods=["PUT"])
 @login_required
 def update_currency(cid):
@@ -285,10 +348,8 @@ def update_currency(cid):
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
     try:
-        unit         = int(unit)
-        buying_rate  = float(buying_rate)
-        selling_rate = float(selling_rate)
-        decimals     = int(decimals)
+        unit = int(unit); buying_rate = float(buying_rate)
+        selling_rate = float(selling_rate); decimals = int(decimals)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
     db = get_db()
