@@ -5,6 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .floating-save {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #f0c040;
+            color: #1a1a2e;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 12px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            z-index: 200;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .floating-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        #addRow select#add-currency { min-width: 150px; }
+        #addRow .actions-cell { display: flex; gap: 6px; align-items: center; }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -13,7 +37,7 @@
             <h2>Home</h2>
             <p>Manage and control your currency rates</p>
         </div>
-        <a href="/add-currency" class="btn btn-gold">+ Add Currency</a>
+        <button class="btn btn-gold" id="editBtn" onclick="toggleAddRow()">✎ Edit</button>
     </div>
 
     <div class="card">
@@ -39,6 +63,8 @@
     </div>
 </div>
 
+<button class="floating-save" id="floatingSave" style="display:none;" onclick="saveNewCurrency()">💾 Save</button>
+
 <script src="navbar.js"></script>
 <script>
 const CURRENCY_COUNTRY = {
@@ -50,9 +76,23 @@ const CURRENCY_COUNTRY = {
     BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru"
 };
 
+const CURRENCY_NAMES = {
+    USD:"US Dollar",GBP:"British Pound",JPY:"Japanese Yen",EUR:"Euro",AUD:"Australian Dollar",
+    SGD:"Singapore Dollar",HKD:"Hong Kong Dollar",CAD:"Canadian Dollar",CHF:"Swiss Franc",
+    NZD:"New Zealand Dollar",TWD:"Taiwan Dollar",KRW:"South Korean Won",INR:"Indian Rupee",
+    THB:"Thai Baht",CNY:"Chinese Yuan",IDR:"Indonesian Rupiah",SAR:"Saudi Riyal",
+    MYR:"Malaysian Ringgit",PHP:"Philippine Peso",VND:"Vietnamese Dong",AED:"UAE Dirham",
+    BND:"Brunei Dollar",TRY:"Turkish Lira",DKK:"Danish Krone",SEK:"Swedish Krona",
+    NOK:"Norwegian Krone",ZAR:"South African Rand",PKR:"Pakistani Rupee",OMR:"Omani Rial",
+    JOD:"Jordanian Dinar",BHD:"Bahraini Dinar",EGP:"Egyptian Pound",QAR:"Qatari Riyal",
+    KWD:"Kuwaiti Dinar",LKR:"Sri Lankan Rupee",BDT:"Bangladeshi Taka",MOP:"Macanese Pataca",
+    SCR:"Seychellois Rupee",IQD:"Iraqi Dinar",RUB:"Russian Ruble"
+};
+
 const errorMsg = document.getElementById("error-msg");
 let editingId = null;
 let allData = [];
+let addModeActive = false;
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
@@ -78,14 +118,86 @@ async function loadCurrencies() {
     }
 }
 
-function renderTable() {
-    const tbody = document.getElementById("tableBody");
-    if (allData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
+function addRowHtml() {
+    const options = Object.keys(CURRENCY_NAMES)
+        .map(code => `<option value="${code}">${code} — ${CURRENCY_NAMES[code]}</option>`)
+        .join("");
+    return `
+    <tr class="edit-row" id="addRow">
+        <td>—</td>
+        <td>
+            <select class="input" id="add-currency">${options}</select>
+        </td>
+        <td><input class="input" id="add-buying" type="number" placeholder="e.g. 83.50" step="any" min="0"></td>
+        <td><input class="input" id="add-selling" type="number" placeholder="e.g. 84.20" step="any" min="0"></td>
+        <td>
+            <select id="add-decimals" class="input" style="min-width:65px;">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </td>
+        <td><span class="badge-off">NEW</span></td>
+        <td>
+            <div class="actions-cell">
+                <input class="input" id="add-unit" type="number" value="1" min="1" step="1" style="width:60px;" title="Unit">
+                <button class="btn btn-secondary btn-xs" onclick="toggleAddRow()">Cancel</button>
+            </div>
+        </td>
+    </tr>`;
+}
+
+function toggleAddRow() {
+    addModeActive = !addModeActive;
+    document.getElementById("floatingSave").style.display = addModeActive ? "block" : "none";
+    document.getElementById("editBtn").textContent = addModeActive ? "✕ Cancel" : "✎ Edit";
+    renderTable();
+}
+
+async function saveNewCurrency() {
+    const currency    = document.getElementById("add-currency").value;
+    const unit        = parseInt(document.getElementById("add-unit").value) || 1;
+    const buyingRate  = parseFloat(document.getElementById("add-buying").value);
+    const sellingRate = parseFloat(document.getElementById("add-selling").value);
+    const decimals    = parseInt(document.getElementById("add-decimals").value);
+
+    if (isNaN(buyingRate) || isNaN(sellingRate)) {
+        showError("Please fill in the buying and selling rates.");
         return;
     }
 
-    let rows = "";
+    try {
+        const res = await fetch("/api/currencies", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ currency, unit, buyingRate, sellingRate, decimals })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            hideError();
+            toggleAddRow();
+            loadCurrencies();
+        } else {
+            showError(data.error || "Failed to add currency");
+        }
+    } catch {
+        showError("Could not reach server. Please try again.");
+    }
+}
+
+function renderTable() {
+    const tbody = document.getElementById("tableBody");
+    const topRow = addModeActive ? addRowHtml() : "";
+
+    if (allData.length === 0) {
+        tbody.innerHTML = topRow || `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
+        return;
+    }
+
+    let rows = topRow;
     allData.forEach((c, i) => {
         if (editingId === c.id) {
             rows += `
