@@ -26,8 +26,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.35);
         }
-        #addRow select#add-currency { min-width: 150px; }
-        #addRow .actions-cell { display: flex; gap: 6px; align-items: center; }
     </style>
 </head>
 <body>
@@ -37,7 +35,7 @@
             <h2>Home</h2>
             <p>Manage and control your currency rates</p>
         </div>
-        <button class="btn btn-gold" id="editBtn" onclick="toggleAddRow()">✎ Edit</button>
+        <button class="btn btn-gold" id="editBtn" onclick="toggleEditMode()">✎ Edit</button>
     </div>
 
     <div class="card">
@@ -63,7 +61,7 @@
     </div>
 </div>
 
-<button class="floating-save" id="floatingSave" style="display:none;" onclick="saveNewCurrency()">💾 Save</button>
+<button class="floating-save" id="floatingSave" style="display:none;" onclick="saveAllChanges()">💾 Save All</button>
 
 <script src="navbar.js"></script>
 <script>
@@ -76,23 +74,9 @@ const CURRENCY_COUNTRY = {
     BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru"
 };
 
-const CURRENCY_NAMES = {
-    USD:"US Dollar",GBP:"British Pound",JPY:"Japanese Yen",EUR:"Euro",AUD:"Australian Dollar",
-    SGD:"Singapore Dollar",HKD:"Hong Kong Dollar",CAD:"Canadian Dollar",CHF:"Swiss Franc",
-    NZD:"New Zealand Dollar",TWD:"Taiwan Dollar",KRW:"South Korean Won",INR:"Indian Rupee",
-    THB:"Thai Baht",CNY:"Chinese Yuan",IDR:"Indonesian Rupiah",SAR:"Saudi Riyal",
-    MYR:"Malaysian Ringgit",PHP:"Philippine Peso",VND:"Vietnamese Dong",AED:"UAE Dirham",
-    BND:"Brunei Dollar",TRY:"Turkish Lira",DKK:"Danish Krone",SEK:"Swedish Krona",
-    NOK:"Norwegian Krone",ZAR:"South African Rand",PKR:"Pakistani Rupee",OMR:"Omani Rial",
-    JOD:"Jordanian Dinar",BHD:"Bahraini Dinar",EGP:"Egyptian Pound",QAR:"Qatari Riyal",
-    KWD:"Kuwaiti Dinar",LKR:"Sri Lankan Rupee",BDT:"Bangladeshi Taka",MOP:"Macanese Pataca",
-    SCR:"Seychellois Rupee",IQD:"Iraqi Dinar",RUB:"Russian Ruble"
-};
-
 const errorMsg = document.getElementById("error-msg");
-let editingId = null;
 let allData = [];
-let addModeActive = false;
+let editModeActive = false;
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
@@ -118,106 +102,29 @@ async function loadCurrencies() {
     }
 }
 
-function addRowHtml() {
-    const options = Object.keys(CURRENCY_NAMES)
-        .map(code => `<option value="${code}">${code} — ${CURRENCY_NAMES[code]}</option>`)
-        .join("");
-    return `
-    <tr class="edit-row" id="addRow">
-        <td>—</td>
-        <td>
-            <select class="input" id="add-currency">${options}</select>
-        </td>
-        <td><input class="input" id="add-buying" type="number" placeholder="e.g. 83.50" step="any" min="0"></td>
-        <td><input class="input" id="add-selling" type="number" placeholder="e.g. 84.20" step="any" min="0"></td>
-        <td>
-            <select id="add-decimals" class="input" style="min-width:65px;">
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-            </select>
-        </td>
-        <td><span class="badge-off">NEW</span></td>
-        <td>
-            <div class="actions-cell">
-                <input class="input" id="add-unit" type="number" value="1" min="1" step="1" style="width:60px;" title="Unit">
-                <button class="btn btn-secondary btn-xs" onclick="toggleAddRow()">Cancel</button>
-            </div>
-        </td>
-    </tr>`;
-}
-
-function toggleAddRow() {
-    addModeActive = !addModeActive;
-    document.getElementById("floatingSave").style.display = addModeActive ? "block" : "none";
-    document.getElementById("editBtn").textContent = addModeActive ? "✕ Cancel" : "✎ Edit";
-    renderTable();
-}
-
-async function saveNewCurrency() {
-    const currency    = document.getElementById("add-currency").value;
-    const unit        = parseInt(document.getElementById("add-unit").value) || 1;
-    const buyingRate  = parseFloat(document.getElementById("add-buying").value);
-    const sellingRate = parseFloat(document.getElementById("add-selling").value);
-    const decimals    = parseInt(document.getElementById("add-decimals").value);
-
-    if (isNaN(buyingRate) || isNaN(sellingRate)) {
-        showError("Please fill in the buying and selling rates.");
-        return;
-    }
-
-    try {
-        const res = await fetch("/api/currencies", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ currency, unit, buyingRate, sellingRate, decimals })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            hideError();
-            toggleAddRow();
-            loadCurrencies();
-        } else {
-            showError(data.error || "Failed to add currency");
-        }
-    } catch {
-        showError("Could not reach server. Please try again.");
-    }
-}
-
 function renderTable() {
     const tbody = document.getElementById("tableBody");
-    const topRow = addModeActive ? addRowHtml() : "";
-
     if (allData.length === 0) {
-        tbody.innerHTML = topRow || `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
         return;
     }
 
-    let rows = topRow;
+    let rows = "";
     allData.forEach((c, i) => {
-        if (editingId === c.id) {
+        if (editModeActive) {
             rows += `
             <tr class="edit-row">
                 <td>${i + 1}</td>
                 <td>${flagCell(c.currency)}</td>
-                <td><input class="input" id="e-buying" type="number" value="${c.buyingRate}" step="any" min="0"></td>
-                <td><input class="input" id="e-selling" type="number" value="${c.sellingRate}" step="any" min="0"></td>
+                <td><input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0"></td>
+                <td><input class="input" id="e-selling-${c.id}" type="number" value="${c.sellingRate}" step="any" min="0"></td>
                 <td>
-                    <select id="e-decimals" class="input" style="min-width:65px;">
+                    <select id="e-decimals-${c.id}" class="input" style="min-width:65px;">
                         ${[0,1,2,3,4].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td>
-                    <div class="actions-cell">
-                        <button class="btn btn-primary btn-xs" onclick="saveEdit(${c.id},'${c.currency}',${c.unit})">Save</button>
-                        <button class="btn btn-secondary btn-xs" onclick="cancelEdit()">Cancel</button>
-                    </div>
-                </td>
+                <td>—</td>
             </tr>`;
         } else {
             rows += `
@@ -230,7 +137,6 @@ function renderTable() {
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
                 <td>
                     <div class="actions-cell">
-                        <button class="btn btn-secondary btn-xs" onclick="startEdit(${c.id})">Edit</button>
                         <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
                         <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
                     </div>
@@ -241,24 +147,50 @@ function renderTable() {
     tbody.innerHTML = rows;
 }
 
-function startEdit(id) { editingId = id; renderTable(); }
-function cancelEdit()  { editingId = null; renderTable(); }
+function toggleEditMode() {
+    editModeActive = !editModeActive;
+    document.getElementById("floatingSave").style.display = editModeActive ? "block" : "none";
+    document.getElementById("editBtn").textContent = editModeActive ? "✕ Cancel" : "✎ Edit";
+    renderTable();
+}
 
-async function saveEdit(id, currency, unit) {
-    const buyingRate  = parseFloat(document.getElementById("e-buying").value);
-    const sellingRate = parseFloat(document.getElementById("e-selling").value);
-    const decimals    = parseInt(document.getElementById("e-decimals").value);
-    if (isNaN(buyingRate) || isNaN(sellingRate)) { showError("Please fill in all fields."); return; }
+async function saveAllChanges() {
+    const updates = allData.map(c => {
+        const buyingRate  = parseFloat(document.getElementById(`e-buying-${c.id}`).value);
+        const sellingRate = parseFloat(document.getElementById(`e-selling-${c.id}`).value);
+        const decimals    = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
+        return { id: c.id, currency: c.currency, unit: c.unit, buyingRate, sellingRate, decimals };
+    });
+
+    if (updates.some(u => isNaN(u.buyingRate) || isNaN(u.sellingRate))) {
+        showError("Please fill in all rate fields before saving.");
+        return;
+    }
+
     try {
-        const res = await fetch(`/api/currencies/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ currency, unit, buyingRate, sellingRate, decimals })
-        });
-        if (!res.ok) { const d = await res.json(); showError(d.error || "Failed"); return; }
-        editingId = null; loadCurrencies();
-    } catch { showError("Could not save. Please try again."); }
+        const results = await Promise.all(updates.map(u =>
+            fetch(`/api/currencies/${u.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    currency: u.currency, unit: u.unit,
+                    buyingRate: u.buyingRate, sellingRate: u.sellingRate, decimals: u.decimals
+                })
+            })
+        ));
+        if (results.some(r => !r.ok)) {
+            showError("Some currencies could not be saved.");
+        } else {
+            hideError();
+        }
+        editModeActive = false;
+        document.getElementById("floatingSave").style.display = "none";
+        document.getElementById("editBtn").textContent = "✎ Edit";
+        loadCurrencies();
+    } catch {
+        showError("Could not reach server. Please try again.");
+    }
 }
 
 async function toggleCurrency(id) {
