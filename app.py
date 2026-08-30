@@ -380,7 +380,14 @@ def delete_currency(cid):
     return jsonify({"message": "Deleted"})
 
 
+# Run schema creation / migrations on import, not just when this file is
+# executed directly. Without this, running the app via gunicorn (as listed
+# in requirements.txt) skips `init_db()` entirely, since gunicorn imports
+# this module rather than running it as __main__ — new columns added to
+# init_db() (e.g. board_color, logo_data) would silently never get applied
+# to an existing database.db, causing endpoints like /api/me to 500.
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
