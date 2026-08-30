@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home — SHOWCASH</title>
+    <title>Board — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .floating-save {
@@ -26,16 +26,69 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.35);
         }
+
+        .edit-row .drag-handle {
+            cursor: grab;
+            color: #bbb;
+            font-size: 16px;
+            text-align: center;
+            width: 28px;
+        }
+        .edit-row.dragging { opacity: 0.4; }
+        tr.dragging td { background: #fffbeb !important; }
+
+        .board-settings-row {
+            display: flex;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .color-input {
+            width: 64px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            padding: 2px;
+            cursor: pointer;
+            background: #fff;
+        }
+        .logo-upload-row { display: flex; align-items: center; gap: 10px; }
+        .logo-preview {
+            height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+            background: #1a1a2e;
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="page-header">
         <div class="page-header-text">
-            <h2>Home</h2>
-            <p>Manage and control your currency rates</p>
+            <h2>Exchange Board</h2>
+            <p>Your live currency rates</p>
         </div>
-        <button class="btn btn-gold" id="editBtn" onclick="toggleEditMode()">✎ Edit</button>
+    </div>
+
+    <div class="card" id="boardSettingsCard" style="display:none;">
+        <h3>Board Settings</h3>
+        <div class="board-settings-row">
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Color</label>
+                <input type="color" id="boardColorInput" class="color-input" value="#1a1a2e">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Your Logo</label>
+                <div class="logo-upload-row">
+                    <img id="logoPreview" class="logo-preview" src="/logo.png" alt="logo preview">
+                    <label class="btn btn-secondary btn-small" for="logoFileInput" style="cursor:pointer;">Upload</label>
+                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                    <button class="btn btn-secondary btn-small" id="logoResetBtn" type="button">Reset</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="card">
@@ -43,18 +96,19 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr>
+                    <tr id="tableHead">
+                        <th class="edit-only" style="display:none;"></th>
                         <th>#</th>
                         <th>Currency</th>
                         <th>Buying Rate</th>
                         <th>Selling Rate</th>
-                        <th>Decimals</th>
+                        <th class="edit-only" style="display:none;">Decimals</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th class="edit-only" style="display:none;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+                    <tr><td colspan="5" class="empty-state">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -77,6 +131,9 @@ const CURRENCY_COUNTRY = {
 const errorMsg = document.getElementById("error-msg");
 let allData = [];
 let editModeActive = false;
+let reorderDirty = false;
+let draggedId = null;
+let boardColor = "#1a1a2e";
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
@@ -88,6 +145,8 @@ function flagImg(code) {
 function flagCell(code) {
     return `<div class="currency-cell">${flagImg(code)}<strong>${code}</strong></div>`;
 }
+
+// ── Currencies ──
 
 async function loadCurrencies() {
     try {
@@ -104,8 +163,10 @@ async function loadCurrencies() {
 
 function renderTable() {
     const tbody = document.getElementById("tableBody");
+    const colspan = editModeActive ? 8 : 5;
+
     if (allData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No currencies yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">No currencies yet.</td></tr>`;
         return;
     }
 
@@ -113,7 +174,11 @@ function renderTable() {
     allData.forEach((c, i) => {
         if (editModeActive) {
             rows += `
-            <tr class="edit-row">
+            <tr class="edit-row" draggable="true"
+                ondragstart="onDragStart(event, ${c.id})"
+                ondragend="onDragEnd(event)"
+                ondragover="onDragOverRow(event, ${c.id})">
+                <td class="drag-handle" title="Drag to reorder">⠿</td>
                 <td>${i + 1}</td>
                 <td>${flagCell(c.currency)}</td>
                 <td><input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0"></td>
@@ -124,7 +189,12 @@ function renderTable() {
                     </select>
                 </td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td>—</td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
+                        <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
+                    </div>
+                </td>
             </tr>`;
         } else {
             rows += `
@@ -133,26 +203,55 @@ function renderTable() {
                 <td>${flagCell(c.currency)}</td>
                 <td>${c.buyingRate.toFixed(c.decimals)}</td>
                 <td>${c.sellingRate.toFixed(c.decimals)}</td>
-                <td>${c.decimals}</td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td>
-                    <div class="actions-cell">
-                        <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
-                        <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
-                    </div>
-                </td>
             </tr>`;
         }
     });
     tbody.innerHTML = rows;
 }
 
-function toggleEditMode() {
-    editModeActive = !editModeActive;
-    document.getElementById("floatingSave").style.display = editModeActive ? "block" : "none";
-    document.getElementById("editBtn").textContent = editModeActive ? "✕ Cancel" : "✎ Edit";
+// ── Drag reorder (edit mode) ──
+
+function onDragStart(e, id) {
+    draggedId = id;
+    e.dataTransfer.effectAllowed = "move";
+    e.target.closest("tr").classList.add("dragging");
+}
+
+function onDragEnd() {
+    document.querySelectorAll("tr.dragging").forEach(r => r.classList.remove("dragging"));
+    draggedId = null;
+}
+
+function onDragOverRow(e, overId) {
+    e.preventDefault();
+    if (draggedId === null || draggedId === overId) return;
+    const fromIdx = allData.findIndex(c => c.id === draggedId);
+    const toIdx   = allData.findIndex(c => c.id === overId);
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+    const [moved] = allData.splice(fromIdx, 1);
+    allData.splice(toIdx, 0, moved);
+    reorderDirty = true;
     renderTable();
 }
+
+// ── Edit mode ──
+
+window.toggleEditMode = function () {
+    editModeActive = !editModeActive;
+    document.getElementById("floatingSave").style.display = editModeActive ? "block" : "none";
+    document.getElementById("boardSettingsCard").style.display = editModeActive ? "block" : "none";
+    document.querySelectorAll(".edit-only").forEach(el => el.style.display = editModeActive ? "" : "none");
+    const navBtn = document.getElementById("navEditBtn");
+    if (navBtn) navBtn.textContent = editModeActive ? "✕ Cancel" : "✎ Edit";
+
+    if (!editModeActive) {
+        reorderDirty = false;
+        loadCurrencies();
+    } else {
+        renderTable();
+    }
+};
 
 async function saveAllChanges() {
     const updates = allData.map(c => {
@@ -179,14 +278,29 @@ async function saveAllChanges() {
                 })
             })
         ));
+
+        if (reorderDirty) {
+            await fetch("/api/currencies/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ order: allData.map(c => c.id) })
+            });
+            reorderDirty = false;
+        }
+
         if (results.some(r => !r.ok)) {
             showError("Some currencies could not be saved.");
         } else {
             hideError();
         }
+
         editModeActive = false;
         document.getElementById("floatingSave").style.display = "none";
-        document.getElementById("editBtn").textContent = "✎ Edit";
+        document.getElementById("boardSettingsCard").style.display = "none";
+        document.querySelectorAll(".edit-only").forEach(el => el.style.display = "none");
+        const navBtn = document.getElementById("navEditBtn");
+        if (navBtn) navBtn.textContent = "✎ Edit";
         loadCurrencies();
     } catch {
         showError("Could not reach server. Please try again.");
@@ -197,7 +311,9 @@ async function toggleCurrency(id) {
     try {
         const res = await fetch(`/api/currencies/${id}/toggle`, { method: "POST", credentials: "include" });
         if (!res.ok) throw new Error();
-        loadCurrencies();
+        const c = allData.find(x => x.id === id);
+        if (c) c.active = !c.active;
+        renderTable();
     } catch { showError("Could not toggle."); }
 }
 
@@ -210,7 +326,88 @@ async function deleteCurrency(id) {
     } catch { showError("Could not delete."); }
 }
 
+// ── Board settings: color + logo ──
+
+function applyBoardColor(color) {
+    document.body.style.background = color;
+}
+
+async function loadBoardSettings() {
+    try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        boardColor = data.boardColor || "#1a1a2e";
+        document.getElementById("boardColorInput").value = boardColor;
+        applyBoardColor(boardColor);
+        if (data.logo) {
+            document.getElementById("logoPreview").src = data.logo;
+        }
+    } catch { /* non-fatal */ }
+}
+
+document.getElementById("boardColorInput").addEventListener("input", (e) => {
+    applyBoardColor(e.target.value);
+});
+document.getElementById("boardColorInput").addEventListener("change", async (e) => {
+    boardColor = e.target.value;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardColor })
+        });
+    } catch {
+        showError("Could not save board color.");
+    }
+});
+
+document.getElementById("logoFileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+        showError("Logo image should be under 500KB.");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const dataUrl = reader.result;
+        document.getElementById("logoPreview").src = dataUrl;
+        try {
+            await fetch("/api/board", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ boardColor, logo: dataUrl })
+            });
+            const navLogo = document.querySelector(".nav-logo");
+            if (navLogo) navLogo.src = dataUrl;
+        } catch {
+            showError("Could not upload logo. Please try again.");
+        }
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById("logoResetBtn").addEventListener("click", async () => {
+    document.getElementById("logoPreview").src = "/logo.png";
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardColor, logo: "" })
+        });
+        const navLogo = document.querySelector(".nav-logo");
+        if (navLogo) navLogo.src = "/logo.png";
+    } catch {
+        showError("Could not reset logo.");
+    }
+});
+
 loadCurrencies();
+loadBoardSettings();
 </script>
 </body>
 </html>

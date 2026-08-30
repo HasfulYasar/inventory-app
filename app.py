@@ -12,6 +12,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
+# Max size (chars) accepted for a base64 logo data URL — keeps the DB sane.
+MAX_LOGO_LEN = 700_000  # ~500KB image
+
+DEFAULT_BOARD_COLOR = "#1a1a2e"
+
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
     "TWD","KRW","INR","THB","CNY","IDR","SAR","MYR","PHP","VND",
@@ -93,6 +98,8 @@ def init_db():
         for col, defn in [
             ("email",        "TEXT NOT NULL DEFAULT ''"),
             ("display_name", "TEXT NOT NULL DEFAULT ''"),
+            ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
+            ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
         ]:
             try:
                 db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -139,18 +146,6 @@ def login_page():
 @app.route("/signup")
 def signup_page():
     return send_from_directory(CLIENT_DIR, "signup.html")
-
-@app.route("/add-currency")
-def add_currency_page():
-    return send_from_directory(CLIENT_DIR, "add-currency.html")
-
-@app.route("/boards")
-def boards_page():
-    return send_from_directory(CLIENT_DIR, "boards.html")
-
-@app.route("/account")
-def account_page():
-    return send_from_directory(CLIENT_DIR, "account.html")
 
 @app.route("/<path:path>")
 def serve_static(path):
@@ -213,49 +208,35 @@ def me():
             "id": user["id"],
             "username": user["username"],
             "email": user["email"] if user["email"] else "",
-            "displayName": user["display_name"] if user["display_name"] else ""
+            "displayName": user["display_name"] if user["display_name"] else "",
+            "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
+            "logo": user["logo_data"] if user["logo_data"] else ""
         })
     return jsonify({"error": "Not logged in"}), 401
 
 
-# ── Account API ──
+# ── Board settings API (color + logo) ──
 
-@app.route("/api/account/profile", methods=["PUT"])
+@app.route("/api/board", methods=["PUT"])
 @login_required
-def update_profile():
+def update_board():
     data = request.json or {}
-    email        = data.get("email", "").strip()
-    display_name = data.get("displayName", "").strip()
-    db = get_db()
-    db.execute(
-        "UPDATE users SET email=?, display_name=? WHERE id=?",
-        (email, display_name, current_user_id())
-    )
-    db.commit()
-    return jsonify({"message": "Profile updated"})
+    color = data.get("boardColor", "").strip()
+    logo  = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
 
+    if color and not (color.startswith("#") and len(color) in (4, 7)):
+        return jsonify({"error": "Invalid color"}), 400
+    if logo is not None and len(logo) > MAX_LOGO_LEN:
+        return jsonify({"error": "Logo image is too large"}), 400
 
-@app.route("/api/account/password", methods=["PUT"])
-@login_required
-def change_password():
-    data = request.json or {}
-    current  = data.get("currentPassword", "").strip()
-    new_pass = data.get("newPassword", "").strip()
-    confirm  = data.get("confirmPassword", "").strip()
-    if not current or not new_pass or not confirm:
-        return jsonify({"error": "All fields are required"}), 400
-    if new_pass != confirm:
-        return jsonify({"error": "New passwords do not match"}), 400
-    if len(new_pass) < 6:
-        return jsonify({"error": "Password must be at least 6 characters"}), 400
     db = get_db()
-    user = db.execute("SELECT * FROM users WHERE id=?", (current_user_id(),)).fetchone()
-    if not check_password_hash(user["password"], current):
-        return jsonify({"error": "Current password is incorrect"}), 401
-    db.execute("UPDATE users SET password=? WHERE id=?",
-               (generate_password_hash(new_pass), current_user_id()))
+    if logo is None:
+        db.execute("UPDATE users SET board_color=? WHERE id=?", (color or DEFAULT_BOARD_COLOR, current_user_id()))
+    else:
+        db.execute("UPDATE users SET board_color=?, logo_data=? WHERE id=?",
+                   (color or DEFAULT_BOARD_COLOR, logo, current_user_id()))
     db.commit()
-    return jsonify({"message": "Password changed successfully"})
+    return jsonify({"message": "Board updated"})
 
 
 # ── Currencies API ──
@@ -287,19 +268,6 @@ def get_currencies():
     return jsonify([row_to_dict(r, i) for i, r in enumerate(rows)])
 
 
-@app.route("/api/currencies/public", methods=["GET"])
-def get_public_currencies():
-    user_id = request.args.get("user")
-    if not user_id:
-        return jsonify([])
-    db = get_db()
-    rows = db.execute(
-        "SELECT * FROM currencies WHERE user_id=? AND active=1 ORDER BY sort_order, id",
-        (user_id,)
-    ).fetchall()
-    return jsonify([row_to_dict(r) for r in rows])
-
-
 @app.route("/api/currencies", methods=["POST"])
 @login_required
 def add_currency():
@@ -328,9 +296,13 @@ def add_currency():
             (unit, buying_rate, selling_rate, decimals, existing["id"], current_user_id())
         )
     else:
+        max_order = db.execute(
+            "SELECT COALESCE(MAX(sort_order), -1) FROM currencies WHERE user_id=?",
+            (current_user_id(),)
+        ).fetchone()[0]
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,999)",
-            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals)
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,?)",
+            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1)
         )
     db.commit()
     return jsonify({"message": "Currency saved"}), 201
@@ -359,6 +331,27 @@ def update_currency(cid):
     )
     db.commit()
     return jsonify({"message": "Updated"})
+
+
+@app.route("/api/currencies/reorder", methods=["POST"])
+@login_required
+def reorder_currencies():
+    data = request.json or {}
+    order = data.get("order", [])
+    if not isinstance(order, list) or not order:
+        return jsonify({"error": "Invalid order"}), 400
+    db = get_db()
+    for idx, cid in enumerate(order):
+        try:
+            cid = int(cid)
+        except (ValueError, TypeError):
+            continue
+        db.execute(
+            "UPDATE currencies SET sort_order=? WHERE id=? AND user_id=?",
+            (idx, cid, current_user_id())
+        )
+    db.commit()
+    return jsonify({"message": "Reordered"})
 
 
 @app.route("/api/currencies/<int:cid>/toggle", methods=["POST"])

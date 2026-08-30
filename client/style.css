@@ -6,6 +6,7 @@ body {
     background: #f0f2f8;
     color: #1a1a2e;
     line-height: 1.6;
+    transition: background 0.2s;
 }
 
 /* ── Navbar ── */
@@ -37,7 +38,7 @@ body {
     display: block;
 }
 
-.nav-links { display: flex; gap: 4px; flex: 1; }
+.nav-links { display: flex; gap: 10px; align-items: center; flex: 1; }
 
 .nav-link {
     font-size: 13px;
@@ -179,6 +180,3 @@ tr:hover td { background: #fafbff; }
     transition: background 0.15s;
 }
 .btn-gold-full:hover { background: #e0b030; }
-
-/* Add currency page */
-.add-currency-card { max-width: 500px; }
