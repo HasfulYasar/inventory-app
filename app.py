@@ -28,7 +28,7 @@ ALL_CURRENCIES = [
     "TWD","KRW","INR","THB","CNY","IDR","SAR","MYR","PHP","VND",
     "AED","BND","TRY","RUB",
     "DKK","SEK","NOK","ZAR","PKR","OMR","JOD","BHD","EGP","QAR",
-    "KWD","LKR","BDT","MOP","SCR","IQD"
+    "KWD","LKR","BDT","MOP","SCR","IQD","NPR","CZK","KHR"
 ]
 
 DEFAULT_RATES = {
@@ -42,6 +42,7 @@ DEFAULT_RATES = {
     "PKR":(100,0,0,2),"OMR":(1,0,0,2),"JOD":(1,0,0,2),"BHD":(1,0,0,2),
     "EGP":(10,0,0,2),"QAR":(1,0,0,2),"KWD":(1,0,0,2),"LKR":(100,0,0,2),
     "BDT":(100,0,0,2),"MOP":(10,0,0,2),"SCR":(10,0,0,2),"IQD":(100,0,0,2),
+    "NPR":(100,0,0,2),"CZK":(10,0,0,2),"KHR":(1000,0,0,2),
 }
 
 

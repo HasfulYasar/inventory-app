@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,57 +7,15 @@
     <style>
         :root {
             --bg: #0d0d0d;
-            --header-bg: linear-gradient(135deg, #1a1200 0%, #1a1a2e 100%);
-            --col-bg: #1a1200;
-            --col-border: #2a2000;
-            --col-text: #1a1a2e;
-            --border: #1e1e1e;
-            --text: #fff;
-            --text2: #999;
-            --text3: #555;
-            --text4: #444;
-            --rate: #f0c040;
-            --footer-bg: #0a0a0a;
-            --footer-border: #1e1e1e;
+            --panel-bg: #14100a;
             --row-bg: #141414;
             --row-alt: #0f0f0f;
+            --border: #262626;
             --divider: #2a2a2a;
-            --back-bg: rgba(240,192,64,0.12);
-            --back-border: rgba(240,192,64,0.3);
-            --back-text: #f0c040;
-            --gbp-glow: rgba(240,192,64,0.07);
-            --gbp-color: #f0c040;
-            --toggle-bg: rgba(255,255,255,0.07);
-            --toggle-text: #f0c040;
-            --sec-bg: #080808;
-            --sec-header-bg: #1a1200;
-        }
-        [data-theme="light"] {
-            --bg: #f5f4ef;
-            --header-bg: linear-gradient(135deg, #fff8e7 0%, #eeeeff 100%);
-            --col-bg: #fff8e7;
-            --col-border: #e8ddb0;
-            --col-text: #1a1a2e;
-            --border: #eae5d5;
-            --text: #1a1a2e;
-            --text2: #666;
-            --text3: #999;
-            --text4: #bbb;
-            --rate: #96700a;
-            --footer-bg: #fff8e7;
-            --footer-border: #e8ddb0;
-            --row-bg: #fff;
-            --row-alt: #faf8f2;
-            --divider: #d0c898;
-            --back-bg: rgba(150,112,10,0.1);
-            --back-border: rgba(150,112,10,0.3);
-            --back-text: #96700a;
-            --gbp-glow: rgba(150,112,10,0.06);
-            --gbp-color: #96700a;
-            --toggle-bg: rgba(0,0,0,0.06);
-            --toggle-text: #96700a;
-            --sec-bg: #f0ede6;
-            --sec-header-bg: #fff8e7;
+            --neon: #f0c040;
+            --text: #ffffff;
+            --text2: #aab0c6;
+            --text3: #6b6f80;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,7 +26,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.4s ease;
         }
 
         .page-wrap {
@@ -82,63 +40,106 @@
         /* ── Header ── */
         .board-header {
             flex-shrink: 0;
-            background: var(--header-bg);
-            border-bottom: 2px solid #f0c040;
-            padding: 0.4rem 1rem;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--neon);
+            box-shadow: 0 0 14px var(--neon), 0 2px 24px -4px var(--neon);
+            padding: 0.55rem 1.1rem;
             display: flex; align-items: center;
             justify-content: space-between;
+            transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
         }
-        .header-left  { display: flex; align-items: center; gap: 8px; }
-        .header-right { display: flex; align-items: center; gap: 7px; }
+        .header-left  { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
         .back-btn {
             display: inline-flex; align-items: center; gap: 4px;
-            background: var(--back-bg); border: 1px solid var(--back-border);
+            background: rgba(240,192,64,0.1); border: 1px solid var(--neon);
             border-radius: 6px; padding: 4px 10px;
-            font-size: 11px; color: var(--back-text); font-weight: 600;
+            font-size: 11px; color: var(--neon); font-weight: 700;
             text-decoration: none;
         }
-        .board-logo { height: 32px; width: auto; object-fit: contain; }
+        .board-logo {
+            height: 46px; width: auto; object-fit: contain;
+            filter: drop-shadow(0 0 6px var(--neon));
+            flex-shrink: 0;
+        }
+
+        .title-block { min-width: 0; }
+        .board-title {
+            font-size: 17px; font-weight: 800; color: var(--neon);
+            letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            text-shadow: 0 0 10px var(--neon), 0 0 2px var(--neon);
+        }
+        .board-subtitle {
+            font-size: 9px; font-weight: 700; letter-spacing: 1.4px;
+            color: var(--text2); text-transform: uppercase; margin-top: 1px;
+        }
+        .board-license {
+            font-size: 8px; font-weight: 600; letter-spacing: 0.6px;
+            color: var(--text3); text-transform: uppercase; margin-top: 1px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         .theme-toggle {
             display: flex; align-items: center; gap: 5px;
-            background: var(--toggle-bg); border: 1px solid rgba(240,192,64,0.2);
+            background: rgba(255,255,255,0.05); border: 1px solid var(--neon);
             border-radius: 20px; padding: 4px 10px;
-            font-size: 11px; color: var(--toggle-text); font-weight: 600;
+            font-size: 11px; color: var(--neon); font-weight: 600;
             cursor: pointer; user-select: none;
         }
         .live-badge {
             display: flex; align-items: center; gap: 5px;
-            background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.3);
+            background: rgba(240,192,64,0.1); border: 1px solid var(--neon);
             border-radius: 20px; padding: 4px 10px;
-            font-size: 11px; color: #f0c040; font-weight: 600;
+            font-size: 11px; color: var(--neon); font-weight: 600;
         }
         .live-dot {
             width: 6px; height: 6px; background: #4caf50;
             border-radius: 50%; animation: pulse 1.5s infinite; flex-shrink: 0;
+            box-shadow: 0 0 6px #4caf50;
         }
         @keyframes pulse {
             0%,100%{opacity:1;transform:scale(1);}
             50%{opacity:0.4;transform:scale(0.75);}
         }
 
-        /* ── Subtitle ── */
+        .board-clock {
+            font-size: 11px; font-weight: 600; color: var(--neon);
+            white-space: nowrap;
+        }
+
+        /* ── Body: left rate grid + right rotating panel ── */
+        .board-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
         .subtitle-bar {
             flex-shrink: 0;
-            background: var(--col-bg); border-bottom: 1px solid var(--col-border);
+            background: var(--panel-bg); border-bottom: 1px solid var(--border);
             padding: 0.2rem 1rem;
             display: flex; align-items: center; justify-content: space-between;
         }
         .subtitle-bar span {
             font-size: 8px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px; color: var(--col-text);
+            text-transform: uppercase; letter-spacing: 1px; color: var(--text2);
         }
 
-        /* ── Col headers ── */
         .col-header {
             flex-shrink: 0;
             display: grid; grid-template-columns: 1fr 1fr;
-            background: var(--col-bg); border-bottom: 1px solid var(--col-border);
+            background: var(--panel-bg); border-bottom: 1px solid var(--neon);
+            box-shadow: 0 1px 8px -2px var(--neon);
         }
         .col-header-half {
             display: grid;
@@ -146,19 +147,14 @@
             padding: 0.25rem 0.8rem;
             align-items: center;
         }
-        .col-header-half:first-child { border-right: 2px solid var(--divider); }
+        .col-header-half:first-child { border-right: 2px solid var(--neon); }
         .col-header span {
             font-size: 8px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.8px; color: var(--col-text);
+            text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2);
         }
         .col-header span.r { text-align: right; }
 
-        /* ── Primary grid ── */
-        .primary-wrap {
-            flex: 1;
-            overflow: hidden;
-            min-height: 0;
-        }
+        .primary-wrap { flex: 1; overflow: hidden; min-height: 0; }
 
         .currency-grid {
             display: grid;
@@ -178,9 +174,9 @@
         .currency-row:nth-child(4n+3),
         .currency-row:nth-child(4n+4) { background: var(--row-alt); }
         .currency-row.left-col { border-right: 2px solid var(--divider); }
-        .currency-row.gbp-row { background: var(--gbp-glow) !important; }
-        .currency-row.gbp-row .c-code { color: var(--gbp-color); font-weight: 900; }
-        .currency-row.gbp-row .rate-val { color: var(--gbp-color); font-weight: 800; }
+        .currency-row.gbp-row { background: rgba(240,192,64,0.08) !important; }
+        .currency-row.gbp-row .c-code { color: var(--neon); font-weight: 900; }
+        .currency-row.gbp-row .rate-val { color: var(--neon); font-weight: 800; }
 
         .currency-name-cell { display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; }
 
@@ -191,57 +187,90 @@
         }
         .c-text { min-width: 0; overflow: hidden; }
         .c-code { font-size: 0.72rem; font-weight: 700; color: var(--text); white-space: nowrap; }
-        .c-name { font-size: 10px; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unit-val { font-size: 0.7rem; font-weight: 700; color: #1a1a2e; text-align: right; }
-        .rate-val { font-size: 0.78rem; font-weight: 700; color: var(--rate); font-variant-numeric: tabular-nums; text-align: right; }
-        .rate-val.preorder-val, .t-val.preorder-val {
-            color: #4caf50; font-size: 0.66rem; letter-spacing: 0.3px;
+        .c-name { font-size: 10px; font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unit-val { font-size: 0.7rem; font-weight: 700; color: var(--text2); text-align: right; }
+        .rate-val {
+            font-size: 0.78rem; font-weight: 700; color: var(--neon);
+            font-variant-numeric: tabular-nums; text-align: right;
+            text-shadow: 0 0 6px var(--neon);
         }
+        .rate-val.preorder-val { color: #4caf50; font-size: 0.66rem; letter-spacing: 0.3px; text-shadow: 0 0 6px #4caf50; }
 
-        /* ── Secondary ticker ── */
-        .secondary-section {
+        /* ── Right rotating panel ── */
+        .right-panel {
+            width: 280px;
             flex-shrink: 0;
-            background: var(--sec-bg);
-            border-top: 2px solid #f0c040;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+            border-left: 2px solid var(--neon);
+            box-shadow: -10px 0 24px -10px var(--neon) inset;
         }
-        .secondary-header {
-            background: var(--sec-header-bg);
-            border-bottom: 1px solid var(--col-border);
-            padding: 0.18rem 1rem;
+        .right-panel-header {
+            flex-shrink: 0;
+            padding: 0.3rem 1rem;
+            border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
         }
-        .secondary-header span {
-            font-size: 8px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px; color: var(--col-text);
+        .right-panel-header span {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text2);
         }
-        .ticker-wrap { overflow: hidden; }
-        .ticker {
-            display: flex; align-items: center;
-            white-space: nowrap;
-            animation: ticker-scroll 40s linear infinite;
+
+        .spotlight-wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 0.5rem 1rem; min-height: 0;
         }
-        .ticker:hover { animation-play-state: paused; }
-        @keyframes ticker-scroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        .spotlight-card {
+            width: 100%;
+            text-align: center;
+            animation: spotlightFade 0.5s ease;
         }
-        .ticker-item {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 5px 16px; border-right: 1px solid var(--border);
+        @keyframes spotlightFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .spot-flag {
+            width: 56px; height: 38px; border-radius: 5px; object-fit: cover;
+            box-shadow: 0 0 14px var(--neon), 0 2px 8px rgba(0,0,0,0.5);
+            margin: 0 auto 10px;
+            display: block;
+        }
+        .spot-code {
+            font-size: 1.5rem; font-weight: 900; color: var(--neon);
+            letter-spacing: 1px; text-shadow: 0 0 12px var(--neon);
+        }
+        .spot-name { font-size: 11px; color: var(--text2); margin-top: 2px; font-weight: 600; }
+        .spot-unit { font-size: 10px; color: var(--text3); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.6px; }
+        .spot-rates {
+            display: flex; gap: 10px; margin-top: 14px;
+        }
+        .spot-rate-box {
+            flex: 1; background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 6px;
+        }
+        .spot-lbl { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 4px; }
+        .spot-val { font-size: 1rem; font-weight: 800; color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+        .spot-val.preorder-val { font-size: 0.72rem; color: #4caf50; text-shadow: 0 0 8px #4caf50; }
+
+        .spotlight-dots {
             flex-shrink: 0;
+            display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+            padding: 0.6rem 1rem 0.8rem;
         }
-        .t-flag { width: 22px; height: 15px; border-radius: 2px; object-fit: cover; }
-        .t-code { font-size: 13px; font-weight: 800; color: var(--text); }
-        .t-unit { font-size: 11px; color: var(--text2); font-weight: 600; }
-        .t-rates { display: flex; gap: 10px; }
-        .t-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; font-weight: 700; }
-        .t-val { font-size: 13px; font-weight: 800; color: var(--rate); }
+        .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--border); transition: background 0.2s, box-shadow 0.2s;
+        }
+        .dot.active { background: var(--neon); box-shadow: 0 0 6px var(--neon); }
 
         /* ── Footer ── */
         .board-footer {
             flex-shrink: 0;
-            background: var(--footer-bg); border-top: 1px solid var(--footer-border);
-            padding: 0.2rem 1rem;
+            background: var(--panel-bg); border-top: 1px solid var(--neon);
+            box-shadow: 0 0 10px var(--neon);
+            padding: 0.25rem 1rem;
             display: flex; justify-content: space-between; align-items: center;
         }
         .footer-note { font-size: 11px; color: var(--text3); font-weight: 500; }
@@ -250,15 +279,6 @@
         .board-empty {
             grid-column: 1/-1; display: flex; align-items: center;
             justify-content: center; color: var(--text3); font-size: 13px;
-        }
-
-        .board-title {
-            font-size: 15px; font-weight: 800; color: var(--text);
-            letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .board-clock {
-            font-size: 11px; font-weight: 600; color: var(--toggle-text);
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -269,7 +289,11 @@
         <div class="header-left">
             <a class="back-btn" href="/">&#8592; Back</a>
             <img src="/logo.png" alt="Logo" class="board-logo" id="boardLogoImg">
-            <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
+            <div class="title-block">
+                <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
+                <div class="board-subtitle">Currency Exchange</div>
+                <div class="board-license" id="boardLicense">Perniagaan Perkhidmatan Wang Berlesen</div>
+            </div>
         </div>
         <div class="header-right">
             <div class="board-clock" id="boardClock"></div>
@@ -278,33 +302,36 @@
         </div>
     </div>
 
-    <div class="subtitle-bar">
-        <span>Today's Rates</span>
-        <span id="rateCount"></span>
-    </div>
+    <div class="board-body">
+        <div class="left-panel">
+            <div class="subtitle-bar">
+                <span>Today's Rates</span>
+                <span id="rateCount"></span>
+            </div>
+            <div class="col-header">
+                <div class="col-header-half">
+                    <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
+                </div>
+                <div class="col-header-half">
+                    <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
+                </div>
+            </div>
+            <div class="primary-wrap">
+                <div class="currency-grid" id="primaryGrid">
+                    <div class="board-empty">Loading...</div>
+                </div>
+            </div>
+        </div>
 
-    <div class="col-header">
-        <div class="col-header-half">
-            <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
-        </div>
-        <div class="col-header-half">
-            <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
-        </div>
-    </div>
-
-    <div class="primary-wrap">
-        <div class="currency-grid" id="primaryGrid">
-            <div class="board-empty">Loading...</div>
-        </div>
-    </div>
-
-    <div class="secondary-section" id="secondarySection" style="display:none;">
-        <div class="secondary-header">
-            <span>More Currencies</span>
-            <span id="secCount"></span>
-        </div>
-        <div class="ticker-wrap">
-            <div class="ticker" id="ticker"></div>
+        <div class="right-panel">
+            <div class="right-panel-header">
+                <span>More Currencies</span>
+                <span id="secCount"></span>
+            </div>
+            <div class="spotlight-wrap">
+                <div class="spotlight-card" id="spotlightCard">Loading...</div>
+            </div>
+            <div class="spotlight-dots" id="spotlightDots"></div>
         </div>
     </div>
 
@@ -321,6 +348,13 @@ const PRIMARY_CODES = [
     "AED","BND","TRY","RUB"
 ];
 
+// The specific rotation order requested for the right-side spotlight panel.
+const SECONDARY_ROTATE_ORDER = [
+    "BHD","DKK","EGP","JOD","KWD","MOP","NOK","OMR","ZAR","TRY",
+    "PKR","BDT","RUB","NPR","CZK","KHR"
+];
+const SECONDARY_ROTATE_MS = 7000;
+
 const CURRENCY_INFO = {
     USD:{name:"US Dollar",cc:"us"},       GBP:{name:"British Pound",cc:"gb"},
     JPY:{name:"Japanese Yen",cc:"jp"},    EUR:{name:"Euro",cc:"eu"},
@@ -334,31 +368,120 @@ const CURRENCY_INFO = {
     PHP:{name:"Philippine Peso",cc:"ph"}, VND:{name:"Vietnamese Dong",cc:"vn"},
     AED:{name:"UAE Dirham",cc:"ae"},      BND:{name:"Brunei Dollar",cc:"bn"},
     TRY:{name:"Turkish Lira",cc:"tr"},    DKK:{name:"Danish Krone",cc:"dk"},
-    SEK:{name:"Swedish Krona",cc:"se"},   NOK:{name:"Norwegian Krone",cc:"no"},
+    SEK:{name:"Swedish Krona",cc:"se"},   NOK:{name:"Norwegian Kroner",cc:"no"},
     ZAR:{name:"South African Rand",cc:"za"},PKR:{name:"Pakistani Rupee",cc:"pk"},
-    OMR:{name:"Omani Rial",cc:"om"},      JOD:{name:"Jordanian Dinar",cc:"jo"},
+    OMR:{name:"Omani Riyal",cc:"om"},     JOD:{name:"Jordanian Dinar",cc:"jo"},
     BHD:{name:"Bahraini Dinar",cc:"bh"},  EGP:{name:"Egyptian Pound",cc:"eg"},
     QAR:{name:"Qatari Riyal",cc:"qa"},    KWD:{name:"Kuwaiti Dinar",cc:"kw"},
     LKR:{name:"Sri Lankan Rupee",cc:"lk"},BDT:{name:"Bangladeshi Taka",cc:"bd"},
-    MOP:{name:"Macanese Pataca",cc:"mo"}, SCR:{name:"Seychellois Rupee",cc:"sc"},
-    IQD:{name:"Iraqi Dinar",cc:"iq"},     RUB:{name:"Russian Ruble",cc:"ru"},
+    MOP:{name:"Macau Pataca",cc:"mo"},    SCR:{name:"Seychellois Rupee",cc:"sc"},
+    IQD:{name:"Iraqi Dinar",cc:"iq"},     RUB:{name:"Russian Rouble",cc:"ru"},
+    NPR:{name:"Nepalese Rupee",cc:"np"},  CZK:{name:"Czech Koruna",cc:"cz"},
+    KHR:{name:"Cambodian Riel",cc:"kh"},
 };
 
-let theme = localStorage.getItem("boards-theme") || "dark";
-applyTheme(theme);
-
-function applyTheme(t) {
-    theme = t;
-    document.documentElement.setAttribute("data-theme", t);
-    localStorage.setItem("boards-theme", t);
-    const btn = document.getElementById("themeBtn");
-    if (btn) btn.textContent = t === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+// ── Color engine: derive a dark board background + a bright neon accent
+// from whatever single boardColor the user picks in Account/Board settings.
+function hexToRgb(hex) {
+    hex = (hex || "#1a1a2e").replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const num = parseInt(hex, 16) || 0x1a1a2e;
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
-function toggleTheme() { applyTheme(theme === "dark" ? "light" : "dark"); }
+function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("");
+}
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            default: h = (r - g) / d + 4;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+function hslToRgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: r * 255, g: g * 255, b: b * 255 };
+}
+function shade(h, s, l) {
+    const c = hslToRgb(h, s, l);
+    return rgbToHex(c.r, c.g, c.b);
+}
+
+let boardColor = "#1a1a2e";
+let theme = localStorage.getItem("boards-theme") || "dark";
+
+function applyPalette() {
+    const { r, g, b } = hexToRgb(boardColor);
+    const { h, s } = rgbToHsl(r, g, b);
+    // Neon accent: same hue as the picked color, pushed to full brightness.
+    const neon = shade(h, Math.max(s, 65), 58);
+    const root = document.documentElement.style;
+
+    if (theme === "dark") {
+        root.setProperty("--bg", shade(h, Math.min(s, 60), 6));
+        root.setProperty("--panel-bg", shade(h, Math.min(s, 55), 9));
+        root.setProperty("--row-bg", shade(h, Math.min(s, 45), 8));
+        root.setProperty("--row-alt", shade(h, Math.min(s, 45), 6));
+        root.setProperty("--border", shade(h, Math.min(s, 30), 16));
+        root.setProperty("--divider", shade(h, Math.min(s, 30), 20));
+        root.setProperty("--text", "#ffffff");
+        root.setProperty("--text2", "#aab0c6");
+        root.setProperty("--text3", "#6b7080");
+    } else {
+        root.setProperty("--bg", shade(h, Math.min(s, 35), 95));
+        root.setProperty("--panel-bg", shade(h, Math.min(s, 30), 97));
+        root.setProperty("--row-bg", "#ffffff");
+        root.setProperty("--row-alt", shade(h, Math.min(s, 25), 93));
+        root.setProperty("--border", shade(h, Math.min(s, 20), 85));
+        root.setProperty("--divider", shade(h, Math.min(s, 25), 78));
+        root.setProperty("--text", "#1a1a2e");
+        root.setProperty("--text2", "#555");
+        root.setProperty("--text3", "#888");
+    }
+    root.setProperty("--neon", neon);
+
+    const btn = document.getElementById("themeBtn");
+    if (btn) btn.textContent = theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+}
+
+function toggleTheme() {
+    theme = theme === "dark" ? "light" : "dark";
+    localStorage.setItem("boards-theme", theme);
+    applyPalette();
+}
+
+applyPalette();
 
 function flagUrl(code) {
     const info = CURRENCY_INFO[code];
-    return `https://flagcdn.com/w40/${info ? info.cc : "un"}.png`;
+    return `https://flagcdn.com/w80/${info ? info.cc : "un"}.png`;
 }
 
 function rateCell(rate, decimals, isPreorder) {
@@ -381,9 +504,9 @@ async function loadRates() {
 
         document.getElementById("boardTitle").textContent = board.boardName || "CURRENCY EXCHANGE";
         if (board.logo) document.getElementById("boardLogoImg").src = board.logo;
-        if (board.boardColor) {
-            document.getElementById("boardTitle").style.color = board.boardColor;
-        }
+
+        boardColor = board.boardColor || "#1a1a2e";
+        applyPalette();
 
         const data = board.currencies || [];
         renderPrimary(data);
@@ -398,7 +521,7 @@ async function loadRates() {
 function renderPrimary(data) {
     const primary = data
         .filter(c => PRIMARY_CODES.includes(c.currency))
-        .sort((a,b) => PRIMARY_CODES.indexOf(a.currency) - PRIMARY_CODES.indexOf(b.currency));
+        .sort((a, b) => PRIMARY_CODES.indexOf(a.currency) - PRIMARY_CODES.indexOf(b.currency));
 
     const grid = document.getElementById("primaryGrid");
     if (primary.length === 0) {
@@ -407,11 +530,11 @@ function renderPrimary(data) {
     }
 
     grid.innerHTML = primary.map((c, i) => {
-        const info = CURRENCY_INFO[c.currency] || {name: c.currency};
+        const info = CURRENCY_INFO[c.currency] || { name: c.currency };
         const isLeft = i % 2 === 0;
         const isGBP = c.currency === "GBP";
         return `
-        <div class="currency-row ${isLeft?'left-col':''} ${isGBP?'gbp-row':''}">
+        <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}">
             <div class="currency-name-cell">
                 <img class="flag-img" src="${flagUrl(c.currency)}" alt="${c.currency}" onerror="this.style.display='none'">
                 <div class="c-text">
@@ -419,38 +542,79 @@ function renderPrimary(data) {
                     <div class="c-name">${info.name}</div>
                 </div>
             </div>
-            <div class="unit-val">${c.unit||1}</div>
+            <div class="unit-val">${c.unit || 1}</div>
             ${rateCell(c.buyingRate, c.decimals, c.buyPreorder)}
             ${rateCell(c.sellingRate, c.decimals, c.sellPreorder)}
         </div>`;
     }).join("");
 }
 
+// ── Right panel: rotates through the requested currency list, one at a time, every 7s ──
+let secondaryList = [];
+let secondaryIdx = 0;
+let secondaryTimer = null;
+
 function renderSecondary(data) {
-    const secondary = data.filter(c => !PRIMARY_CODES.includes(c.currency));
-    const section = document.getElementById("secondarySection");
-    if (secondary.length === 0) { section.style.display = "none"; return; }
+    secondaryList = SECONDARY_ROTATE_ORDER
+        .map(code => data.find(c => c.currency === code))
+        .filter(Boolean);
+    secondaryIdx = 0;
+    clearInterval(secondaryTimer);
 
-    section.style.display = "block";
-    document.getElementById("secCount").textContent = secondary.length + " more";
+    document.getElementById("secCount").textContent = secondaryList.length ? secondaryList.length + " codes" : "";
 
-    const tVal = (rate, decimals, isPreorder) =>
-        isPreorder ? `<span class="t-val preorder-val">PRE-ORDER</span>` : `<span class="t-val">${rate.toFixed(decimals)}</span>`;
+    if (secondaryList.length === 0) {
+        document.getElementById("spotlightCard").innerHTML = `<div class="board-empty">No additional rates yet</div>`;
+        document.getElementById("spotlightDots").innerHTML = "";
+        return;
+    }
 
-    const makeItems = arr => arr.map(c => `
-        <div class="ticker-item">
-            <img class="t-flag" src="${flagUrl(c.currency)}" alt="${c.currency}" onerror="this.style.display='none'">
-            <span class="t-code">${c.currency}</span>
-            <span class="t-unit">×${c.unit||1}</span>
-            <div class="t-rates">
-                <div><div class="t-lbl">Buy</div>${tVal(c.buyingRate, c.decimals, c.buyPreorder)}</div>
-                <div><div class="t-lbl">Sell</div>${tVal(c.sellingRate, c.decimals, c.sellPreorder)}</div>
-            </div>
-        </div>`).join("");
+    renderSpotlight();
+    buildDots();
 
-    const ticker = document.getElementById("ticker");
-    ticker.innerHTML = makeItems(secondary) + makeItems(secondary);
-    ticker.style.animationDuration = Math.max(20, secondary.length * 5) + "s";
+    if (secondaryList.length > 1) {
+        secondaryTimer = setInterval(() => {
+            secondaryIdx = (secondaryIdx + 1) % secondaryList.length;
+            renderSpotlight();
+        }, SECONDARY_ROTATE_MS);
+    }
+}
+
+function renderSpotlight() {
+    const c = secondaryList[secondaryIdx];
+    const info = CURRENCY_INFO[c.currency] || { name: c.currency };
+    const card = document.getElementById("spotlightCard");
+
+    const buyHtml = c.buyPreorder
+        ? `<div class="spot-val preorder-val">PRE-ORDER</div>`
+        : `<div class="spot-val">${c.buyingRate.toFixed(c.decimals)}</div>`;
+    const sellHtml = c.sellPreorder
+        ? `<div class="spot-val preorder-val">PRE-ORDER</div>`
+        : `<div class="spot-val">${c.sellingRate.toFixed(c.decimals)}</div>`;
+
+    card.innerHTML = `
+        <img class="spot-flag" src="${flagUrl(c.currency)}" alt="${c.currency}" onerror="this.style.display='none'">
+        <div class="spot-code">${c.currency}</div>
+        <div class="spot-name">${info.name}</div>
+        <div class="spot-unit">Unit: ${c.unit || 1}</div>
+        <div class="spot-rates">
+            <div class="spot-rate-box"><div class="spot-lbl">We Buy</div>${buyHtml}</div>
+            <div class="spot-rate-box"><div class="spot-lbl">We Sell</div>${sellHtml}</div>
+        </div>`;
+    // restart the fade-in animation
+    card.style.animation = "none";
+    void card.offsetWidth;
+    card.style.animation = "";
+
+    updateDots();
+}
+
+function buildDots() {
+    document.getElementById("spotlightDots").innerHTML =
+        secondaryList.map((_, i) => `<span class="dot" data-i="${i}"></span>`).join("");
+}
+function updateDots() {
+    document.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("active", i === secondaryIdx));
 }
 
 function updateClock() {

@@ -70,6 +70,7 @@
             <h2>Exchange Board</h2>
             <p>Your live currency rates</p>
         </div>
+        <a id="viewBoardBtn" href="#" target="_blank" class="btn btn-gold">📺 View Live Board</a>
     </div>
 
     <div class="card" id="boardSettingsCard" style="display:none;">
@@ -125,7 +126,7 @@ const CURRENCY_COUNTRY = {
     CNY:"cn",IDR:"id",SAR:"sa",MYR:"my",PHP:"ph",VND:"vn",AED:"ae",
     BND:"bn",TRY:"tr",DKK:"dk",SEK:"se",NOK:"no",ZAR:"za",PKR:"pk",
     OMR:"om",JOD:"jo",BHD:"bh",EGP:"eg",QAR:"qa",KWD:"kw",LKR:"lk",
-    BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru"
+    BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru",NPR:"np",CZK:"cz",KHR:"kh"
 };
 
 const errorMsg = document.getElementById("error-msg");
@@ -360,6 +361,10 @@ async function loadBoardSettings() {
         applyBoardColor(boardColor);
         if (data.logo) {
             document.getElementById("logoPreview").src = data.logo;
+        }
+        const viewBoardBtn = document.getElementById("viewBoardBtn");
+        if (viewBoardBtn && data.id) {
+            viewBoardBtn.href = `/boards.html?user=${data.id}`;
         }
     } catch { /* non-fatal */ }
 }
