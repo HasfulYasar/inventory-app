@@ -5,6 +5,7 @@ async function initPage() {
         const data = await res.json();
 
         const logoSrc = data.logo ? data.logo : "/logo.png";
+        const path = window.location.pathname;
 
         const nav = document.createElement("nav");
         nav.className = "navbar";
@@ -13,10 +14,13 @@ async function initPage() {
                 <img src="${logoSrc}" alt="SHOWCASH" class="nav-logo">
             </a>
             <div class="nav-links">
-                <a href="/" class="nav-link active">Home</a>
+                <a href="/" class="nav-link${path === "/" ? " active" : ""}">Home</a>
+                <a href="/add-currency.html" class="nav-link${path === "/add-currency.html" ? " active" : ""}">+ Add Currency</a>
+                <a href="/boards.html?user=${data.id}" target="_blank" class="nav-link">📺 Boards</a>
                 <button class="btn btn-small btn-gold" id="navEditBtn" style="display:none;">✎ Edit</button>
             </div>
             <div class="nav-right">
+                <a href="/account.html" class="nav-link${path === "/account.html" ? " active" : ""}">👤 Account</a>
                 <span class="nav-user">Hi, ${data.displayName || data.username}</span>
                 <button class="btn btn-small" style="background:#f0c040;color:#1a1a2e;border:none;font-weight:700;" onclick="doLogout()">Logout</button>
             </div>

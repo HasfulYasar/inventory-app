@@ -87,9 +87,11 @@ def init_db():
         ''')
         # Migrations for existing DBs
         for col, defn in [
-            ("unit",         "INTEGER NOT NULL DEFAULT 1"),
-            ("user_id",      "INTEGER NOT NULL DEFAULT 0"),
-            ("sort_order",   "INTEGER NOT NULL DEFAULT 999"),
+            ("unit",          "INTEGER NOT NULL DEFAULT 1"),
+            ("user_id",       "INTEGER NOT NULL DEFAULT 0"),
+            ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
+            ("buy_preorder",  "INTEGER NOT NULL DEFAULT 0"),
+            ("sell_preorder", "INTEGER NOT NULL DEFAULT 0"),
         ]:
             try:
                 db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
@@ -100,6 +102,7 @@ def init_db():
             ("display_name", "TEXT NOT NULL DEFAULT ''"),
             ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
             ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
+            ("board_name",   "TEXT NOT NULL DEFAULT ''"),
         ]:
             try:
                 db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -210,9 +213,51 @@ def me():
             "email": user["email"] if user["email"] else "",
             "displayName": user["display_name"] if user["display_name"] else "",
             "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
-            "logo": user["logo_data"] if user["logo_data"] else ""
+            "logo": user["logo_data"] if user["logo_data"] else "",
+            "boardName": user["board_name"] if user["board_name"] else ""
         })
     return jsonify({"error": "Not logged in"}), 401
+
+
+# ── Account settings API (profile + password) ──
+
+@app.route("/api/account/profile", methods=["PUT"])
+@login_required
+def update_profile():
+    data = request.json or {}
+    display_name = data.get("displayName", "").strip()
+    email        = data.get("email", "").strip()
+    db = get_db()
+    db.execute("UPDATE users SET display_name=?, email=? WHERE id=?",
+               (display_name, email, current_user_id()))
+    db.commit()
+    return jsonify({"message": "Profile updated"})
+
+
+@app.route("/api/account/password", methods=["PUT"])
+@login_required
+def update_password():
+    data = request.json or {}
+    current_password = data.get("currentPassword", "").strip()
+    new_password     = data.get("newPassword", "").strip()
+    confirm_password = data.get("confirmPassword", "").strip()
+
+    if not current_password or not new_password or not confirm_password:
+        return jsonify({"error": "All fields are required"}), 400
+    if new_password != confirm_password:
+        return jsonify({"error": "New passwords do not match"}), 400
+    if len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id=?", (current_user_id(),)).fetchone()
+    if not user or not check_password_hash(user["password"], current_password):
+        return jsonify({"error": "Current password is incorrect"}), 400
+
+    db.execute("UPDATE users SET password=? WHERE id=?",
+               (generate_password_hash(new_password), current_user_id()))
+    db.commit()
+    return jsonify({"message": "Password updated"})
 
 
 # ── Board settings API (color + logo) ──
@@ -221,20 +266,32 @@ def me():
 @login_required
 def update_board():
     data = request.json or {}
-    color = data.get("boardColor", "").strip()
-    logo  = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
+    color      = data.get("boardColor", "").strip()
+    logo       = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
+    board_name = data.get("boardName", None)  # None = leave unchanged
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
     if logo is not None and len(logo) > MAX_LOGO_LEN:
         return jsonify({"error": "Logo image is too large"}), 400
+    if board_name is not None and len(board_name) > 80:
+        return jsonify({"error": "Board name is too long"}), 400
 
     db = get_db()
-    if logo is None:
-        db.execute("UPDATE users SET board_color=? WHERE id=?", (color or DEFAULT_BOARD_COLOR, current_user_id()))
-    else:
-        db.execute("UPDATE users SET board_color=?, logo_data=? WHERE id=?",
-                   (color or DEFAULT_BOARD_COLOR, logo, current_user_id()))
+    sets, params = [], []
+    if color:
+        sets.append("board_color=?")
+        params.append(color)
+    if logo is not None:
+        sets.append("logo_data=?")
+        params.append(logo)
+    if board_name is not None:
+        sets.append("board_name=?")
+        params.append(board_name.strip())
+    if not sets:
+        return jsonify({"message": "Nothing to update"})
+    params.append(current_user_id())
+    db.execute(f"UPDATE users SET {', '.join(sets)} WHERE id=?", params)
     db.commit()
     return jsonify({"message": "Board updated"})
 
@@ -243,18 +300,34 @@ def update_board():
 
 def row_to_dict(row, i=None):
     d = {
-        "id":          row["id"],
-        "currency":    row["currency"],
-        "unit":        row["unit"] if row["unit"] else 1,
-        "buyingRate":  row["buying_rate"],
-        "sellingRate": row["selling_rate"],
-        "decimals":    row["decimals"],
-        "active":      bool(row["active"]),
-        "isPrimary":   row["currency"] in PRIMARY_CURRENCIES,
+        "id":            row["id"],
+        "currency":      row["currency"],
+        "unit":          row["unit"] if row["unit"] else 1,
+        "buyingRate":    row["buying_rate"],
+        "sellingRate":   row["selling_rate"],
+        "decimals":      row["decimals"],
+        "active":        bool(row["active"]),
+        "isPrimary":     row["currency"] in PRIMARY_CURRENCIES,
+        "buyPreorder":   bool(row["buy_preorder"]),
+        "sellPreorder":  bool(row["sell_preorder"]),
     }
     if i is not None:
         d["serialNumber"] = i + 1
     return d
+
+
+def parse_rate_field(data, rate_key, preorder_key):
+    """A rate is either a number, or marked as pre-order (no number required)."""
+    preorder = bool(data.get(preorder_key, False))
+    if preorder:
+        return 0.0, True
+    value = data.get(rate_key)
+    if value is None:
+        return None, None
+    try:
+        return float(value), False
+    except (ValueError, TypeError):
+        return None, None
 
 
 @app.route("/api/currencies", methods=["GET"])
@@ -272,16 +345,17 @@ def get_currencies():
 @login_required
 def add_currency():
     data = request.json or {}
-    currency     = data.get("currency", "").strip()
-    unit         = data.get("unit", 1)
-    buying_rate  = data.get("buyingRate")
-    selling_rate = data.get("sellingRate")
-    decimals     = data.get("decimals", 2)
+    currency = data.get("currency", "").strip()
+    unit     = data.get("unit", 1)
+    decimals = data.get("decimals", 2)
+
+    buying_rate,  buy_preorder  = parse_rate_field(data, "buyingRate",  "buyPreorder")
+    selling_rate, sell_preorder = parse_rate_field(data, "sellingRate", "sellPreorder")
+
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
     try:
-        unit = int(unit); buying_rate = float(buying_rate)
-        selling_rate = float(selling_rate); decimals = int(decimals)
+        unit = int(unit); decimals = int(decimals)
         if unit < 1: raise ValueError
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
@@ -292,8 +366,8 @@ def add_currency():
     ).fetchone()
     if existing:
         db.execute(
-            "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=? WHERE id=? AND user_id=?",
-            (unit, buying_rate, selling_rate, decimals, existing["id"], current_user_id())
+            "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
+            (unit, buying_rate, selling_rate, decimals, int(buy_preorder), int(sell_preorder), existing["id"], current_user_id())
         )
     else:
         max_order = db.execute(
@@ -301,8 +375,8 @@ def add_currency():
             (current_user_id(),)
         ).fetchone()[0]
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,?)",
-            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1)
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,1,?,?,?)",
+            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, int(buy_preorder), int(sell_preorder))
         )
     db.commit()
     return jsonify({"message": "Currency saved"}), 201
@@ -312,22 +386,23 @@ def add_currency():
 @login_required
 def update_currency(cid):
     data = request.json or {}
-    currency     = data.get("currency", "").strip()
-    unit         = data.get("unit", 1)
-    buying_rate  = data.get("buyingRate")
-    selling_rate = data.get("sellingRate")
-    decimals     = data.get("decimals", 2)
+    currency = data.get("currency", "").strip()
+    unit     = data.get("unit", 1)
+    decimals = data.get("decimals", 2)
+
+    buying_rate,  buy_preorder  = parse_rate_field(data, "buyingRate",  "buyPreorder")
+    selling_rate, sell_preorder = parse_rate_field(data, "sellingRate", "sellPreorder")
+
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
     try:
-        unit = int(unit); buying_rate = float(buying_rate)
-        selling_rate = float(selling_rate); decimals = int(decimals)
+        unit = int(unit); decimals = int(decimals)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
     db = get_db()
     db.execute(
-        "UPDATE currencies SET buying_rate=?, selling_rate=?, decimals=?, unit=? WHERE id=? AND user_id=?",
-        (buying_rate, selling_rate, decimals, unit, cid, current_user_id())
+        "UPDATE currencies SET buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
+        (buying_rate, selling_rate, decimals, unit, int(buy_preorder), int(sell_preorder), cid, current_user_id())
     )
     db.commit()
     return jsonify({"message": "Updated"})
@@ -378,6 +453,29 @@ def delete_currency(cid):
     db.execute("DELETE FROM currencies WHERE id=? AND user_id=?", (cid, current_user_id()))
     db.commit()
     return jsonify({"message": "Deleted"})
+
+
+# ── Public board (no login required — this is what the TV/display board reads) ──
+
+@app.route("/api/board/public", methods=["GET"])
+def public_board():
+    user_id = request.args.get("user")
+    if not user_id:
+        return jsonify({"error": "Missing user"}), 400
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+    if not user:
+        return jsonify({"error": "Board not found"}), 404
+    rows = db.execute(
+        "SELECT * FROM currencies WHERE user_id=? AND active=1 ORDER BY sort_order, id",
+        (user_id,)
+    ).fetchall()
+    return jsonify({
+        "boardName":  user["board_name"] if user["board_name"] else "",
+        "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
+        "logo":       user["logo_data"] if user["logo_data"] else "",
+        "currencies": [row_to_dict(r) for r in rows]
+    })
 
 
 # Run schema creation / migrations on import, not just when this file is

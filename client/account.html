@@ -131,6 +131,20 @@
                 </div>
                 <div class="msg-success" id="prof-success"></div>
                 <div class="msg-error"   id="prof-error"></div>
+
+                <div class="divider"></div>
+
+                <div class="panel-title" style="font-size:1rem;">TV Board Name</div>
+                <div class="panel-subtitle">Shown as the business name on your public exchange board</div>
+                <div class="field">
+                    <label class="field-label">Board / Business Name</label>
+                    <input class="input" type="text" id="prof-boardname" placeholder="e.g. SURIA MUHABAT SDN BHD" maxlength="80">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-gold" onclick="saveBoardName()">Save Board Name</button>
+                </div>
+                <div class="msg-success" id="board-success"></div>
+                <div class="msg-error"   id="board-error"></div>
             </div>
 
             <!-- Password Panel -->
@@ -193,6 +207,7 @@ async function loadProfile() {
         document.getElementById("prof-username").value    = data.username || "";
         document.getElementById("prof-displayname").value = data.displayName || "";
         document.getElementById("prof-email").value       = data.email || "";
+        document.getElementById("prof-boardname").value   = data.boardName || "";
 
         // Sidebar
         const name = data.displayName || data.username;
@@ -224,6 +239,26 @@ async function saveProfile() {
         }
     } catch {
         showMsg("prof-error", "Could not reach server. Please try again.", true);
+    }
+}
+
+async function saveBoardName() {
+    const boardName = document.getElementById("prof-boardname").value.trim();
+    try {
+        const res = await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardName })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showMsg("board-success", "✓ Board name updated", false);
+        } else {
+            showMsg("board-error", data.error || "Failed to update", true);
+        }
+    } catch {
+        showMsg("board-error", "Could not reach server. Please try again.", true);
     }
 }
 

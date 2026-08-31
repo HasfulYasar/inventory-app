@@ -33,11 +33,17 @@
             </div>
             <div class="field">
                 <label class="field-label">Buying Rate</label>
-                <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0" required>
+                <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
+                    <input type="checkbox" id="buyPreorder" onchange="togglePreorder('buy')"> Pre-order (no fixed rate yet)
+                </label>
             </div>
             <div class="field">
                 <label class="field-label">Selling Rate</label>
-                <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="any" min="0" required>
+                <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="any" min="0">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
+                    <input type="checkbox" id="sellPreorder" onchange="togglePreorder('sell')"> Pre-order (no fixed rate yet)
+                </label>
             </div>
             <div class="field">
                 <label class="field-label">Decimal Places</label>
@@ -109,6 +115,14 @@ CURRENCIES.forEach(c => {
     select.appendChild(opt);
 });
 
+function togglePreorder(which) {
+    const checked = document.getElementById(which + "Preorder").checked;
+    const rateInput = document.getElementById(which === "buy" ? "buyingRate" : "sellingRate");
+    rateInput.disabled = checked;
+    rateInput.required = !checked;
+    if (checked) rateInput.value = "";
+}
+
 async function addCurrency(e) {
     e.preventDefault();
     const errorEl   = document.getElementById("error-msg");
@@ -116,12 +130,28 @@ async function addCurrency(e) {
     errorEl.style.display   = "none";
     successEl.style.display = "none";
 
+    const buyPreorder  = document.getElementById("buyPreorder").checked;
+    const sellPreorder = document.getElementById("sellPreorder").checked;
+
+    if (!buyPreorder && document.getElementById("buyingRate").value === "") {
+        errorEl.textContent = "Enter a buying rate or mark it as pre-order.";
+        errorEl.style.display = "block";
+        return;
+    }
+    if (!sellPreorder && document.getElementById("sellingRate").value === "") {
+        errorEl.textContent = "Enter a selling rate or mark it as pre-order.";
+        errorEl.style.display = "block";
+        return;
+    }
+
     const payload = {
-        currency:    document.getElementById("currency").value,
-        unit:        parseInt(document.getElementById("unit").value) || 1,
-        buyingRate:  parseFloat(document.getElementById("buyingRate").value),
-        sellingRate: parseFloat(document.getElementById("sellingRate").value),
-        decimals:    parseInt(document.getElementById("decimals").value)
+        currency:     document.getElementById("currency").value,
+        unit:         parseInt(document.getElementById("unit").value) || 1,
+        buyingRate:   buyPreorder  ? 0 : parseFloat(document.getElementById("buyingRate").value),
+        sellingRate:  sellPreorder ? 0 : parseFloat(document.getElementById("sellingRate").value),
+        decimals:     parseInt(document.getElementById("decimals").value),
+        buyPreorder:  buyPreorder,
+        sellPreorder: sellPreorder
     };
 
     try {
@@ -137,6 +167,8 @@ async function addCurrency(e) {
             successEl.style.display = "block";
             document.getElementById("currencyForm").reset();
             document.getElementById("unit").value = "1";
+            togglePreorder("buy");
+            togglePreorder("sell");
         } else {
             errorEl.textContent   = data.error || "Failed to add currency";
             errorEl.style.display = "block";

@@ -151,6 +151,7 @@ tr:hover td { background: #fafbff; }
 /* Status badges */
 .badge-on  { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; background:#e6f9ef; color:#1a7f4b; }
 .badge-off { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; background:#fdf2f2; color:#c0392b; }
+.badge-preorder { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; background:#e6f9ef; color:#1a7f4b; letter-spacing:0.3px; }
 
 /* Messages */
 .error-msg   { font-size:13px; color:#c0392b; background:#fdf2f2; border:1px solid #f5c6c2; border-radius:7px; padding:8px 12px; margin-top:8px; }

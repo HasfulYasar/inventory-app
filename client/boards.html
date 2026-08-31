@@ -194,6 +194,9 @@
         .c-name { font-size: 10px; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .unit-val { font-size: 0.7rem; font-weight: 700; color: #1a1a2e; text-align: right; }
         .rate-val { font-size: 0.78rem; font-weight: 700; color: var(--rate); font-variant-numeric: tabular-nums; text-align: right; }
+        .rate-val.preorder-val, .t-val.preorder-val {
+            color: #4caf50; font-size: 0.66rem; letter-spacing: 0.3px;
+        }
 
         /* ── Secondary ticker ── */
         .secondary-section {
@@ -248,6 +251,15 @@
             grid-column: 1/-1; display: flex; align-items: center;
             justify-content: center; color: var(--text3); font-size: 13px;
         }
+
+        .board-title {
+            font-size: 15px; font-weight: 800; color: var(--text);
+            letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .board-clock {
+            font-size: 11px; font-weight: 600; color: var(--toggle-text);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -256,9 +268,11 @@
     <div class="board-header">
         <div class="header-left">
             <a class="back-btn" href="/">&#8592; Back</a>
-            <img src="/logo.png" alt="SHOWCASH" class="board-logo">
+            <img src="/logo.png" alt="Logo" class="board-logo" id="boardLogoImg">
+            <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
         </div>
         <div class="header-right">
+            <div class="board-clock" id="boardClock"></div>
             <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light Mode</div>
             <div class="live-badge"><div class="live-dot"></div>Live Rates</div>
         </div>
@@ -347,6 +361,12 @@ function flagUrl(code) {
     return `https://flagcdn.com/w40/${info ? info.cc : "un"}.png`;
 }
 
+function rateCell(rate, decimals, isPreorder) {
+    return isPreorder
+        ? `<div class="rate-val preorder-val">PRE-ORDER</div>`
+        : `<div class="rate-val">${rate.toFixed(decimals)}</div>`;
+}
+
 async function loadRates() {
     const userId = new URLSearchParams(window.location.search).get("user");
     if (!userId) {
@@ -355,12 +375,19 @@ async function loadRates() {
         return;
     }
     try {
-        const res = await fetch(`/api/currencies/public?user=${userId}`);
+        const res = await fetch(`/api/board/public?user=${userId}`);
         if (!res.ok) throw new Error();
-        const data = await res.json();
+        const board = await res.json();
+
+        document.getElementById("boardTitle").textContent = board.boardName || "CURRENCY EXCHANGE";
+        if (board.logo) document.getElementById("boardLogoImg").src = board.logo;
+        if (board.boardColor) {
+            document.getElementById("boardTitle").style.color = board.boardColor;
+        }
+
+        const data = board.currencies || [];
         renderPrimary(data);
         renderSecondary(data);
-        document.getElementById("lastUpdated").textContent = "Updated: " + new Date().toLocaleTimeString();
         document.getElementById("rateCount").textContent = data.length + " Currencies";
     } catch {
         document.getElementById("primaryGrid").innerHTML =
@@ -393,8 +420,8 @@ function renderPrimary(data) {
                 </div>
             </div>
             <div class="unit-val">${c.unit||1}</div>
-            <div class="rate-val">${c.buyingRate.toFixed(c.decimals)}</div>
-            <div class="rate-val">${c.sellingRate.toFixed(c.decimals)}</div>
+            ${rateCell(c.buyingRate, c.decimals, c.buyPreorder)}
+            ${rateCell(c.sellingRate, c.decimals, c.sellPreorder)}
         </div>`;
     }).join("");
 }
@@ -407,14 +434,17 @@ function renderSecondary(data) {
     section.style.display = "block";
     document.getElementById("secCount").textContent = secondary.length + " more";
 
+    const tVal = (rate, decimals, isPreorder) =>
+        isPreorder ? `<span class="t-val preorder-val">PRE-ORDER</span>` : `<span class="t-val">${rate.toFixed(decimals)}</span>`;
+
     const makeItems = arr => arr.map(c => `
         <div class="ticker-item">
             <img class="t-flag" src="${flagUrl(c.currency)}" alt="${c.currency}" onerror="this.style.display='none'">
             <span class="t-code">${c.currency}</span>
             <span class="t-unit">×${c.unit||1}</span>
             <div class="t-rates">
-                <div><div class="t-lbl">Buy</div><div class="t-val">${c.buyingRate.toFixed(c.decimals)}</div></div>
-                <div><div class="t-lbl">Sell</div><div class="t-val">${c.sellingRate.toFixed(c.decimals)}</div></div>
+                <div><div class="t-lbl">Buy</div>${tVal(c.buyingRate, c.decimals, c.buyPreorder)}</div>
+                <div><div class="t-lbl">Sell</div>${tVal(c.sellingRate, c.decimals, c.sellPreorder)}</div>
             </div>
         </div>`).join("");
 
@@ -423,8 +453,18 @@ function renderSecondary(data) {
     ticker.style.animationDuration = Math.max(20, secondary.length * 5) + "s";
 }
 
+function updateClock() {
+    const now = new Date();
+    const datePart = now.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const timePart = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    document.getElementById("boardClock").textContent = `${datePart} · ${timePart}`;
+    document.getElementById("lastUpdated").textContent = "Updated: " + timePart;
+}
+
 loadRates();
+updateClock();
 setInterval(loadRates, 60000);
+setInterval(updateClock, 1000);
 </script>
 </body>
 </html>

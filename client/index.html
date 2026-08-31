@@ -181,8 +181,18 @@ function renderTable() {
                 <td class="drag-handle" title="Drag to reorder">⠿</td>
                 <td>${i + 1}</td>
                 <td>${flagCell(c.currency)}</td>
-                <td><input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0"></td>
-                <td><input class="input" id="e-selling-${c.id}" type="number" value="${c.sellingRate}" step="any" min="0"></td>
+                <td>
+                    <input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0" ${c.buyPreorder?'disabled':''} style="margin-bottom:4px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:500;white-space:nowrap;">
+                        <input type="checkbox" id="e-buypreorder-${c.id}" ${c.buyPreorder?'checked':''} onchange="onPreorderToggle(${c.id},'buy')"> Pre-order
+                    </label>
+                </td>
+                <td>
+                    <input class="input" id="e-selling-${c.id}" type="number" value="${c.sellingRate}" step="any" min="0" ${c.sellPreorder?'disabled':''} style="margin-bottom:4px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:500;white-space:nowrap;">
+                        <input type="checkbox" id="e-sellpreorder-${c.id}" ${c.sellPreorder?'checked':''} onchange="onPreorderToggle(${c.id},'sell')"> Pre-order
+                    </label>
+                </td>
                 <td>
                     <select id="e-decimals-${c.id}" class="input" style="min-width:65px;">
                         ${[0,1,2,3,4].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
@@ -201,8 +211,8 @@ function renderTable() {
             <tr>
                 <td>${i + 1}</td>
                 <td>${flagCell(c.currency)}</td>
-                <td>${c.buyingRate.toFixed(c.decimals)}</td>
-                <td>${c.sellingRate.toFixed(c.decimals)}</td>
+                <td>${c.buyPreorder ? '<span class="badge-preorder">PRE-ORDER</span>' : c.buyingRate.toFixed(c.decimals)}</td>
+                <td>${c.sellPreorder ? '<span class="badge-preorder">PRE-ORDER</span>' : c.sellingRate.toFixed(c.decimals)}</td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
             </tr>`;
         }
@@ -235,6 +245,11 @@ function onDragOverRow(e, overId) {
     renderTable();
 }
 
+function onPreorderToggle(id, which) {
+    const checked = document.getElementById(`e-${which}preorder-${id}`).checked;
+    document.getElementById(`e-${which}-${id}`).disabled = checked;
+}
+
 // ── Edit mode ──
 
 window.toggleEditMode = function () {
@@ -255,14 +270,16 @@ window.toggleEditMode = function () {
 
 async function saveAllChanges() {
     const updates = allData.map(c => {
-        const buyingRate  = parseFloat(document.getElementById(`e-buying-${c.id}`).value);
-        const sellingRate = parseFloat(document.getElementById(`e-selling-${c.id}`).value);
-        const decimals    = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
-        return { id: c.id, currency: c.currency, unit: c.unit, buyingRate, sellingRate, decimals };
+        const buyPreorder  = document.getElementById(`e-buypreorder-${c.id}`).checked;
+        const sellPreorder = document.getElementById(`e-sellpreorder-${c.id}`).checked;
+        const buyingRate   = buyPreorder  ? 0 : parseFloat(document.getElementById(`e-buying-${c.id}`).value);
+        const sellingRate  = sellPreorder ? 0 : parseFloat(document.getElementById(`e-selling-${c.id}`).value);
+        const decimals     = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
+        return { id: c.id, currency: c.currency, unit: c.unit, buyingRate, sellingRate, decimals, buyPreorder, sellPreorder };
     });
 
     if (updates.some(u => isNaN(u.buyingRate) || isNaN(u.sellingRate))) {
-        showError("Please fill in all rate fields before saving.");
+        showError("Please fill in all rate fields, or mark them as pre-order, before saving.");
         return;
     }
 
@@ -274,7 +291,8 @@ async function saveAllChanges() {
                 credentials: "include",
                 body: JSON.stringify({
                     currency: u.currency, unit: u.unit,
-                    buyingRate: u.buyingRate, sellingRate: u.sellingRate, decimals: u.decimals
+                    buyingRate: u.buyingRate, sellingRate: u.sellingRate, decimals: u.decimals,
+                    buyPreorder: u.buyPreorder, sellPreorder: u.sellPreorder
                 })
             })
         ));
