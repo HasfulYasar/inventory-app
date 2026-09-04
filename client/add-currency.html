@@ -166,6 +166,9 @@ async function addCurrency(e) {
         });
         const data = await res.json();
         if (res.ok) {
+            if ("BroadcastChannel" in window) {
+                new BroadcastChannel("showcash-board-updates").postMessage("refresh");
+            }
             successEl.textContent   = `${payload.currency} added successfully!`;
             successEl.style.display = "block";
             document.getElementById("currencyForm").reset();

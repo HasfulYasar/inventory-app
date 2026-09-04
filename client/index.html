@@ -43,14 +43,24 @@
             flex-wrap: wrap;
             align-items: flex-end;
         }
-        .color-input {
-            width: 64px;
-            height: 40px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            padding: 2px;
+        .color-swatch-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 300px;
+        }
+        .color-swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
             cursor: pointer;
-            background: #fff;
+            border: 2px solid transparent;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+        }
+        .color-swatch:hover { transform: translateY(-2px); }
+        .color-swatch.selected {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px #1a1a2e, 0 0 16px 2px var(--glow);
         }
         .logo-upload-row { display: flex; align-items: center; gap: 10px; }
         .logo-preview {
@@ -70,7 +80,7 @@
             <h2>Exchange Board</h2>
             <p>Your live currency rates</p>
         </div>
-        <a id="viewBoardBtn" href="#" target="_blank" class="btn btn-gold">📺 View Live Board</a>
+        <a id="viewBoardBtn" href="#" class="btn btn-gold">📺 View Live Board</a>
     </div>
 
     <div class="card" id="boardSettingsCard" style="display:none;">
@@ -78,7 +88,16 @@
         <div class="board-settings-row">
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Board Color</label>
-                <input type="color" id="boardColorInput" class="color-input" value="#1a1a2e">
+                <div class="color-swatch-grid" id="colorSwatchGrid"></div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Pick a shade — saves and updates the live board instantly</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Font Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="fontScaleInput" min="80" max="160" step="10" value="100" style="width:160px;">
+                    <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size on the live board — layout reflows automatically</div>
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Your Logo</label>
@@ -88,6 +107,26 @@
                     <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
                     <button class="btn btn-secondary btn-small" id="logoResetBtn" type="button">Reset</button>
                 </div>
+            </div>
+            <div class="field" style="margin-bottom:0;min-width:220px;">
+                <label class="field-label">Board Title</label>
+                <input class="input" type="text" id="boardTitleInput" placeholder="e.g. CURRENCY EXCHANGE" maxlength="80" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">The big heading at the top of the board</div>
+            </div>
+            <div class="field" style="margin-bottom:0;min-width:200px;">
+                <label class="field-label">Board Subtitle</label>
+                <input class="input" type="text" id="boardSubtitleInput" placeholder="e.g. Currency Exchange" maxlength="120" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Smaller line shown under the title</div>
+            </div>
+            <div class="field" style="margin-bottom:0;min-width:220px;">
+                <label class="field-label">License Text</label>
+                <input class="input" type="text" id="boardLicenseInput" placeholder="e.g. Perniagaan Perkhidmatan Wang Berlesen" maxlength="120" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown under the subtitle on the board</div>
+            </div>
+            <div class="field" style="margin-bottom:0;min-width:180px;">
+                <label class="field-label">Mobile Number</label>
+                <input class="input" type="text" id="mobileNumberInput" placeholder="e.g. +60 12-345 6789" maxlength="40" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown above the clock, top-right of the board</div>
             </div>
         </div>
     </div>
@@ -129,12 +168,20 @@ const CURRENCY_COUNTRY = {
     BDT:"bd",MOP:"mo",SCR:"sc",IQD:"iq",RUB:"ru",NPR:"np",CZK:"cz",KHR:"kh"
 };
 
+// Instantly notifies any open /boards.html tab (e.g. on a TV screen) to
+// refresh the moment currencies, board color, name or logo are saved here.
+const boardUpdateChannel = "BroadcastChannel" in window ? new BroadcastChannel("showcash-board-updates") : null;
+function notifyBoardUpdate() {
+    if (boardUpdateChannel) boardUpdateChannel.postMessage("refresh");
+}
+
 const errorMsg = document.getElementById("error-msg");
 let allData = [];
 let editModeActive = false;
 let reorderDirty = false;
 let draggedId = null;
 let boardColor = "#1a1a2e";
+let fontScale = 1;
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
@@ -321,6 +368,7 @@ async function saveAllChanges() {
         const navBtn = document.getElementById("navEditBtn");
         if (navBtn) navBtn.textContent = "✎ Edit";
         loadCurrencies();
+        notifyBoardUpdate();
     } catch {
         showError("Could not reach server. Please try again.");
     }
@@ -333,6 +381,7 @@ async function toggleCurrency(id) {
         const c = allData.find(x => x.id === id);
         if (c) c.active = !c.active;
         renderTable();
+        notifyBoardUpdate();
     } catch { showError("Could not toggle."); }
 }
 
@@ -342,13 +391,60 @@ async function deleteCurrency(id) {
         const res = await fetch(`/api/currencies/${id}`, { method: "DELETE", credentials: "include" });
         if (!res.ok) throw new Error();
         loadCurrencies();
+        notifyBoardUpdate();
     } catch { showError("Could not delete."); }
 }
 
 // ── Board settings: color + logo ──
 
+// Curated dark shades only — each carries a matching neon glow color so the
+// picker previews roughly what the TV board's accent will look like.
+const BOARD_COLOR_PRESETS = [
+    { name: "Midnight Navy",  hex: "#1a1a2e", glow: "#f0c040" },
+    { name: "Onyx Black",     hex: "#111214", glow: "#ffffff" },
+    { name: "Deep Purple",    hex: "#241b3f", glow: "#c084fc" },
+    { name: "Emerald Night",  hex: "#0f2e22", glow: "#34d399" },
+    { name: "Wine Red",       hex: "#2b0f1c", glow: "#f87171" },
+    { name: "Ocean Teal",     hex: "#0d2b33", glow: "#22d3ee" },
+    { name: "Royal Indigo",   hex: "#161b3d", glow: "#818cf8" },
+    { name: "Espresso Brown", hex: "#2a1c12", glow: "#fbbf24" },
+    { name: "Midnight Blue",  hex: "#0B1F3A", glow: "#2F80ED" },
+    { name: "Navy Gold",      hex: "#12355B", glow: "#C9A227" },
+    { name: "Teal Blue",      hex: "#00A6A6", glow: "#155EEF" },
+    { name: "Charcoal Green", hex: "#202124", glow: "#12B76A" },
+    { name: "Forest Gold",    hex: "#14532D", glow: "#D4AF37" },
+    { name: "Navy Amber",     hex: "#172B4D", glow: "#EAB308" },
+];
+
 function applyBoardColor(color) {
     document.body.style.background = color;
+}
+
+function renderColorSwatches() {
+    const grid = document.getElementById("colorSwatchGrid");
+    grid.innerHTML = BOARD_COLOR_PRESETS.map(p => `
+        <div class="color-swatch${boardColor.toLowerCase() === p.hex ? ' selected' : ''}"
+             style="background:${p.hex}; --glow:${p.glow};"
+             title="${p.name}"
+             onclick="pickBoardColor('${p.hex}')"></div>
+    `).join("");
+}
+
+async function pickBoardColor(hex) {
+    boardColor = hex;
+    applyBoardColor(hex);
+    renderColorSwatches();
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardColor })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save board color.");
+    }
 }
 
 async function loadBoardSettings() {
@@ -357,11 +453,22 @@ async function loadBoardSettings() {
         if (!res.ok) return;
         const data = await res.json();
         boardColor = data.boardColor || "#1a1a2e";
-        document.getElementById("boardColorInput").value = boardColor;
         applyBoardColor(boardColor);
+        renderColorSwatches();
+
+        fontScale = data.fontScale || 1;
+        const pct = Math.round(fontScale * 100);
+        document.getElementById("fontScaleInput").value = pct;
+        document.getElementById("fontScaleLabel").textContent = pct + "%";
+
         if (data.logo) {
             document.getElementById("logoPreview").src = data.logo;
         }
+        document.getElementById("boardTitleInput").value    = data.boardName     || "";
+        document.getElementById("boardSubtitleInput").value = data.boardSubtitle || "";
+        document.getElementById("boardLicenseInput").value  = data.boardLicense  || "";
+        document.getElementById("mobileNumberInput").value  = data.mobileNumber  || "";
+
         const viewBoardBtn = document.getElementById("viewBoardBtn");
         if (viewBoardBtn && data.id) {
             viewBoardBtn.href = `/boards.html?user=${data.id}`;
@@ -369,20 +476,21 @@ async function loadBoardSettings() {
     } catch { /* non-fatal */ }
 }
 
-document.getElementById("boardColorInput").addEventListener("input", (e) => {
-    applyBoardColor(e.target.value);
+document.getElementById("fontScaleInput").addEventListener("input", (e) => {
+    document.getElementById("fontScaleLabel").textContent = e.target.value + "%";
 });
-document.getElementById("boardColorInput").addEventListener("change", async (e) => {
-    boardColor = e.target.value;
+document.getElementById("fontScaleInput").addEventListener("change", async (e) => {
+    fontScale = parseInt(e.target.value) / 100;
     try {
         await fetch("/api/board", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ boardColor })
+            body: JSON.stringify({ fontScale })
         });
+        notifyBoardUpdate();
     } catch {
-        showError("Could not save board color.");
+        showError("Could not save font size.");
     }
 });
 
@@ -406,6 +514,7 @@ document.getElementById("logoFileInput").addEventListener("change", (e) => {
             });
             const navLogo = document.querySelector(".nav-logo");
             if (navLogo) navLogo.src = dataUrl;
+            notifyBoardUpdate();
         } catch {
             showError("Could not upload logo. Please try again.");
         }
@@ -424,10 +533,34 @@ document.getElementById("logoResetBtn").addEventListener("click", async () => {
         });
         const navLogo = document.querySelector(".nav-logo");
         if (navLogo) navLogo.src = "/logo.png";
+        notifyBoardUpdate();
     } catch {
         showError("Could not reset logo.");
     }
 });
+
+// Board subtitle / license text / mobile number — free-text board content,
+// saved the moment the admin leaves the field (same instant-save feel as
+// the rest of Board Settings).
+function wireTextBoardField(inputId, payloadKey, errorLabel) {
+    document.getElementById(inputId).addEventListener("change", async (e) => {
+        try {
+            await fetch("/api/board", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ [payloadKey]: e.target.value.trim() })
+            });
+            notifyBoardUpdate();
+        } catch {
+            showError(`Could not save ${errorLabel}.`);
+        }
+    });
+}
+wireTextBoardField("boardTitleInput",    "boardName",     "board title");
+wireTextBoardField("boardSubtitleInput", "boardSubtitle", "board subtitle");
+wireTextBoardField("boardLicenseInput",  "boardLicense",  "license text");
+wireTextBoardField("mobileNumberInput",  "mobileNumber",  "mobile number");
 
 loadCurrencies();
 loadBoardSettings();

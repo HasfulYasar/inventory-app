@@ -16,6 +16,12 @@ DB_PATH = os.path.join(BASE_DIR, "database.db")
 MAX_LOGO_LEN = 700_000  # ~500KB image
 
 DEFAULT_BOARD_COLOR = "#1a1a2e"
+DEFAULT_FONT_SCALE = 1.0
+MIN_FONT_SCALE = 0.8
+MAX_FONT_SCALE = 1.6
+DEFAULT_BOARD_SUBTITLE = "Currency Exchange"
+DEFAULT_BOARD_LICENSE = "Perniagaan Perkhidmatan Wang Berlesen"
+MAX_TEXT_FIELD_LEN = 120
 
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
@@ -104,6 +110,10 @@ def init_db():
             ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
             ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
             ("board_name",   "TEXT NOT NULL DEFAULT ''"),
+            ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+            ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
+            ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+            ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
         ]:
             try:
                 db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -215,7 +225,11 @@ def me():
             "displayName": user["display_name"] if user["display_name"] else "",
             "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
             "logo": user["logo_data"] if user["logo_data"] else "",
-            "boardName": user["board_name"] if user["board_name"] else ""
+            "boardName": user["board_name"] if user["board_name"] else "",
+            "fontScale": user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
+            "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
+            "boardLicense": user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+            "mobileNumber": user["mobile_number"] if user["mobile_number"] else ""
         })
     return jsonify({"error": "Not logged in"}), 401
 
@@ -270,6 +284,10 @@ def update_board():
     color      = data.get("boardColor", "").strip()
     logo       = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
     board_name = data.get("boardName", None)  # None = leave unchanged
+    font_scale = data.get("fontScale", None)  # None = leave unchanged
+    subtitle   = data.get("boardSubtitle", None)  # None = leave unchanged
+    license_txt= data.get("boardLicense", None)   # None = leave unchanged
+    mobile     = data.get("mobileNumber", None)   # None = leave unchanged
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
@@ -277,6 +295,19 @@ def update_board():
         return jsonify({"error": "Logo image is too large"}), 400
     if board_name is not None and len(board_name) > 80:
         return jsonify({"error": "Board name is too long"}), 400
+    if subtitle is not None and len(subtitle) > MAX_TEXT_FIELD_LEN:
+        return jsonify({"error": "Subtitle is too long"}), 400
+    if license_txt is not None and len(license_txt) > MAX_TEXT_FIELD_LEN:
+        return jsonify({"error": "License text is too long"}), 400
+    if mobile is not None and len(mobile) > 40:
+        return jsonify({"error": "Mobile number is too long"}), 400
+    if font_scale is not None:
+        try:
+            font_scale = float(font_scale)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid font size"}), 400
+        if font_scale < MIN_FONT_SCALE or font_scale > MAX_FONT_SCALE:
+            return jsonify({"error": "Font size out of range"}), 400
 
     db = get_db()
     sets, params = [], []
@@ -289,6 +320,18 @@ def update_board():
     if board_name is not None:
         sets.append("board_name=?")
         params.append(board_name.strip())
+    if font_scale is not None:
+        sets.append("font_scale=?")
+        params.append(font_scale)
+    if subtitle is not None:
+        sets.append("board_subtitle=?")
+        params.append(subtitle.strip())
+    if license_txt is not None:
+        sets.append("board_license=?")
+        params.append(license_txt.strip())
+    if mobile is not None:
+        sets.append("mobile_number=?")
+        params.append(mobile.strip())
     if not sets:
         return jsonify({"message": "Nothing to update"})
     params.append(current_user_id())
@@ -475,6 +518,10 @@ def public_board():
         "boardName":  user["board_name"] if user["board_name"] else "",
         "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
         "logo":       user["logo_data"] if user["logo_data"] else "",
+        "fontScale":  user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
+        "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
+        "boardLicense":  user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+        "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
         "currencies": [row_to_dict(r) for r in rows]
     })
 

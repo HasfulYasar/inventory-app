@@ -253,6 +253,9 @@ async function saveBoardName() {
         });
         const data = await res.json();
         if (res.ok) {
+            if ("BroadcastChannel" in window) {
+                new BroadcastChannel("showcash-board-updates").postMessage("refresh");
+            }
             showMsg("board-success", "✓ Board name updated", false);
         } else {
             showMsg("board-error", data.error || "Failed to update", true);
