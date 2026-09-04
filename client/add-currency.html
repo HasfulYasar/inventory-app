@@ -1,189 +1,567 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Currency — SHOWCASH</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="container">
-    <div class="page-header">
-        <div class="page-header-text">
-            <h2>Add Currency</h2>
-            <p>Add a new currency exchange rate</p>
+    <div class="container">
+        <div class="page-header">
+            <div class="page-header-text">
+                <h2>Add Currency</h2>
+                <p>Add a new currency exchange rate</p>
+            </div>
+            <a href="/" class="btn btn-secondary">← Home</a>
         </div>
-        <a href="/" class="btn btn-secondary">← Home</a>
+
+        <div class="card" style="max-width:500px;">
+            <div id="error-msg" class="error-msg" style="display:none;"></div>
+            <div id="success-msg" class="success-msg"></div>
+
+            <form id="currencyForm" onsubmit="addCurrency(event)">
+                <div class="field">
+                    <label class="field-label">Currency</label>
+                    <select id="currency" class="input"></select>
+                </div>
+
+                <div id="customCurrencyFields" style="display:none;">
+                    <div class="field">
+                        <label class="field-label">Currency Code</label>
+                        <input class="input" type="text" id="customCurrencyCode" placeholder="e.g. XAF" maxlength="3"
+                            style="text-transform:uppercase;"
+                            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')">
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label">Currency Name</label>
+                        <input class="input" type="text" id="customCurrencyName"
+                            placeholder="e.g. Central African CFA Franc" maxlength="80">
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label">Country / Flag</label>
+                        <select class="input" id="customCurrencyFlag">
+                            <option value="af">🇦🇫 Afghanistan</option>
+                            <option value="al">🇦🇱 Albania</option>
+                            <option value="dz">🇩🇿 Algeria</option>
+                            <option value="as">🇦🇸 American Samoa</option>
+                            <option value="ad">🇦🇩 Andorra</option>
+                            <option value="ao">🇦🇴 Angola</option>
+                            <option value="ai">🇦🇮 Anguilla</option>
+                            <option value="aq">🇦🇶 Antarctica</option>
+                            <option value="ag">🇦🇬 Antigua and Barbuda</option>
+                            <option value="ar">🇦🇷 Argentina</option>
+                            <option value="am">🇦🇲 Armenia</option>
+                            <option value="aw">🇦🇼 Aruba</option>
+                            <option value="au">🇦🇺 Australia</option>
+                            <option value="at">🇦🇹 Austria</option>
+                            <option value="az">🇦🇿 Azerbaijan</option>
+
+                            <option value="bs">🇧🇸 Bahamas</option>
+                            <option value="bh">🇧🇭 Bahrain</option>
+                            <option value="bd">🇧🇩 Bangladesh</option>
+                            <option value="bb">🇧🇧 Barbados</option>
+                            <option value="by">🇧🇾 Belarus</option>
+                            <option value="be">🇧🇪 Belgium</option>
+                            <option value="bz">🇧🇿 Belize</option>
+                            <option value="bj">🇧🇯 Benin</option>
+                            <option value="bm">🇧🇲 Bermuda</option>
+                            <option value="bt">🇧🇹 Bhutan</option>
+                            <option value="bo">🇧🇴 Bolivia</option>
+                            <option value="ba">🇧🇦 Bosnia and Herzegovina</option>
+                            <option value="bw">🇧🇼 Botswana</option>
+                            <option value="br">🇧🇷 Brazil</option>
+                            <option value="io">🇮🇴 British Indian Ocean Territory</option>
+                            <option value="vg">🇻🇬 British Virgin Islands</option>
+                            <option value="bn">🇧🇳 Brunei</option>
+                            <option value="bg">🇧🇬 Bulgaria</option>
+                            <option value="bf">🇧🇫 Burkina Faso</option>
+                            <option value="bi">🇧🇮 Burundi</option>
+
+                            <option value="cv">🇨🇻 Cabo Verde</option>
+                            <option value="kh">🇰🇭 Cambodia</option>
+                            <option value="cm">🇨🇲 Cameroon</option>
+                            <option value="ca">🇨🇦 Canada</option>
+                            <option value="ky">🇰🇾 Cayman Islands</option>
+                            <option value="cf">🇨🇫 Central African Republic</option>
+                            <option value="td">🇹🇩 Chad</option>
+                            <option value="cl">🇨🇱 Chile</option>
+                            <option value="cn">🇨🇳 China</option>
+                            <option value="cx">🇨🇽 Christmas Island</option>
+                            <option value="cc">🇨🇨 Cocos Islands</option>
+                            <option value="co">🇨🇴 Colombia</option>
+                            <option value="km">🇰🇲 Comoros</option>
+                            <option value="cg">🇨🇬 Congo</option>
+                            <option value="cd">🇨🇩 Democratic Republic of the Congo</option>
+                            <option value="ck">🇨🇰 Cook Islands</option>
+                            <option value="cr">🇨🇷 Costa Rica</option>
+                            <option value="ci">🇨🇮 Côte d'Ivoire</option>
+                            <option value="hr">🇭🇷 Croatia</option>
+                            <option value="cu">🇨🇺 Cuba</option>
+                            <option value="cw">🇨🇼 Curaçao</option>
+                            <option value="cy">🇨🇾 Cyprus</option>
+                            <option value="cz">🇨🇿 Czechia</option>
+
+                            <option value="dk">🇩🇰 Denmark</option>
+                            <option value="dj">🇩🇯 Djibouti</option>
+                            <option value="dm">🇩🇲 Dominica</option>
+                            <option value="do">🇩🇴 Dominican Republic</option>
+
+                            <option value="ec">🇪🇨 Ecuador</option>
+                            <option value="eg">🇪🇬 Egypt</option>
+                            <option value="sv">🇸🇻 El Salvador</option>
+                            <option value="gq">🇬🇶 Equatorial Guinea</option>
+                            <option value="er">🇪🇷 Eritrea</option>
+                            <option value="ee">🇪🇪 Estonia</option>
+                            <option value="sz">🇸🇿 Eswatini</option>
+                            <option value="et">🇪🇹 Ethiopia</option>
+
+                            <option value="fk">🇫🇰 Falkland Islands</option>
+                            <option value="fo">🇫🇴 Faroe Islands</option>
+                            <option value="fj">🇫🇯 Fiji</option>
+                            <option value="fi">🇫🇮 Finland</option>
+                            <option value="fr">🇫🇷 France</option>
+                            <option value="gf">🇬🇫 French Guiana</option>
+                            <option value="pf">🇵🇫 French Polynesia</option>
+                            <option value="tf">🇹🇫 French Southern Territories</option>
+
+                            <option value="ga">🇬🇦 Gabon</option>
+                            <option value="gm">🇬🇲 Gambia</option>
+                            <option value="ge">🇬🇪 Georgia</option>
+                            <option value="de">🇩🇪 Germany</option>
+                            <option value="gh">🇬🇭 Ghana</option>
+                            <option value="gi">🇬🇮 Gibraltar</option>
+                            <option value="gr">🇬🇷 Greece</option>
+                            <option value="gl">🇬🇱 Greenland</option>
+                            <option value="gd">🇬🇩 Grenada</option>
+                            <option value="gp">🇬🇵 Guadeloupe</option>
+                            <option value="gu">🇬🇺 Guam</option>
+                            <option value="gt">🇬🇹 Guatemala</option>
+                            <option value="gg">🇬🇬 Guernsey</option>
+                            <option value="gn">🇬🇳 Guinea</option>
+                            <option value="gw">🇬🇼 Guinea-Bissau</option>
+                            <option value="gy">🇬🇾 Guyana</option>
+
+                            <option value="ht">🇭🇹 Haiti</option>
+                            <option value="hm">🇭🇲 Heard Island and McDonald Islands</option>
+                            <option value="va">🇻🇦 Vatican City</option>
+                            <option value="hn">🇭🇳 Honduras</option>
+                            <option value="hk">🇭🇰 Hong Kong</option>
+                            <option value="hu">🇭🇺 Hungary</option>
+
+                            <option value="is">🇮🇸 Iceland</option>
+                            <option value="in">🇮🇳 India</option>
+                            <option value="id">🇮🇩 Indonesia</option>
+                            <option value="ir">🇮🇷 Iran</option>
+                            <option value="iq">🇮🇶 Iraq</option>
+                            <option value="ie">🇮🇪 Ireland</option>
+                            <option value="im">🇮🇲 Isle of Man</option>
+                            <option value="il">🇮🇱 Israel</option>
+                            <option value="it">🇮🇹 Italy</option>
+
+                            <option value="jm">🇯🇲 Jamaica</option>
+                            <option value="jp">🇯🇵 Japan</option>
+                            <option value="je">🇯🇪 Jersey</option>
+                            <option value="jo">🇯🇴 Jordan</option>
+
+                            <option value="kz">🇰🇿 Kazakhstan</option>
+                            <option value="ke">🇰🇪 Kenya</option>
+                            <option value="ki">🇰🇮 Kiribati</option>
+                            <option value="kp">🇰🇵 North Korea</option>
+                            <option value="kr">🇰🇷 South Korea</option>
+                            <option value="kw">🇰🇼 Kuwait</option>
+                            <option value="kg">🇰🇬 Kyrgyzstan</option>
+
+                            <option value="la">🇱🇦 Laos</option>
+                            <option value="lv">🇱🇻 Latvia</option>
+                            <option value="lb">🇱🇧 Lebanon</option>
+                            <option value="ls">🇱🇸 Lesotho</option>
+                            <option value="lr">🇱🇷 Liberia</option>
+                            <option value="ly">🇱🇾 Libya</option>
+                            <option value="li">🇱🇮 Liechtenstein</option>
+                            <option value="lt">🇱🇹 Lithuania</option>
+                            <option value="lu">🇱🇺 Luxembourg</option>
+
+                            <option value="mo">🇲🇴 Macao</option>
+                            <option value="mg">🇲🇬 Madagascar</option>
+                            <option value="mw">🇲🇼 Malawi</option>
+                            <option value="my">🇲🇾 Malaysia</option>
+                            <option value="mv">🇲🇻 Maldives</option>
+                            <option value="ml">🇲🇱 Mali</option>
+                            <option value="mt">🇲🇹 Malta</option>
+                            <option value="mh">🇲🇭 Marshall Islands</option>
+                            <option value="mq">🇲🇶 Martinique</option>
+                            <option value="mr">🇲🇷 Mauritania</option>
+                            <option value="mu">🇲🇺 Mauritius</option>
+                            <option value="yt">🇾🇹 Mayotte</option>
+                            <option value="mx">🇲🇽 Mexico</option>
+                            <option value="fm">🇫🇲 Micronesia</option>
+                            <option value="md">🇲🇩 Moldova</option>
+                            <option value="mc">🇲🇨 Monaco</option>
+                            <option value="mn">🇲🇳 Mongolia</option>
+                            <option value="me">🇲🇪 Montenegro</option>
+                            <option value="ms">🇲🇸 Montserrat</option>
+                            <option value="ma">🇲🇦 Morocco</option>
+                            <option value="mz">🇲🇿 Mozambique</option>
+                            <option value="mm">🇲🇲 Myanmar</option>
+
+                            <option value="na">🇳🇦 Namibia</option>
+                            <option value="nr">🇳🇷 Nauru</option>
+                            <option value="np">🇳🇵 Nepal</option>
+                            <option value="nl">🇳🇱 Netherlands</option>
+                            <option value="nc">🇳🇨 New Caledonia</option>
+                            <option value="nz">🇳🇿 New Zealand</option>
+                            <option value="ni">🇳🇮 Nicaragua</option>
+                            <option value="ne">🇳🇪 Niger</option>
+                            <option value="ng">🇳🇬 Nigeria</option>
+                            <option value="nu">🇳🇺 Niue</option>
+                            <option value="nf">🇳🇫 Norfolk Island</option>
+                            <option value="mk">🇲🇰 North Macedonia</option>
+                            <option value="mp">🇲🇵 Northern Mariana Islands</option>
+                            <option value="no">🇳🇴 Norway</option>
+
+                            <option value="om">🇴🇲 Oman</option>
+
+                            <option value="pk">🇵🇰 Pakistan</option>
+                            <option value="pw">🇵🇼 Palau</option>
+                            <option value="ps">🇵🇸 Palestine</option>
+                            <option value="pa">🇵🇦 Panama</option>
+                            <option value="pg">🇵🇬 Papua New Guinea</option>
+                            <option value="py">🇵🇾 Paraguay</option>
+                            <option value="pe">🇵🇪 Peru</option>
+                            <option value="ph">🇵🇭 Philippines</option>
+                            <option value="pn">🇵🇳 Pitcairn</option>
+                            <option value="pl">🇵🇱 Poland</option>
+                            <option value="pt">🇵🇹 Portugal</option>
+                            <option value="pr">🇵🇷 Puerto Rico</option>
+
+                            <option value="qa">🇶🇦 Qatar</option>
+
+                            <option value="re">🇷🇪 Réunion</option>
+                            <option value="ro">🇷🇴 Romania</option>
+                            <option value="ru">🇷🇺 Russia</option>
+                            <option value="rw">🇷🇼 Rwanda</option>
+
+                            <option value="bl">🇧🇱 Saint Barthélemy</option>
+                            <option value="sh">🇸🇭 Saint Helena</option>
+                            <option value="kn">🇰🇳 Saint Kitts and Nevis</option>
+                            <option value="lc">🇱🇨 Saint Lucia</option>
+                            <option value="mf">🇲🇫 Saint Martin</option>
+                            <option value="pm">🇵🇲 Saint Pierre and Miquelon</option>
+                            <option value="vc">🇻🇨 Saint Vincent and the Grenadines</option>
+                            <option value="ws">🇼🇸 Samoa</option>
+                            <option value="sm">🇸🇲 San Marino</option>
+                            <option value="st">🇸🇹 São Tomé and Príncipe</option>
+                            <option value="sa">🇸🇦 Saudi Arabia</option>
+                            <option value="sn">🇸🇳 Senegal</option>
+                            <option value="rs">🇷🇸 Serbia</option>
+                            <option value="sc">🇸🇨 Seychelles</option>
+                            <option value="sl">🇸🇱 Sierra Leone</option>
+                            <option value="sg">🇸🇬 Singapore</option>
+                            <option value="sx">🇸🇽 Sint Maarten</option>
+                            <option value="sk">🇸🇰 Slovakia</option>
+                            <option value="si">🇸🇮 Slovenia</option>
+                            <option value="sb">🇸🇧 Solomon Islands</option>
+                            <option value="so">🇸🇴 Somalia</option>
+                            <option value="za">🇿🇦 South Africa</option>
+                            <option value="gs">🇬🇸 South Georgia and South Sandwich Islands</option>
+                            <option value="ss">🇸🇸 South Sudan</option>
+                            <option value="es">🇪🇸 Spain</option>
+                            <option value="lk">🇱🇰 Sri Lanka</option>
+                            <option value="sd">🇸🇩 Sudan</option>
+                            <option value="sr">🇸🇷 Suriname</option>
+                            <option value="sj">🇸🇯 Svalbard and Jan Mayen</option>
+                            <option value="se">🇸🇪 Sweden</option>
+                            <option value="ch">🇨🇭 Switzerland</option>
+                            <option value="sy">🇸🇾 Syria</option>
+
+                            <option value="tw">🇹🇼 Taiwan</option>
+                            <option value="tj">🇹🇯 Tajikistan</option>
+                            <option value="tz">🇹🇿 Tanzania</option>
+                            <option value="th">🇹🇭 Thailand</option>
+                            <option value="tl">🇹🇱 Timor-Leste</option>
+                            <option value="tg">🇹🇬 Togo</option>
+                            <option value="tk">🇹🇰 Tokelau</option>
+                            <option value="to">🇹🇴 Tonga</option>
+                            <option value="tt">🇹🇹 Trinidad and Tobago</option>
+                            <option value="tn">🇹🇳 Tunisia</option>
+                            <option value="tr">🇹🇷 Türkiye</option>
+                            <option value="tm">🇹🇲 Turkmenistan</option>
+                            <option value="tc">🇹🇨 Turks and Caicos Islands</option>
+                            <option value="tv">🇹🇻 Tuvalu</option>
+
+                            <option value="ug">🇺🇬 Uganda</option>
+                            <option value="ua">🇺🇦 Ukraine</option>
+                            <option value="ae">🇦🇪 United Arab Emirates</option>
+                            <option value="gb">🇬🇧 United Kingdom</option>
+                            <option value="us">🇺🇸 United States</option>
+                            <option value="uy">🇺🇾 Uruguay</option>
+                            <option value="uz">🇺🇿 Uzbekistan</option>
+
+                            <option value="vu">🇻🇺 Vanuatu</option>
+                            <option value="ve">🇻🇪 Venezuela</option>
+                            <option value="vn">🇻🇳 Vietnam</option>
+                            <option value="vi">🇻🇮 U.S. Virgin Islands</option>
+
+                            <option value="wf">🇼🇫 Wallis and Futuna</option>
+                            <option value="eh">🇪🇭 Western Sahara</option>
+
+                            <option value="ye">🇾🇪 Yemen</option>
+
+                            <option value="zm">🇿🇲 Zambia</option>
+                            <option value="zw">🇿🇼 Zimbabwe</option>
+                        </select>
+                        <div id="flagPreview" style="display:none;margin-top:8px;font-size:28px;"></div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Unit <span style="color:#999;font-weight:400;">(e.g. 1, 10,
+                            100)</span></label>
+                    <input class="input" type="number" id="unit" placeholder="e.g. 1" min="1" step="1" value="1"
+                        required onkeypress="return event.charCode>=48&&event.charCode<=57"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <div class="field">
+                    <label class="field-label">Buying Rate</label>
+                    <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0">
+                    <label
+                        style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
+                        <input type="checkbox" id="buyPreorder" onchange="togglePreorder('buy')"> Pre-order (no fixed
+                        rate yet)
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="field-label">Selling Rate</label>
+                    <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="any" min="0">
+                    <label
+                        style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
+                        <input type="checkbox" id="sellPreorder" onchange="togglePreorder('sell')"> Pre-order (no fixed
+                        rate yet)
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="field-label">Decimal Places</label>
+                    <select id="decimals" class="input">
+                        <option value="0">0 — e.g. 84</option>
+                        <option value="1">1 — e.g. 84.2</option>
+                        <option value="2" selected>2 — e.g. 84.20</option>
+                        <option value="3">3 — e.g. 84.200</option>
+                        <option value="4">4 — e.g. 84.2000</option>
+                        <option value="5">5 — e.g. 84.20000</option>
+                        <option value="6">6 — e.g. 84.200000</option>
+                        <option value="7">7 — e.g. 84.2000000</option>
+                        <option value="8">8 — e.g. 84.20000000</option>
+                        <option value="9">9 — e.g. 84.200000000</option>
+
+                    </select>
+                </div>
+                <button class="btn btn-gold full-width" type="submit">Add Currency</button>
+            </form>
+        </div>
     </div>
 
-    <div class="card" style="max-width:500px;">
-        <div id="error-msg" class="error-msg" style="display:none;"></div>
-        <div id="success-msg" class="success-msg"></div>
-
-        <form id="currencyForm" onsubmit="addCurrency(event)">
-            <div class="field">
-                <label class="field-label">Currency</label>
-                <select id="currency" class="input"></select>
-            </div>
-            <div class="field">
-                <label class="field-label">Unit <span style="color:#999;font-weight:400;">(e.g. 1, 10, 100)</span></label>
-                <input class="input" type="number" id="unit" placeholder="e.g. 1" min="1" step="1" value="1" required
-                    onkeypress="return event.charCode>=48&&event.charCode<=57"
-                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-            </div>
-            <div class="field">
-                <label class="field-label">Buying Rate</label>
-                <input class="input" type="number" id="buyingRate" placeholder="e.g. 83.50" step="any" min="0">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
-                    <input type="checkbox" id="buyPreorder" onchange="togglePreorder('buy')"> Pre-order (no fixed rate yet)
-                </label>
-            </div>
-            <div class="field">
-                <label class="field-label">Selling Rate</label>
-                <input class="input" type="number" id="sellingRate" placeholder="e.g. 84.20" step="any" min="0">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;font-weight:500;margin-top:4px;">
-                    <input type="checkbox" id="sellPreorder" onchange="togglePreorder('sell')"> Pre-order (no fixed rate yet)
-                </label>
-            </div>
-            <div class="field">
-                <label class="field-label">Decimal Places</label>
-                <select id="decimals" class="input">
-                    <option value="0">0 — e.g. 84</option>
-                    <option value="1">1 — e.g. 84.2</option>
-                    <option value="2" selected>2 — e.g. 84.20</option>
-                    <option value="3">3 — e.g. 84.200</option>
-                    <option value="4">4 — e.g. 84.2000</option>
-                </select>
-            </div>
-            <button class="btn btn-gold full-width" type="submit">Add Currency</button>
-        </form>
-    </div>
-</div>
-
-<script src="navbar.js"></script>
-<script>
-// Full currency list with correct country codes for flags
-const CURRENCIES = [
-    { code: "USD", name: "US Dollar",            cc: "us" },
-    { code: "GBP", name: "British Pound",         cc: "gb" },
-    { code: "JPY", name: "Japanese Yen",          cc: "jp" },
-    { code: "EUR", name: "Euro",                  cc: "eu" },
-    { code: "AUD", name: "Australian Dollar",     cc: "au" },
-    { code: "SGD", name: "Singapore Dollar",      cc: "sg" },
-    { code: "HKD", name: "Hong Kong Dollar",      cc: "hk" },
-    { code: "CAD", name: "Canadian Dollar",       cc: "ca" },
-    { code: "CHF", name: "Swiss Franc",           cc: "ch" },
-    { code: "NZD", name: "New Zealand Dollar",    cc: "nz" },
-    { code: "TWD", name: "Taiwan Dollar",         cc: "tw" },
-    { code: "KRW", name: "South Korean Won",      cc: "kr" },
-    { code: "INR", name: "Indian Rupee",          cc: "in" },
-    { code: "DKK", name: "Danish Krone",          cc: "dk" },
-    { code: "SEK", name: "Swedish Krona",         cc: "se" },
-    { code: "NOK", name: "Norwegian Krone",       cc: "no" },
-    { code: "ZAR", name: "South African Rand",    cc: "za" },
-    { code: "THB", name: "Thai Baht",             cc: "th" },
-    { code: "CNY", name: "Chinese Yuan",          cc: "cn" },
-    { code: "IDR", name: "Indonesian Rupiah",     cc: "id" },
-    { code: "SAR", name: "Saudi Riyal",           cc: "sa" },
-    { code: "MYR", name: "Malaysian Ringgit",     cc: "my" },
-    { code: "PHP", name: "Philippine Peso",       cc: "ph" },
-    { code: "PKR", name: "Pakistani Rupee",       cc: "pk" },
-    { code: "VND", name: "Vietnamese Dong",       cc: "vn" },
-    { code: "OMR", name: "Omani Rial",            cc: "om" },
-    { code: "JOD", name: "Jordanian Dinar",       cc: "jo" },
-    { code: "AED", name: "UAE Dirham",            cc: "ae" },
-    { code: "BHD", name: "Bahraini Dinar",        cc: "bh" },
-    { code: "BND", name: "Brunei Dollar",         cc: "bn" },
-    { code: "EGP", name: "Egyptian Pound",        cc: "eg" },
-    { code: "QAR", name: "Qatari Riyal",          cc: "qa" },
-    { code: "KWD", name: "Kuwaiti Dinar",         cc: "kw" },
-    { code: "LKR", name: "Sri Lankan Rupee",      cc: "lk" },
-    { code: "BDT", name: "Bangladeshi Taka",      cc: "bd" },
-    { code: "MOP", name: "Macanese Pataca",       cc: "mo" },
-    { code: "SCR", name: "Seychellois Rupee",     cc: "sc" },
-    { code: "IQD", name: "Iraqi Dinar",           cc: "iq" },
-    { code: "TRY", name: "Turkish Lira",          cc: "tr" },
-    { code: "RUB", name: "Russian Ruble",         cc: "ru" },
-    { code: "NPR", name: "Nepalese Rupee",        cc: "np" },
-    { code: "CZK", name: "Czech Koruna",          cc: "cz" },
-    { code: "KHR", name: "Cambodian Riel",        cc: "kh" },
-];
-
-// Populate dropdown with flag images
-const select = document.getElementById("currency");
-CURRENCIES.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.code;
-    opt.textContent = `${c.code} — ${c.name}`;
-    select.appendChild(opt);
-});
-
-function togglePreorder(which) {
-    const checked = document.getElementById(which + "Preorder").checked;
-    const rateInput = document.getElementById(which === "buy" ? "buyingRate" : "sellingRate");
-    rateInput.disabled = checked;
-    rateInput.required = !checked;
-    if (checked) rateInput.value = "";
-}
-
-async function addCurrency(e) {
-    e.preventDefault();
-    const errorEl   = document.getElementById("error-msg");
-    const successEl = document.getElementById("success-msg");
-    errorEl.style.display   = "none";
-    successEl.style.display = "none";
-
-    const buyPreorder  = document.getElementById("buyPreorder").checked;
-    const sellPreorder = document.getElementById("sellPreorder").checked;
-
-    if (!buyPreorder && document.getElementById("buyingRate").value === "") {
-        errorEl.textContent = "Enter a buying rate or mark it as pre-order.";
-        errorEl.style.display = "block";
-        return;
-    }
-    if (!sellPreorder && document.getElementById("sellingRate").value === "") {
-        errorEl.textContent = "Enter a selling rate or mark it as pre-order.";
-        errorEl.style.display = "block";
-        return;
-    }
-
-    const payload = {
-        currency:     document.getElementById("currency").value,
-        unit:         parseInt(document.getElementById("unit").value) || 1,
-        buyingRate:   buyPreorder  ? 0 : parseFloat(document.getElementById("buyingRate").value),
-        sellingRate:  sellPreorder ? 0 : parseFloat(document.getElementById("sellingRate").value),
-        decimals:     parseInt(document.getElementById("decimals").value),
-        buyPreorder:  buyPreorder,
-        sellPreorder: sellPreorder
-    };
-
-    try {
-        const res = await fetch("/api/currencies", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload)
+    <script src="navbar.js"></script>
+    <script>
+        // Full currency list with correct country codes for flags
+        const CURRENCIES = [
+            {code: "USD", name: "US Dollar", cc: "us"},
+            {code: "GBP", name: "British Pound", cc: "gb"},
+            {code: "JPY", name: "Japanese Yen", cc: "jp"},
+            {code: "EUR", name: "Euro", cc: "eu"},
+            {code: "AUD", name: "Australian Dollar", cc: "au"},
+            {code: "SGD", name: "Singapore Dollar", cc: "sg"},
+            {code: "HKD", name: "Hong Kong Dollar", cc: "hk"},
+            {code: "CAD", name: "Canadian Dollar", cc: "ca"},
+            {code: "CHF", name: "Swiss Franc", cc: "ch"},
+            {code: "NZD", name: "New Zealand Dollar", cc: "nz"},
+            {code: "TWD", name: "Taiwan Dollar", cc: "tw"},
+            {code: "KRW", name: "South Korean Won", cc: "kr"},
+            {code: "INR", name: "Indian Rupee", cc: "in"},
+            {code: "DKK", name: "Danish Krone", cc: "dk"},
+            {code: "SEK", name: "Swedish Krona", cc: "se"},
+            {code: "NOK", name: "Norwegian Krone", cc: "no"},
+            {code: "ZAR", name: "South African Rand", cc: "za"},
+            {code: "THB", name: "Thai Baht", cc: "th"},
+            {code: "CNY", name: "Chinese Yuan", cc: "cn"},
+            {code: "IDR", name: "Indonesian Rupiah", cc: "id"},
+            {code: "SAR", name: "Saudi Riyal", cc: "sa"},
+            {code: "MYR", name: "Malaysian Ringgit", cc: "my"},
+            {code: "PHP", name: "Philippine Peso", cc: "ph"},
+            {code: "PKR", name: "Pakistani Rupee", cc: "pk"},
+            {code: "VND", name: "Vietnamese Dong", cc: "vn"},
+            {code: "OMR", name: "Omani Rial", cc: "om"},
+            {code: "JOD", name: "Jordanian Dinar", cc: "jo"},
+            {code: "AED", name: "UAE Dirham", cc: "ae"},
+            {code: "BHD", name: "Bahraini Dinar", cc: "bh"},
+            {code: "BND", name: "Brunei Dollar", cc: "bn"},
+            {code: "EGP", name: "Egyptian Pound", cc: "eg"},
+            {code: "QAR", name: "Qatari Riyal", cc: "qa"},
+            {code: "KWD", name: "Kuwaiti Dinar", cc: "kw"},
+            {code: "LKR", name: "Sri Lankan Rupee", cc: "lk"},
+            {code: "BDT", name: "Bangladeshi Taka", cc: "bd"},
+            {code: "MOP", name: "Macanese Pataca", cc: "mo"},
+            {code: "SCR", name: "Seychellois Rupee", cc: "sc"},
+            {code: "IQD", name: "Iraqi Dinar", cc: "iq"},
+            {code: "TRY", name: "Turkish Lira", cc: "tr"},
+            {code: "RUB", name: "Russian Ruble", cc: "ru"},
+            {code: "NPR", name: "Nepalese Rupee", cc: "np"},
+            {code: "CZK", name: "Czech Koruna", cc: "cz"},
+            {code: "KHR", name: "Cambodian Riel", cc: "kh"}
+        ];
+        // Populate dropdown with all standard currencies plus Other.
+        const select = document.getElementById("currency");
+        CURRENCIES.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.code;
+            opt.textContent = `${c.code} — ${c.name}`;
+            select.appendChild(opt);
         });
-        const data = await res.json();
-        if (res.ok) {
-            if ("BroadcastChannel" in window) {
-                new BroadcastChannel("showcash-board-updates").postMessage("refresh");
+
+        const otherOpt = document.createElement("option");
+        otherOpt.value = "__OTHER__";
+        otherOpt.textContent = "Other — Custom Currency";
+        select.appendChild(otherOpt);
+
+        const customCurrencyFields = document.getElementById("customCurrencyFields");
+        const customCurrencyCode = document.getElementById("customCurrencyCode");
+        const customCurrencyName = document.getElementById("customCurrencyName");
+        const customCurrencyFlag = document.getElementById("customCurrencyFlag");
+        const flagPreview = document.getElementById("flagPreview");
+
+        function updateFlagPreview() {
+            const selected = customCurrencyFlag.options[customCurrencyFlag.selectedIndex];
+            if (customCurrencyFlag.value) {
+                flagPreview.textContent = selected.textContent.split(" ")[0];
+                flagPreview.style.display = "block";
+            } else {
+                flagPreview.textContent = "";
+                flagPreview.style.display = "none";
             }
-            successEl.textContent   = `${payload.currency} added successfully!`;
-            successEl.style.display = "block";
-            document.getElementById("currencyForm").reset();
-            document.getElementById("unit").value = "1";
-            togglePreorder("buy");
-            togglePreorder("sell");
-        } else {
-            errorEl.textContent   = data.error || "Failed to add currency";
-            errorEl.style.display = "block";
         }
-    } catch {
-        errorEl.textContent   = "Could not reach server. Please try again.";
-        errorEl.style.display = "block";
-    }
-}
-</script>
+
+        customCurrencyFlag.addEventListener("change", updateFlagPreview);
+
+        select.addEventListener("change", () => {
+            const isOther = select.value === "__OTHER__";
+            customCurrencyFields.style.display = isOther ? "block" : "none";
+            customCurrencyCode.required = isOther;
+            customCurrencyName.required = isOther;
+
+            if (!isOther) {
+                customCurrencyCode.value = "";
+                customCurrencyName.value = "";
+                customCurrencyFlag.value = "";
+                updateFlagPreview();
+            }
+        });
+
+        function togglePreorder(which) {
+            const checked = document.getElementById(which + "Preorder").checked;
+            const rateInput = document.getElementById(which === "buy" ? "buyingRate" : "sellingRate");
+            rateInput.disabled = checked;
+            rateInput.required = !checked;
+            if (checked) rateInput.value = "";
+        }
+
+        async function addCurrency(e) {
+            e.preventDefault();
+            const errorEl = document.getElementById("error-msg");
+            const successEl = document.getElementById("success-msg");
+            errorEl.style.display = "none";
+            successEl.style.display = "none";
+
+            const buyPreorder = document.getElementById("buyPreorder").checked;
+            const sellPreorder = document.getElementById("sellPreorder").checked;
+            const isOther = select.value === "__OTHER__";
+
+            let currencyCode = select.value;
+            let currencyName = "";
+            let currencyFlag = "";
+
+            if (isOther) {
+                currencyFlag = customCurrencyFlag.value;
+                currencyCode = customCurrencyCode.value.trim().toUpperCase();
+                currencyName = customCurrencyName.value.trim();
+
+                if (!/^[A-Z]{3}$/.test(currencyCode)) {
+                    errorEl.textContent = "Enter a valid 3-letter currency code, e.g. XAF.";
+                    errorEl.style.display = "block";
+                    return;
+                }
+
+                if (!currencyName) {
+                    errorEl.textContent = "Enter the currency name.";
+                    errorEl.style.display = "block";
+                    return;
+                }
+
+                if (!currencyFlag) {
+                    errorEl.textContent = "Select a country / flag.";
+                    errorEl.style.display = "block";
+                    return;
+                }
+            }
+
+            if (!buyPreorder && document.getElementById("buyingRate").value === "") {
+                errorEl.textContent = "Enter a buying rate or mark it as pre-order.";
+                errorEl.style.display = "block";
+                return;
+            }
+            if (!sellPreorder && document.getElementById("sellingRate").value === "") {
+                errorEl.textContent = "Enter a selling rate or mark it as pre-order.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const payload = {
+                currency: currencyCode,
+                currencyName: currencyName || (CURRENCIES.find(c => c.code === currencyCode)?.name || ""),
+                currencyFlag: currencyFlag || (CURRENCIES.find(c => c.code === currencyCode)?.cc || ""),
+                unit: parseInt(document.getElementById("unit").value) || 1,
+                buyingRate: buyPreorder ? 0 : parseFloat(document.getElementById("buyingRate").value),
+                sellingRate: sellPreorder ? 0 : parseFloat(document.getElementById("sellingRate").value),
+                decimals: parseInt(document.getElementById("decimals").value),
+                buyPreorder: buyPreorder,
+                sellPreorder: sellPreorder
+            };
+
+            try {
+                const res = await fetch("/api/currencies", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if ("BroadcastChannel" in window) {
+                        new BroadcastChannel("showcash-board-updates").postMessage("refresh");
+                    }
+                    successEl.textContent = `${payload.currency} added successfully!`;
+                    successEl.style.display = "block";
+                    document.getElementById("currencyForm").reset();
+                    document.getElementById("unit").value = "1";
+                    customCurrencyFields.style.display = "none";
+                    customCurrencyCode.required = false;
+                    customCurrencyName.required = false;
+                    customCurrencyFlag.value = "";
+                    updateFlagPreview();
+                    togglePreorder("buy");
+                    togglePreorder("sell");
+                } else {
+                    errorEl.textContent = data.error || "Failed to add currency";
+                    errorEl.style.display = "block";
+                }
+            } catch {
+                errorEl.textContent = "Could not reach server. Please try again.";
+                errorEl.style.display = "block";
+            }
+        }
+    </script>
 </body>
+
 </html>

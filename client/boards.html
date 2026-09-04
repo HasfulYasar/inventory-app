@@ -56,7 +56,7 @@
             align-items: center;
             gap: 5px;
             font-size: calc(18px * var(--font-scale)); font-weight: 700;
-            color: var(--neon); text-shadow: 0 0 6px var(--neon);
+            color: #F5B942; text-shadow: 0 0 6px var(--neon);
             white-space: nowrap;
         }
         .header-mobile.has-value { display: flex; }
@@ -69,22 +69,22 @@
 
         .title-block { min-width: 0; }
         .board-title {
-            font-size: calc(17px * var(--font-scale)); font-weight: 800; color: var(--neon);
+            font-size: calc(17px * var(--font-scale)); font-weight: 800; color: #F5B942;
             letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             text-shadow: 0 0 10px var(--neon), 0 0 2px var(--neon);
         }
         .board-subtitle {
             font-size: calc(9px * var(--font-scale)); font-weight: 700; letter-spacing: 1.4px;
-            color: var(--text2); text-transform: uppercase; margin-top: 1px;
+            color: #F5B942; text-transform: uppercase; margin-top: 1px;
         }
         .board-license {
             font-size: calc(8px * var(--font-scale)); font-weight: 600; letter-spacing: 0.6px;
-            color: var(--text3); text-transform: uppercase; margin-top: 1px;
+            color: #F5B942; text-transform: uppercase; margin-top: 1px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .board-clock {
-            font-size: calc(11px * var(--font-scale)); font-weight: 600; color: var(--neon);
+            font-size: calc(11px * var(--font-scale)); font-weight: 600; color: -#F5B942;
             white-space: nowrap;
             margin-top: 6px;
         }
@@ -169,7 +169,7 @@
         .c-text { min-width: 0; overflow: hidden; }
         .c-code { font-size: calc(0.72rem * var(--font-scale)); font-weight: 700; color: var(--text); white-space: nowrap; }
         .c-name { font-size: calc(10px * var(--font-scale)); font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unit-val { font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: var(--text2); text-align: right; }
+        .unit-val { font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: right; text-shadow: 0 0 6px var(--neon); }
         .rate-val {
             font-size: calc(0.9rem * var(--font-scale)); font-weight: 700; color: #12B76A;
             font-variant-numeric: tabular-nums; text-align: right;
@@ -503,7 +503,21 @@ function renderPrimary(data) {
         return;
     }
 
-    grid.innerHTML = primary.map((c, i) => {
+    // Grid fills row-by-row (left, right, left, right...), but we want the
+    // first half stacked top-to-bottom in the left column and the second
+    // half stacked top-to-bottom in the right column. So interleave the
+    // data here: position 0 = left row 1, position 1 = right row 1, etc.
+    const half = Math.ceil(primary.length / 2);
+    const leftCol = primary.slice(0, half);
+    const rightCol = primary.slice(half);
+    const reordered = [];
+    for (let r = 0; r < half; r++) {
+        reordered.push(leftCol[r]);
+        if (rightCol[r]) reordered.push(rightCol[r]);
+    }
+
+
+    grid.innerHTML = reordered.map((c, i) => {
         const info = CURRENCY_INFO[c.currency] || { name: c.currency };
         const isLeft = i % 2 === 0;
         const isGBP = c.currency === "GBP";
