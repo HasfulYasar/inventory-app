@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify, send_from_directory, session, g
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg2
+import psycopg2.extras
+import psycopg2.errors
 import os
 
 app = Flask(__name__)
@@ -10,7 +12,10 @@ CORS(app, supports_credentials=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
-DB_PATH = os.path.join(BASE_DIR, "database.db")
+
+# Set this env var to your Postgres connection string, e.g.
+#   postgresql://postgres:yourpassword@localhost:5432/showcash
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/showcash")
 
 # Max size (chars) accepted for a base64 logo data URL — keeps the DB sane.
 MAX_LOGO_LEN = 700_000  # ~500KB image
@@ -52,10 +57,30 @@ DEFAULT_RATES = {
 }
 
 
+class Db:
+    """Thin wrapper so existing code that calls db.execute(...).fetchone()/
+    .fetchall() and reads row['col'] keeps working unchanged, backed by
+    psycopg2 instead of sqlite3."""
+    def __init__(self, conn):
+        self.conn = conn
+
+    def execute(self, sql, params=()):
+        sql = sql.replace("?", "%s")
+        cur = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(sql, params)
+        return cur
+
+    def commit(self):
+        self.conn.commit()
+
+    def rollback(self):
+        self.conn.rollback()
+
+
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
+        conn = psycopg2.connect(DATABASE_URL)
+        g.db = Db(conn)
     return g.db
 
 
@@ -63,7 +88,7 @@ def get_db():
 def close_db(error):
     db = g.pop("db", None)
     if db is not None:
-        db.close()
+        db.conn.close()
 
 
 def init_db():
@@ -71,7 +96,7 @@ def init_db():
         db = get_db()
         db.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 email TEXT NOT NULL DEFAULT '',
@@ -80,45 +105,39 @@ def init_db():
         ''')
         db.execute('''
             CREATE TABLE IF NOT EXISTS currencies (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL DEFAULT 0,
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL DEFAULT 0 REFERENCES users(id),
                 currency TEXT NOT NULL,
                 unit INTEGER NOT NULL DEFAULT 1,
-                buying_rate REAL NOT NULL DEFAULT 0,
-                selling_rate REAL NOT NULL DEFAULT 0,
+                buying_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+                selling_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
                 decimals INTEGER NOT NULL DEFAULT 2,
-                active INTEGER NOT NULL DEFAULT 1,
-                sort_order INTEGER NOT NULL DEFAULT 999,
-                FOREIGN KEY (user_id) REFERENCES users(id)
+                active BOOLEAN NOT NULL DEFAULT TRUE,
+                sort_order INTEGER NOT NULL DEFAULT 999
             )
         ''')
-        # Migrations for existing DBs
+        # Migrations for existing DBs (Postgres supports IF NOT EXISTS here,
+        # unlike SQLite, so no try/except dance is needed)
         for col, defn in [
             ("unit",          "INTEGER NOT NULL DEFAULT 1"),
             ("user_id",       "INTEGER NOT NULL DEFAULT 0"),
             ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
-            ("buy_preorder",  "INTEGER NOT NULL DEFAULT 0"),
-            ("sell_preorder", "INTEGER NOT NULL DEFAULT 0"),
+            ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT FALSE"),
+            ("sell_preorder", "BOOLEAN NOT NULL DEFAULT FALSE"),
         ]:
-            try:
-                db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
-            except Exception:
-                pass
+            db.execute(f"ALTER TABLE currencies ADD COLUMN IF NOT EXISTS {col} {defn}")
         for col, defn in [
             ("email",        "TEXT NOT NULL DEFAULT ''"),
             ("display_name", "TEXT NOT NULL DEFAULT ''"),
             ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
             ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
             ("board_name",   "TEXT NOT NULL DEFAULT ''"),
-            ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+            ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
             ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
             ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
             ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
         ]:
-            try:
-                db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
-            except Exception:
-                pass
+            db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
         db.commit()
 
 
@@ -127,7 +146,7 @@ def seed_currencies(user_id):
     for i, code in enumerate(ALL_CURRENCIES):
         unit, buy, sell, dec = DEFAULT_RATES.get(code, (1,0,0,2))
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,1,?)",
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,TRUE,?)",
             (user_id, code, unit, buy, sell, dec, i)
         )
     db.commit()
@@ -180,11 +199,16 @@ def signup():
     hashed = generate_password_hash(password)
     db = get_db()
     try:
-        cur = db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
+        cur = db.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?) RETURNING id",
+            (username, hashed)
+        )
+        new_id = cur.fetchone()["id"]
         db.commit()
-        seed_currencies(cur.lastrowid)
+        seed_currencies(new_id)
         return jsonify({"message": "Account created"})
-    except sqlite3.IntegrityError:
+    except psycopg2.errors.UniqueViolation:
+        db.rollback()
         return jsonify({"error": "Username already exists"}), 400
 
 
@@ -411,7 +435,7 @@ def add_currency():
     if existing:
         db.execute(
             "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
-            (unit, buying_rate, selling_rate, decimals, int(buy_preorder), int(sell_preorder), existing["id"], current_user_id())
+            (unit, buying_rate, selling_rate, decimals, bool(buy_preorder), bool(sell_preorder), existing["id"], current_user_id())
         )
     else:
         max_order = db.execute(
@@ -419,8 +443,8 @@ def add_currency():
             (current_user_id(),)
         ).fetchone()[0]
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,1,?,?,?)",
-            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, int(buy_preorder), int(sell_preorder))
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,TRUE,?,?,?)",
+            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, bool(buy_preorder), bool(sell_preorder))
         )
     db.commit()
     return jsonify({"message": "Currency saved"}), 201
@@ -446,7 +470,7 @@ def update_currency(cid):
     db = get_db()
     db.execute(
         "UPDATE currencies SET buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
-        (buying_rate, selling_rate, decimals, unit, int(buy_preorder), int(sell_preorder), cid, current_user_id())
+        (buying_rate, selling_rate, decimals, unit, bool(buy_preorder), bool(sell_preorder), cid, current_user_id())
     )
     db.commit()
     return jsonify({"message": "Updated"})
@@ -483,7 +507,7 @@ def toggle_currency(cid):
     ).fetchone()
     if not row:
         return jsonify({"error": "Not found"}), 404
-    new_state = 0 if row["active"] else 1
+    new_state = not row["active"]
     db.execute("UPDATE currencies SET active=? WHERE id=? AND user_id=?",
                (new_state, cid, current_user_id()))
     db.commit()
@@ -511,7 +535,7 @@ def public_board():
     if not user:
         return jsonify({"error": "Board not found"}), 404
     rows = db.execute(
-        "SELECT * FROM currencies WHERE user_id=? AND active=1 ORDER BY sort_order, id",
+        "SELECT * FROM currencies WHERE user_id=? AND active=TRUE ORDER BY sort_order, id",
         (user_id,)
     ).fetchall()
     return jsonify({
