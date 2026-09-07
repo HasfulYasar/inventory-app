@@ -43,7 +43,7 @@
             flex-shrink: 0;
             background: var(--panel-bg);
             border-bottom: 2px solid var(--neon);
-            box-shadow: 0 0 14px var(--neon), 0 2px 24px -4px var(--neon);
+            box-shadow: 0 0 7px var(--neon), 0 2px 12px -6px var(--neon);
             padding: 0.55rem 1.1rem;
             display: flex; align-items: center;
             justify-content: space-between;
@@ -63,7 +63,7 @@
 
         .board-logo {
             height: 46px; width: auto; object-fit: contain;
-            filter: drop-shadow(0 0 6px var(--neon));
+            filter: drop-shadow(0 0 3px var(--neon));
             flex-shrink: 0;
         }
 
@@ -71,7 +71,7 @@
         .board-title {
             font-size: calc(17px * var(--font-scale)); font-weight: 800; color: #F5B942;
             letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            text-shadow: 0 0 10px var(--neon), 0 0 2px var(--neon);
+            text-shadow: 0 0 5px var(--neon);
         }
         .board-subtitle {
             font-size: calc(9px * var(--font-scale)); font-weight: 700; letter-spacing: 1.4px;
@@ -120,7 +120,7 @@
             flex-shrink: 0;
             display: grid; grid-template-columns: 1fr 1fr;
             background: var(--panel-bg); border-bottom: 1px solid var(--neon);
-            box-shadow: 0 1px 8px -2px var(--neon);
+            box-shadow: 0 1px 4px -2px var(--neon);
         }
         .col-header-half {
             display: grid;
@@ -155,10 +155,7 @@
         .currency-row:nth-child(4n+3),
         .currency-row:nth-child(4n+4) { background: var(--row-alt); }
         .currency-row.left-col { border-right: 2px solid var(--divider); }
-        .currency-row.gbp-row .rate-val {color: #12B76A !important; font-weight: 800;}
-        .currency-row.gbp-row .c-code { color: var(--neon); font-weight: 900; }
-        .currency-row.gbp-row .rate-val { color: var(--neon); font-weight: 800; }
-        .currency-row.gbp-row .rate-val.preorder-val {color: #F5B942 !important;text-shadow: 0 0 6px #F5B942;}
+
         .currency-name-cell { display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; }
 
         .flag-img {
@@ -169,13 +166,13 @@
         .c-text { min-width: 0; overflow: hidden; }
         .c-code { font-size: calc(0.72rem * var(--font-scale)); font-weight: 700; color: var(--text); white-space: nowrap; }
         .c-name { font-size: calc(10px * var(--font-scale)); font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unit-val { font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: right; text-shadow: 0 0 6px var(--neon); }
+        .unit-val { font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: right; text-shadow: 0 0 3px var(--neon); }
         .rate-val {
             font-size: calc(0.9rem * var(--font-scale)); font-weight: 700; color: #12B76A;
             font-variant-numeric: tabular-nums; text-align: right;
-            text-shadow: 0 0 6px var(--neon);
+            text-shadow: 0 0 3px var(--neon);
         }
-        .rate-val.preorder-val { color: #F5B942; font-size: calc(0.66rem * var(--font-scale)); letter-spacing: 0.3px; text-shadow: 0 0 6px #F5B942; }
+        .rate-val.preorder-val { color: #F5B942; font-size: calc(0.66rem * var(--font-scale)); letter-spacing: 0.3px; text-shadow: 0 0 3px #F5B942; }
 
         /* ── Right panel: 4 secondary currencies at once, no header label ── */
         /* ── Right panel: rotates through the secondary currencies (10 at a
@@ -186,7 +183,7 @@
             display: flex;
             background: var(--panel-bg);
             border-left: 2px solid var(--neon);
-            box-shadow: -10px 0 24px -10px var(--neon) inset;
+            box-shadow: -6px 0 14px -10px var(--neon) inset;
             padding: 0.5rem 0.6rem;
             overflow: hidden;
         }
@@ -217,18 +214,18 @@
         }
         .sec-card-top { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
         .sec-flag { width: 18px; height: 12px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
-        .sec-code { font-size: calc(0.8rem * var(--font-scale)); font-weight: 800; color: var(--neon); text-shadow: 0 0 6px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sec-code { font-size: calc(0.8rem * var(--font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sec-rates { display: flex; flex-wrap: nowrap; gap: 3px; width: 100%; }
         .sec-rate-box { flex: 1 0 0 ; min-width: 0; text-align: center; }
         .sec-lbl { font-size: calc(8px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
-        .sec-val { font-size: calc(0.82rem * var(--font-scale)); font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; display: block; }
+        .sec-val { font-size: calc(0.82rem * var(--font-scale)); font-weight: 700; color: #12B76A; font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--neon); }
         .sec-val.preorder-val {  font-size: calc(0.56rem * var(--font-scale));  color: #F5B942 !important;  }
 
         /* ── Footer ── */
         .board-footer {
             flex-shrink: 0;
             background: var(--panel-bg); border-top: 1px solid var(--neon);
-            box-shadow: 0 0 10px var(--neon);
+            box-shadow: 0 0 5px var(--neon);
             padding: 0.25rem 1rem;
             display: flex; justify-content: space-between; align-items: center;
         }
