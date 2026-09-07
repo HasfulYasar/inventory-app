@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
 import psycopg2.extras
 import psycopg2.errors
+import sqlite3
 import os
 
 app = Flask(__name__)
@@ -13,9 +14,18 @@ CORS(app, supports_credentials=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 
-# Set this env var to your Postgres connection string, e.g.
-#   postgresql://postgres:yourpassword@localhost:5432/showcash
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/showcash")
+# If DATABASE_URL is set (e.g. on the EC2/production server), we connect to
+# that Postgres database exactly as before. If it's NOT set (e.g. running on
+# a developer's laptop with nothing configured), we fall back to a local
+# SQLite file — no install or setup required, just for quick local testing.
+_env_url = os.environ.get("DATABASE_URL")
+if _env_url:
+    DB_ENGINE = "postgres"
+    DATABASE_URL = _env_url
+else:
+    DB_ENGINE = "sqlite"
+    DATABASE_URL = os.path.join(BASE_DIR, "local_dev.db")
+    print(f"[dev mode] No DATABASE_URL set — using local SQLite file at {DATABASE_URL}")
 
 # Max size (chars) accepted for a base64 logo data URL — keeps the DB sane.
 MAX_LOGO_LEN = 700_000  # ~500KB image
@@ -59,14 +69,18 @@ DEFAULT_RATES = {
 
 class Db:
     """Thin wrapper so existing code that calls db.execute(...).fetchone()/
-    .fetchall() and reads row['col'] keeps working unchanged, backed by
-    psycopg2 instead of sqlite3."""
-    def __init__(self, conn):
+    .fetchall() and reads row['col'] keeps working unchanged, whether it's
+    backed by psycopg2 (Postgres, production) or sqlite3 (local dev)."""
+    def __init__(self, conn, engine):
         self.conn = conn
+        self.engine = engine
 
     def execute(self, sql, params=()):
-        sql = sql.replace("?", "%s")
-        cur = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if self.engine == "postgres":
+            sql = sql.replace("?", "%s")
+            cur = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            cur = self.conn.cursor()
         cur.execute(sql, params)
         return cur
 
@@ -79,8 +93,12 @@ class Db:
 
 def get_db():
     if "db" not in g:
-        conn = psycopg2.connect(DATABASE_URL)
-        g.db = Db(conn)
+        if DB_ENGINE == "postgres":
+            conn = psycopg2.connect(DATABASE_URL)
+        else:
+            conn = sqlite3.connect(DATABASE_URL)
+            conn.row_factory = sqlite3.Row
+        g.db = Db(conn, DB_ENGINE)
     return g.db
 
 
@@ -94,50 +112,106 @@ def close_db(error):
 def init_db():
     with app.app_context():
         db = get_db()
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                email TEXT NOT NULL DEFAULT '',
-                display_name TEXT NOT NULL DEFAULT ''
-            )
-        ''')
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS currencies (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL DEFAULT 0 REFERENCES users(id),
-                currency TEXT NOT NULL,
-                unit INTEGER NOT NULL DEFAULT 1,
-                buying_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
-                selling_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
-                decimals INTEGER NOT NULL DEFAULT 2,
-                active BOOLEAN NOT NULL DEFAULT TRUE,
-                sort_order INTEGER NOT NULL DEFAULT 999
-            )
-        ''')
-        # Migrations for existing DBs (Postgres supports IF NOT EXISTS here,
-        # unlike SQLite, so no try/except dance is needed)
-        for col, defn in [
-            ("unit",          "INTEGER NOT NULL DEFAULT 1"),
-            ("user_id",       "INTEGER NOT NULL DEFAULT 0"),
-            ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
-            ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT FALSE"),
-            ("sell_preorder", "BOOLEAN NOT NULL DEFAULT FALSE"),
-        ]:
-            db.execute(f"ALTER TABLE currencies ADD COLUMN IF NOT EXISTS {col} {defn}")
-        for col, defn in [
-            ("email",        "TEXT NOT NULL DEFAULT ''"),
-            ("display_name", "TEXT NOT NULL DEFAULT ''"),
-            ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
-            ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
-            ("board_name",   "TEXT NOT NULL DEFAULT ''"),
-            ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
-            ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
-            ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
-            ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
-        ]:
-            db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
+        if DB_ENGINE == "postgres":
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    email TEXT NOT NULL DEFAULT '',
+                    display_name TEXT NOT NULL DEFAULT ''
+                )
+            ''')
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS currencies (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL DEFAULT 0 REFERENCES users(id),
+                    currency TEXT NOT NULL,
+                    unit INTEGER NOT NULL DEFAULT 1,
+                    buying_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+                    selling_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+                    decimals INTEGER NOT NULL DEFAULT 2,
+                    active BOOLEAN NOT NULL DEFAULT TRUE,
+                    sort_order INTEGER NOT NULL DEFAULT 999
+                )
+            ''')
+            # Migrations for existing DBs (Postgres supports IF NOT EXISTS here,
+            # unlike SQLite, so no try/except dance is needed)
+            for col, defn in [
+                ("unit",          "INTEGER NOT NULL DEFAULT 1"),
+                ("user_id",       "INTEGER NOT NULL DEFAULT 0"),
+                ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
+                ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("sell_preorder", "BOOLEAN NOT NULL DEFAULT FALSE"),
+            ]:
+                db.execute(f"ALTER TABLE currencies ADD COLUMN IF NOT EXISTS {col} {defn}")
+            for col, defn in [
+                ("email",        "TEXT NOT NULL DEFAULT ''"),
+                ("display_name", "TEXT NOT NULL DEFAULT ''"),
+                ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
+                ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
+                ("board_name",   "TEXT NOT NULL DEFAULT ''"),
+                ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+                ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
+                ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+                ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+            ]:
+                db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
+        else:
+            # SQLite (local dev only): no SERIAL/BOOLEAN keywords, and no
+            # "ADD COLUMN IF NOT EXISTS", so we check existing columns first.
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    email TEXT NOT NULL DEFAULT '',
+                    display_name TEXT NOT NULL DEFAULT ''
+                )
+            ''')
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS currencies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL DEFAULT 0,
+                    currency TEXT NOT NULL,
+                    unit INTEGER NOT NULL DEFAULT 1,
+                    buying_rate REAL NOT NULL DEFAULT 0,
+                    selling_rate REAL NOT NULL DEFAULT 0,
+                    decimals INTEGER NOT NULL DEFAULT 2,
+                    active BOOLEAN NOT NULL DEFAULT 1,
+                    sort_order INTEGER NOT NULL DEFAULT 999
+                )
+            ''')
+
+            def existing_columns(table):
+                rows = db.execute(f"PRAGMA table_info({table})").fetchall()
+                return {r["name"] for r in rows}
+
+            currency_cols = existing_columns("currencies")
+            for col, defn in [
+                ("unit",          "INTEGER NOT NULL DEFAULT 1"),
+                ("user_id",       "INTEGER NOT NULL DEFAULT 0"),
+                ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
+                ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT 0"),
+                ("sell_preorder", "BOOLEAN NOT NULL DEFAULT 0"),
+            ]:
+                if col not in currency_cols:
+                    db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
+
+            user_cols = existing_columns("users")
+            for col, defn in [
+                ("email",        "TEXT NOT NULL DEFAULT ''"),
+                ("display_name", "TEXT NOT NULL DEFAULT ''"),
+                ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
+                ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
+                ("board_name",   "TEXT NOT NULL DEFAULT ''"),
+                ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+                ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
+                ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+                ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+            ]:
+                if col not in user_cols:
+                    db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
         db.commit()
 
 
@@ -207,7 +281,7 @@ def signup():
         db.commit()
         seed_currencies(new_id)
         return jsonify({"message": "Account created"})
-    except psycopg2.errors.UniqueViolation:
+    except (psycopg2.errors.UniqueViolation, sqlite3.IntegrityError):
         db.rollback()
         return jsonify({"error": "Username already exists"}), 400
 
@@ -224,7 +298,7 @@ def login_user():
     if user and check_password_hash(user["password"], password):
         session["user_id"] = user["id"]
         session["username"] = user["username"]
-        count = db.execute("SELECT COUNT(*) FROM currencies WHERE user_id=?", (user["id"],)).fetchone()[0]
+        count = db.execute("SELECT COUNT(*) AS count FROM currencies WHERE user_id=?", (user["id"],)).fetchone()["count"]
         if count == 0:
             seed_currencies(user["id"])
         return jsonify({"message": "Login successful"})
@@ -439,9 +513,9 @@ def add_currency():
         )
     else:
         max_order = db.execute(
-            "SELECT COALESCE(MAX(sort_order), -1) FROM currencies WHERE user_id=?",
+            "SELECT COALESCE(MAX(sort_order), -1) AS max_order FROM currencies WHERE user_id=?",
             (current_user_id(),)
-        ).fetchone()[0]
+        ).fetchone()["max_order"]
         db.execute(
             "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,TRUE,?,?,?)",
             (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, bool(buy_preorder), bool(sell_preorder))

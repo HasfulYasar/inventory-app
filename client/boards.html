@@ -236,6 +236,24 @@
             grid-column: 1/-1; display: flex; align-items: center;
             justify-content: center; color: var(--text3); font-size: calc(13px * var(--font-scale));
         }
+
+        /* ── Light theme overrides: applied when a light board color is
+           picked. Several elements use hardcoded gold/white colors tuned
+           for the dark theme — swap those for theme-aware colors here. ── */
+        body.light-theme .board-title,
+        body.light-theme .board-subtitle,
+        body.light-theme .board-license,
+        body.light-theme .header-mobile,
+        body.light-theme .board-clock {
+            color: var(--neon);
+            text-shadow: none;
+        }
+        body.light-theme .board-logo { filter: none; }
+        body.light-theme .unit-val { color: var(--text); text-shadow: none; }
+        body.light-theme .rate-val { text-shadow: none; }
+        body.light-theme .sec-code { color: var(--text); text-shadow: none; }
+        body.light-theme .sec-val { text-shadow: none; }
+        body.light-theme .c-code { color: var(--text); }
     </style>
 </head>
 <body>
@@ -380,21 +398,39 @@ let boardColor = "#1a1a2e";
 
 function applyPalette() {
     const { r, g, b } = hexToRgb(boardColor);
-    const { h, s } = rgbToHsl(r, g, b);
-    // Neon accent: same hue as the picked color, pushed to full brightness.
-    const neon = shade(h, Math.max(s, 65), 58);
+    const { h, s, l } = rgbToHsl(r, g, b);
     const root = document.documentElement.style;
+    const isLight = l > 55;
 
-    root.setProperty("--bg", shade(h, Math.min(s, 60), 6));
-    root.setProperty("--panel-bg", shade(h, Math.min(s, 55), 9));
-    root.setProperty("--row-bg", shade(h, Math.min(s, 45), 8));
-    root.setProperty("--row-alt", shade(h, Math.min(s, 45), 6));
-    root.setProperty("--border", shade(h, Math.min(s, 30), 16));
-    root.setProperty("--divider", shade(h, Math.min(s, 30), 20));
-    root.setProperty("--text", "#ffffff");
-    root.setProperty("--text2", "#aab0c6");
-    root.setProperty("--text3", "#6b7080");
-    root.setProperty("--neon", neon);
+    if (isLight) {
+        // A genuinely light background needs dark, readable text and a
+        // deeper accent color for contrast — not the neon-on-black look.
+        const neon = shade(h, Math.max(s, 45), 32);
+        root.setProperty("--bg", shade(h, Math.min(s, 35), 94));
+        root.setProperty("--panel-bg", shade(h, Math.min(s, 30), 90));
+        root.setProperty("--row-bg", shade(h, Math.min(s, 25), 97));
+        root.setProperty("--row-alt", shade(h, Math.min(s, 25), 92));
+        root.setProperty("--border", shade(h, Math.min(s, 25), 78));
+        root.setProperty("--divider", shade(h, Math.min(s, 25), 72));
+        root.setProperty("--text", "#1a1a1a");
+        root.setProperty("--text2", "#4b4f5c");
+        root.setProperty("--text3", "#6b7080");
+        root.setProperty("--neon", neon);
+        document.body.classList.add("light-theme");
+    } else {
+        const neon = shade(h, Math.max(s, 65), 58);
+        root.setProperty("--bg", shade(h, Math.min(s, 60), 6));
+        root.setProperty("--panel-bg", shade(h, Math.min(s, 55), 9));
+        root.setProperty("--row-bg", shade(h, Math.min(s, 45), 8));
+        root.setProperty("--row-alt", shade(h, Math.min(s, 45), 6));
+        root.setProperty("--border", shade(h, Math.min(s, 30), 16));
+        root.setProperty("--divider", shade(h, Math.min(s, 30), 20));
+        root.setProperty("--text", "#ffffff");
+        root.setProperty("--text2", "#aab0c6");
+        root.setProperty("--text3", "#6b7080");
+        root.setProperty("--neon", neon);
+        document.body.classList.remove("light-theme");
+    }
 }
 
 applyPalette();
