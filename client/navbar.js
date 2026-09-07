@@ -16,7 +16,7 @@ async function initPage() {
             <div class="nav-links">
                 <a href="/" class="nav-link${path === "/" ? " active" : ""}">Home</a>
                 <a href="/add-currency.html" class="nav-link${path === "/add-currency.html" ? " active" : ""}">+ Add Currency</a>
-                <a href="/boards.html?user=${data.id}" class="nav-link">📺 Boards</a>
+                <a href="/boards.html?user=${data.id}" class="nav-link" target="_blank" rel="noopener">📺 Boards</a>
                 <button class="btn btn-small btn-gold" id="navEditBtn" style="display:none;">✎ Edit</button>
             </div>
             <div class="nav-right">
