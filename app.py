@@ -224,7 +224,7 @@ def login_user():
     if user and check_password_hash(user["password"], password):
         session["user_id"] = user["id"]
         session["username"] = user["username"]
-        count = db.execute("SELECT COUNT(*) FROM currencies WHERE user_id=?", (user["id"],)).fetchone()[0]
+        count = db.execute("SELECT COUNT(*) AS count FROM currencies WHERE user_id=?", (user["id"],)).fetchone()["count"]
         if count == 0:
             seed_currencies(user["id"])
         return jsonify({"message": "Login successful"})
@@ -439,9 +439,9 @@ def add_currency():
         )
     else:
         max_order = db.execute(
-            "SELECT COALESCE(MAX(sort_order), -1) FROM currencies WHERE user_id=?",
+            "SELECT COALESCE(MAX(sort_order), -1) AS max_order FROM currencies WHERE user_id=?",
             (current_user_id(),)
-        ).fetchone()[0]
+        ).fetchone()["max_order"]
         db.execute(
             "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,TRUE,?,?,?)",
             (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, bool(buy_preorder), bool(sell_preorder))
