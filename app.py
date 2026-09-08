@@ -6,6 +6,15 @@ import psycopg2.extras
 import psycopg2.errors
 import sqlite3
 import os
+from datetime import datetime, timezone
+
+def utc_now_naive():
+    """True UTC wall-clock time, regardless of the DB session's timezone
+    setting. Postgres' CURRENT_TIMESTAMP resolves to the session timezone
+    (which may be IST on this server), silently storing non-UTC time in a
+    plain TIMESTAMP column — this sidesteps that by generating UTC in
+    Python and passing it as a parameter."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-in-production")
@@ -31,6 +40,7 @@ else:
 MAX_LOGO_LEN = 700_000  # ~500KB image
 
 DEFAULT_BOARD_COLOR = "#1a1a2e"
+DEFAULT_RATE_COLOR = "#12B76A"
 DEFAULT_FONT_SCALE = 1.0
 MIN_FONT_SCALE = 0.8
 MAX_FONT_SCALE = 5.0
@@ -40,6 +50,8 @@ MAX_TEXT_FIELD_LEN = 120
 DEFAULT_PRIMARY_DISPLAY_COUNT = 22
 MIN_PRIMARY_DISPLAY_COUNT = 6
 MAX_PRIMARY_DISPLAY_COUNT = 60
+DEFAULT_SECONDARY_GROUP_SIZE = 10
+ALLOWED_SECONDARY_GROUP_SIZES = (5, 10)
 
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
@@ -146,12 +158,16 @@ def init_db():
                 ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
                 ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT FALSE"),
                 ("sell_preorder", "BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("updated_at",    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+                ("currency_name", "TEXT NOT NULL DEFAULT ''"),
+                ("currency_flag", "TEXT NOT NULL DEFAULT ''"),
             ]:
                 db.execute(f"ALTER TABLE currencies ADD COLUMN IF NOT EXISTS {col} {defn}")
             for col, defn in [
                 ("email",        "TEXT NOT NULL DEFAULT ''"),
                 ("display_name", "TEXT NOT NULL DEFAULT ''"),
                 ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
+                ("rate_color",   f"TEXT NOT NULL DEFAULT '{DEFAULT_RATE_COLOR}'"),
                 ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
                 ("board_name",   "TEXT NOT NULL DEFAULT ''"),
                 ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
@@ -159,6 +175,7 @@ def init_db():
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
+                ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
             ]:
                 db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
         else:
@@ -198,6 +215,9 @@ def init_db():
                 ("sort_order",    "INTEGER NOT NULL DEFAULT 999"),
                 ("buy_preorder",  "BOOLEAN NOT NULL DEFAULT 0"),
                 ("sell_preorder", "BOOLEAN NOT NULL DEFAULT 0"),
+                ("updated_at",    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"),
+                ("currency_name", "TEXT NOT NULL DEFAULT ''"),
+                ("currency_flag", "TEXT NOT NULL DEFAULT ''"),
             ]:
                 if col not in currency_cols:
                     db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
@@ -207,6 +227,7 @@ def init_db():
                 ("email",        "TEXT NOT NULL DEFAULT ''"),
                 ("display_name", "TEXT NOT NULL DEFAULT ''"),
                 ("board_color",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_COLOR}'"),
+                ("rate_color",   f"TEXT NOT NULL DEFAULT '{DEFAULT_RATE_COLOR}'"),
                 ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
                 ("board_name",   "TEXT NOT NULL DEFAULT ''"),
                 ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
@@ -214,6 +235,7 @@ def init_db():
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
+                ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
             ]:
                 if col not in user_cols:
                     db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -225,8 +247,8 @@ def seed_currencies(user_id):
     for i, code in enumerate(ALL_CURRENCIES):
         unit, buy, sell, dec = DEFAULT_RATES.get(code, (1,0,0,2))
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order) VALUES (?,?,?,?,?,?,TRUE,?)",
-            (user_id, code, unit, buy, sell, dec, i)
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,updated_at) VALUES (?,?,?,?,?,?,TRUE,?,?)",
+            (user_id, code, unit, buy, sell, dec, i, utc_now_naive())
         )
     db.commit()
 
@@ -327,13 +349,15 @@ def me():
             "email": user["email"] if user["email"] else "",
             "displayName": user["display_name"] if user["display_name"] else "",
             "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
+            "rateColor": user["rate_color"] if user["rate_color"] else DEFAULT_RATE_COLOR,
             "logo": user["logo_data"] if user["logo_data"] else "",
             "boardName": user["board_name"] if user["board_name"] else "",
             "fontScale": user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
             "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
             "boardLicense": user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
             "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
-            "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT
+            "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
+            "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE
         })
     return jsonify({"error": "Not logged in"}), 401
 
@@ -386,6 +410,7 @@ def update_password():
 def update_board():
     data = request.json or {}
     color      = data.get("boardColor", "").strip()
+    rate_color = data.get("rateColor", "").strip()
     logo       = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
     board_name = data.get("boardName", None)  # None = leave unchanged
     font_scale = data.get("fontScale", None)  # None = leave unchanged
@@ -393,9 +418,12 @@ def update_board():
     license_txt= data.get("boardLicense", None)   # None = leave unchanged
     mobile     = data.get("mobileNumber", None)   # None = leave unchanged
     primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
+    secondary_group_size = data.get("secondaryGroupSize", None)  # None = leave unchanged
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
+    if rate_color and not (rate_color.startswith("#") and len(rate_color) in (4, 7)):
+        return jsonify({"error": "Invalid rate color"}), 400
     if logo is not None and len(logo) > MAX_LOGO_LEN:
         return jsonify({"error": "Logo image is too large"}), 400
     if board_name is not None and len(board_name) > 80:
@@ -420,12 +448,22 @@ def update_board():
             return jsonify({"error": "Invalid currency count"}), 400
         if primary_count < MIN_PRIMARY_DISPLAY_COUNT or primary_count > MAX_PRIMARY_DISPLAY_COUNT:
             return jsonify({"error": "Currency count out of range"}), 400
+    if secondary_group_size is not None:
+        try:
+            secondary_group_size = int(secondary_group_size)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid rotation count"}), 400
+        if secondary_group_size not in ALLOWED_SECONDARY_GROUP_SIZES:
+            return jsonify({"error": "Rotation count must be 5 or 10"}), 400
 
     db = get_db()
     sets, params = [], []
     if color:
         sets.append("board_color=?")
         params.append(color)
+    if rate_color:
+        sets.append("rate_color=?")
+        params.append(rate_color)
     if logo is not None:
         sets.append("logo_data=?")
         params.append(logo)
@@ -447,6 +485,9 @@ def update_board():
     if primary_count is not None:
         sets.append("primary_display_count=?")
         params.append(primary_count)
+    if secondary_group_size is not None:
+        sets.append("secondary_group_size=?")
+        params.append(secondary_group_size)
     if not sets:
         return jsonify({"message": "Nothing to update"})
     params.append(current_user_id())
@@ -469,6 +510,8 @@ def row_to_dict(row, i=None):
         "isPrimary":     row["currency"] in PRIMARY_CURRENCIES,
         "buyPreorder":   bool(row["buy_preorder"]),
         "sellPreorder":  bool(row["sell_preorder"]),
+        "currencyName":  row["currency_name"] if row["currency_name"] else "",
+        "currencyFlag":  row["currency_flag"] if row["currency_flag"] else "",
     }
     if i is not None:
         d["serialNumber"] = i + 1
@@ -504,9 +547,11 @@ def get_currencies():
 @login_required
 def add_currency():
     data = request.json or {}
-    currency = data.get("currency", "").strip()
+    currency = data.get("currency", "").strip().upper()
     unit     = data.get("unit", 1)
     decimals = data.get("decimals", 2)
+    currency_name = (data.get("currencyName") or "").strip()
+    currency_flag = (data.get("currencyFlag") or "").strip().lower()
 
     buying_rate,  buy_preorder  = parse_rate_field(data, "buyingRate",  "buyPreorder")
     selling_rate, sell_preorder = parse_rate_field(data, "sellingRate", "sellPreorder")
@@ -525,8 +570,8 @@ def add_currency():
     ).fetchone()
     if existing:
         db.execute(
-            "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
-            (unit, buying_rate, selling_rate, decimals, bool(buy_preorder), bool(sell_preorder), existing["id"], current_user_id())
+            "UPDATE currencies SET unit=?, buying_rate=?, selling_rate=?, decimals=?, buy_preorder=?, sell_preorder=?, currency_name=?, currency_flag=?, updated_at=? WHERE id=? AND user_id=?",
+            (unit, buying_rate, selling_rate, decimals, bool(buy_preorder), bool(sell_preorder), currency_name, currency_flag, utc_now_naive(), existing["id"], current_user_id())
         )
     else:
         max_order = db.execute(
@@ -534,8 +579,8 @@ def add_currency():
             (current_user_id(),)
         ).fetchone()["max_order"]
         db.execute(
-            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder) VALUES (?,?,?,?,?,?,TRUE,?,?,?)",
-            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, bool(buy_preorder), bool(sell_preorder))
+            "INSERT INTO currencies (user_id,currency,unit,buying_rate,selling_rate,decimals,active,sort_order,buy_preorder,sell_preorder,updated_at,currency_name,currency_flag) VALUES (?,?,?,?,?,?,TRUE,?,?,?,?,?,?)",
+            (current_user_id(), currency, unit, buying_rate, selling_rate, decimals, max_order + 1, bool(buy_preorder), bool(sell_preorder), utc_now_naive(), currency_name, currency_flag)
         )
     db.commit()
     return jsonify({"message": "Currency saved"}), 201
@@ -545,9 +590,11 @@ def add_currency():
 @login_required
 def update_currency(cid):
     data = request.json or {}
-    currency = data.get("currency", "").strip()
+    currency = data.get("currency", "").strip().upper()
     unit     = data.get("unit", 1)
     decimals = data.get("decimals", 2)
+    currency_name = (data.get("currencyName") or "").strip()
+    currency_flag = (data.get("currencyFlag") or "").strip().lower()
 
     buying_rate,  buy_preorder  = parse_rate_field(data, "buyingRate",  "buyPreorder")
     selling_rate, sell_preorder = parse_rate_field(data, "sellingRate", "sellPreorder")
@@ -559,9 +606,15 @@ def update_currency(cid):
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid values"}), 400
     db = get_db()
+    dupe = db.execute(
+        "SELECT id FROM currencies WHERE user_id=? AND currency=? AND id!=?",
+        (current_user_id(), currency, cid)
+    ).fetchone()
+    if dupe:
+        return jsonify({"error": f"{currency} already exists on your board"}), 409
     db.execute(
-        "UPDATE currencies SET buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=? WHERE id=? AND user_id=?",
-        (buying_rate, selling_rate, decimals, unit, bool(buy_preorder), bool(sell_preorder), cid, current_user_id())
+        "UPDATE currencies SET currency=?, buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=?, currency_name=?, currency_flag=?, updated_at=? WHERE id=? AND user_id=?",
+        (currency, buying_rate, selling_rate, decimals, unit, bool(buy_preorder), bool(sell_preorder), currency_name, currency_flag, utc_now_naive(), cid, current_user_id())
     )
     db.commit()
     return jsonify({"message": "Updated"})
@@ -599,8 +652,8 @@ def toggle_currency(cid):
     if not row:
         return jsonify({"error": "Not found"}), 404
     new_state = not row["active"]
-    db.execute("UPDATE currencies SET active=? WHERE id=? AND user_id=?",
-               (new_state, cid, current_user_id()))
+    db.execute("UPDATE currencies SET active=?, updated_at=? WHERE id=? AND user_id=?",
+               (new_state, utc_now_naive(), cid, current_user_id()))
     db.commit()
     return jsonify({"active": bool(new_state)})
 
@@ -629,17 +682,49 @@ def public_board():
         "SELECT * FROM currencies WHERE user_id=? AND active=TRUE ORDER BY sort_order, id",
         (user_id,)
     ).fetchall()
-    return jsonify({
+
+    last_updated_row = db.execute(
+        "SELECT MAX(updated_at) AS last_updated FROM currencies WHERE user_id=?",
+        (user_id,)
+    ).fetchone()
+    last_updated = last_updated_row["last_updated"] if last_updated_row else None
+    if last_updated is not None:
+        # Postgres (psycopg2) returns a datetime object; SQLite returns a
+        # plain string. Normalize to an ISO string and tag it as UTC so the
+        # browser (new Date(...)) parses it correctly and converts it to
+        # the viewer's local time, instead of assuming it's already local.
+        # Also drop fractional seconds entirely — Postgres returns
+        # microsecond precision, but the JS Date parser only reliably
+        # handles 0 or 3 fractional digits, so anything else (e.g. 6-digit
+        # microseconds) can silently produce an Invalid Date in the browser.
+        if hasattr(last_updated, "isoformat"):
+            last_updated = last_updated.replace(microsecond=0).isoformat()
+        else:
+            last_updated = last_updated.split(".")[0]
+        if "T" not in last_updated:
+            last_updated = last_updated.replace(" ", "T")
+        if not last_updated.endswith("Z") and "+" not in last_updated:
+            last_updated += "Z"
+
+    resp = jsonify({
         "boardName":  user["board_name"] if user["board_name"] else "",
         "boardColor": user["board_color"] if user["board_color"] else DEFAULT_BOARD_COLOR,
+        "rateColor":  user["rate_color"] if user["rate_color"] else DEFAULT_RATE_COLOR,
         "logo":       user["logo_data"] if user["logo_data"] else "",
         "fontScale":  user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
         "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
         "boardLicense":  user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
         "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
         "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
+        "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
+        "lastUpdated": last_updated,
         "currencies": [row_to_dict(r) for r in rows]
     })
+    # This board data changes every time an admin edits a rate, and the
+    # board page polls it every 15s (plus on-demand via BroadcastChannel) —
+    # it must never be served stale from a browser or intermediary cache.
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return resp
 
 
 # Run schema creation / migrations on import, not just when this file is

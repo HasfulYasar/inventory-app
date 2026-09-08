@@ -57,6 +57,7 @@
                         <th class="edit-only" style="display:none;"></th>
                         <th>#</th>
                         <th>Currency</th>
+                        <th class="edit-only" style="display:none;">Unit</th>
                         <th>Buying Rate</th>
                         <th>Selling Rate</th>
                         <th class="edit-only" style="display:none;">Decimals</th>
@@ -101,12 +102,19 @@ let draggedId = null;
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
 
-function flagImg(code) {
-    const cc = CURRENCY_COUNTRY[code] || "un";
-    return `<img class="flag-img" src="https://flagcdn.com/w40/${cc}.png" alt="${code}" onerror="this.style.display='none'">`;
+function flagImg(c) {
+    const cc = CURRENCY_COUNTRY[c.currency] || c.currencyFlag || "un";
+    return `<img class="flag-img" src="https://flagcdn.com/w40/${cc}.png" alt="${c.currency}" onerror="this.style.display='none'">`;
 }
-function flagCell(code) {
-    return `<div class="currency-cell">${flagImg(code)}<strong>${code}</strong></div>`;
+function flagCell(c) {
+    return `<div class="currency-cell">${flagImg(c)}<strong>${c.currency}</strong></div>`;
+}
+function isCustomCurrency(code) {
+    return !(code in CURRENCY_COUNTRY);
+}
+function ccToFlagEmoji(cc) {
+    if (!cc || cc.length !== 2) return "🏳️";
+    return cc.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)));
 }
 
 // ── Currencies ──
@@ -126,7 +134,7 @@ async function loadCurrencies() {
 
 function renderTable() {
     const tbody = document.getElementById("tableBody");
-    const colspan = editModeActive ? 8 : 5;
+    const colspan = editModeActive ? 9 : 5;
 
     if (allData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">No currencies yet.</td></tr>`;
@@ -136,6 +144,23 @@ function renderTable() {
     let rows = "";
     allData.forEach((c, i) => {
         if (editModeActive) {
+            const isCustom = isCustomCurrency(c.currency);
+            const currencyCell = isCustom ? `
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;">
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <span style="font-size:18px;" id="e-flagpreview-${c.id}">${ccToFlagEmoji(c.currencyFlag)}</span>
+                        <input class="input" id="e-code-${c.id}" type="text" value="${c.currency}" maxlength="3"
+                            placeholder="Code" style="text-transform:uppercase;width:64px;padding:5px 8px;font-size:13px;margin-bottom:0;"
+                            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')">
+                        <input class="input" id="e-flag-${c.id}" type="text" value="${c.currencyFlag||''}" maxlength="2"
+                            placeholder="cc" title="2-letter country code, e.g. us"
+                            style="width:44px;padding:5px 8px;font-size:13px;margin-bottom:0;"
+                            oninput="this.value=this.value.toLowerCase().replace(/[^a-z]/g,''); document.getElementById('e-flagpreview-${c.id}').textContent=ccToFlagEmoji(this.value);">
+                    </div>
+                    <input class="input" id="e-name-${c.id}" type="text" value="${c.currencyName||''}"
+                        placeholder="Currency name" style="padding:5px 8px;font-size:13px;margin-bottom:0;">
+                </div>` : flagCell(c);
+
             rows += `
             <tr class="edit-row" draggable="true"
                 ondragstart="onDragStart(event, ${c.id})"
@@ -143,7 +168,8 @@ function renderTable() {
                 ondragover="onDragOverRow(event, ${c.id})">
                 <td class="drag-handle" title="Drag to reorder">⠿</td>
                 <td>${i + 1}</td>
-                <td>${flagCell(c.currency)}</td>
+                <td>${currencyCell}</td>
+                <td><input class="input" id="e-unit-${c.id}" type="number" min="1" step="1" value="${c.unit}" style="width:64px;"></td>
                 <td>
                     <input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0" ${c.buyPreorder?'disabled':''} style="margin-bottom:4px;">
                     <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:500;white-space:nowrap;">
@@ -173,7 +199,7 @@ function renderTable() {
             rows += `
             <tr>
                 <td>${i + 1}</td>
-                <td>${flagCell(c.currency)}</td>
+                <td>${flagCell(c)}</td>
                 <td>${c.buyPreorder ? '<span class="badge-preorder">PRE-ORDER</span>' : c.buyingRate.toFixed(c.decimals)}</td>
                 <td>${c.sellPreorder ? '<span class="badge-preorder">PRE-ORDER</span>' : c.sellingRate.toFixed(c.decimals)}</td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
@@ -237,11 +263,33 @@ async function saveAllChanges() {
         const buyingRate   = buyPreorder  ? 0 : parseFloat(document.getElementById(`e-buying-${c.id}`).value);
         const sellingRate  = sellPreorder ? 0 : parseFloat(document.getElementById(`e-selling-${c.id}`).value);
         const decimals     = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
-        return { id: c.id, currency: c.currency, unit: c.unit, buyingRate, sellingRate, decimals, buyPreorder, sellPreorder };
+        const unit         = parseInt(document.getElementById(`e-unit-${c.id}`).value) || 1;
+
+        const codeInput = document.getElementById(`e-code-${c.id}`);
+        const nameInput = document.getElementById(`e-name-${c.id}`);
+        const flagInput = document.getElementById(`e-flag-${c.id}`);
+        const currency      = codeInput ? codeInput.value.trim().toUpperCase() : c.currency;
+        const currencyName  = nameInput ? nameInput.value.trim() : (c.currencyName || "");
+        const currencyFlag  = flagInput ? flagInput.value.trim().toLowerCase() : (c.currencyFlag || "");
+        const isCustomEdit  = !!codeInput;
+
+        return { id: c.id, currency, currencyName, currencyFlag, unit, buyingRate, sellingRate, decimals, buyPreorder, sellPreorder, isCustomEdit };
     });
 
     if (updates.some(u => isNaN(u.buyingRate) || isNaN(u.sellingRate))) {
         showError("Please fill in all rate fields, or mark them as pre-order, before saving.");
+        return;
+    }
+    if (updates.some(u => u.isCustomEdit && !/^[A-Z]{3}$/.test(u.currency))) {
+        showError("Custom currency codes must be exactly 3 letters, e.g. XAF.");
+        return;
+    }
+    if (updates.some(u => u.isCustomEdit && !u.currencyName)) {
+        showError("Please enter a name for each custom currency.");
+        return;
+    }
+    if (updates.some(u => u.isCustomEdit && !/^[a-z]{2}$/.test(u.currencyFlag))) {
+        showError("Please enter a valid 2-letter country code for each custom currency's flag, e.g. us.");
         return;
     }
 
@@ -253,6 +301,7 @@ async function saveAllChanges() {
                 credentials: "include",
                 body: JSON.stringify({
                     currency: u.currency, unit: u.unit,
+                    currencyName: u.currencyName, currencyFlag: u.currencyFlag,
                     buyingRate: u.buyingRate, sellingRate: u.sellingRate, decimals: u.decimals,
                     buyPreorder: u.buyPreorder, sellPreorder: u.sellPreorder
                 })
@@ -269,8 +318,11 @@ async function saveAllChanges() {
             reorderDirty = false;
         }
 
-        if (results.some(r => !r.ok)) {
-            showError("Some currencies could not be saved.");
+        const failed = results.find(r => !r.ok);
+        if (failed) {
+            let msg = "Some currencies could not be saved.";
+            try { msg = (await failed.json()).error || msg; } catch {}
+            showError(msg);
         } else {
             hideError();
         }
