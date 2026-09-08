@@ -580,7 +580,7 @@ function renderPrimary(data) {
 
 
     grid.innerHTML = reordered.map((c, i) => {
-        const info = CURRENCY_INFO[c.currency] || { name: c.currency };
+        const info = CURRENCY_INFO[c.currency] || { name: c.currencyName || c.currency };
         const isLeft = i % 2 === 0;
         const isGBP = c.currency === "GBP";
         return `
