@@ -63,14 +63,16 @@
         .header-mobile.has-value { display: flex; }
 
         .board-logo {
-            height: 58px; width: auto; object-fit: contain;
+            height: 70px; width: 100px; 
+            object-fit: contain;
             filter: drop-shadow(0 0 3px var(--neon));
             flex-shrink: 0;
+            margin-left: -15px;
         }
 
         .title-block { min-width: 0; }
         .board-title {
-            font-size: calc(24px * var(--font-scale)); font-weight: 800; color: #F5B942;
+            font-size: calc(30px * var(--font-scale)); font-weight: 800; color: #F5B942;
             letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             text-shadow: 0 0 5px var(--neon);
         }
@@ -79,7 +81,7 @@
             margin-top: 2px; min-width: 0;
         }
         .board-subtitle {
-            font-size: calc(9px * var(--font-scale)); font-weight: 700; letter-spacing: 1.4px;
+            font-size: calc(12px * var(--font-scale)); font-weight: 700; letter-spacing: 1.4px;
             color: #F5B942; text-transform: uppercase;
             white-space: nowrap; flex-shrink: 0;
         }
@@ -88,7 +90,7 @@
             line-height: 1; flex-shrink: 0;
         }
         .board-license {
-            font-size: calc(8px * var(--font-scale)); font-weight: 600; letter-spacing: 0.6px;
+            font-size: calc(12px * var(--font-scale)); font-weight: 600; letter-spacing: 0.6px;
             color: #F5B942; text-transform: uppercase;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
         }
