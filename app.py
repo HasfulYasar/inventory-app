@@ -33,10 +33,13 @@ MAX_LOGO_LEN = 700_000  # ~500KB image
 DEFAULT_BOARD_COLOR = "#1a1a2e"
 DEFAULT_FONT_SCALE = 1.0
 MIN_FONT_SCALE = 0.8
-MAX_FONT_SCALE = 1.6
+MAX_FONT_SCALE = 5.0
 DEFAULT_BOARD_SUBTITLE = "Currency Exchange"
 DEFAULT_BOARD_LICENSE = "Perniagaan Perkhidmatan Wang Berlesen"
 MAX_TEXT_FIELD_LEN = 120
+DEFAULT_PRIMARY_DISPLAY_COUNT = 22
+MIN_PRIMARY_DISPLAY_COUNT = 6
+MAX_PRIMARY_DISPLAY_COUNT = 60
 
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
@@ -155,6 +158,7 @@ def init_db():
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+                ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
             ]:
                 db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
         else:
@@ -209,6 +213,7 @@ def init_db():
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+                ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
             ]:
                 if col not in user_cols:
                     db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -327,7 +332,8 @@ def me():
             "fontScale": user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
             "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
             "boardLicense": user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
-            "mobileNumber": user["mobile_number"] if user["mobile_number"] else ""
+            "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
+            "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT
         })
     return jsonify({"error": "Not logged in"}), 401
 
@@ -386,6 +392,7 @@ def update_board():
     subtitle   = data.get("boardSubtitle", None)  # None = leave unchanged
     license_txt= data.get("boardLicense", None)   # None = leave unchanged
     mobile     = data.get("mobileNumber", None)   # None = leave unchanged
+    primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
@@ -406,6 +413,13 @@ def update_board():
             return jsonify({"error": "Invalid font size"}), 400
         if font_scale < MIN_FONT_SCALE or font_scale > MAX_FONT_SCALE:
             return jsonify({"error": "Font size out of range"}), 400
+    if primary_count is not None:
+        try:
+            primary_count = int(primary_count)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid currency count"}), 400
+        if primary_count < MIN_PRIMARY_DISPLAY_COUNT or primary_count > MAX_PRIMARY_DISPLAY_COUNT:
+            return jsonify({"error": "Currency count out of range"}), 400
 
     db = get_db()
     sets, params = [], []
@@ -430,6 +444,9 @@ def update_board():
     if mobile is not None:
         sets.append("mobile_number=?")
         params.append(mobile.strip())
+    if primary_count is not None:
+        sets.append("primary_display_count=?")
+        params.append(primary_count)
     if not sets:
         return jsonify({"message": "Nothing to update"})
     params.append(current_user_id())
@@ -620,6 +637,7 @@ def public_board():
         "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
         "boardLicense":  user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
         "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
+        "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
         "currencies": [row_to_dict(r) for r in rows]
     })
 

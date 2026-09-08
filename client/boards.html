@@ -62,7 +62,7 @@
         .header-mobile.has-value { display: flex; }
 
         .board-logo {
-            height: 46px; width: auto; object-fit: contain;
+            height: 58px; width: auto; object-fit: contain;
             filter: drop-shadow(0 0 3px var(--neon));
             flex-shrink: 0;
         }
@@ -84,7 +84,7 @@
         }
 
         .board-clock {
-            font-size: calc(11px * var(--font-scale)); font-weight: 600; color: -#F5B942;
+            font-size: calc(15px * var(--font-scale)); font-weight: 700; color: #F5B942;
             white-space: nowrap;
             margin-top: 6px;
         }
@@ -124,9 +124,10 @@
         }
         .col-header-half {
             display: grid;
-            grid-template-columns: 1.1fr 0.5fr 0.9fr 0.9fr;
+            grid-template-columns: minmax(0, 1.85fr) minmax(40px, 0.2fr) minmax(0, 0.95fr);
             padding: 0.25rem 0.8rem;
             align-items: center;
+            min-width: 0;
         }
         .col-header-half:first-child { border-right: 2px solid var(--neon); }
         .col-header span {
@@ -134,6 +135,22 @@
             text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2);
         }
         .col-header span.r { text-align: right; }
+
+        /* ── Buy/Sell pair: pulled together around a shared divider line
+           instead of spread across the full row width ── */
+        .rate-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 0;
+        }
+        .rate-group > * { flex: 1 1 0; min-width: 0; }
+        .rate-group > *:first-child { text-align: right; padding-right: 10px; }
+        .rate-group > *:last-child {
+            text-align: left;
+            padding-left: 10px;
+            border-left: 1px solid var(--divider);
+        }
 
         .primary-wrap { flex: 1; overflow: hidden; min-height: 0; }
 
@@ -146,9 +163,10 @@
 
         .currency-row {
             display: grid;
-            grid-template-columns: 1.1fr 0.5fr 0.9fr 0.9fr;
+            grid-template-columns: minmax(0, 1.85fr) minmax(40px, 0.2fr) minmax(0, 0.95fr);
             align-items: center;
             padding: 0 0.8rem;
+            min-width: 0;
             border-bottom: 1px solid var(--border);
             background: var(--row-bg);
         }
@@ -164,21 +182,21 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
         .c-text { min-width: 0; overflow: hidden; }
-        .c-code { font-size: calc(0.72rem * var(--font-scale)); font-weight: 700; color: var(--text); white-space: nowrap; }
-        .c-name { font-size: calc(10px * var(--font-scale)); font-weight: 600; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unit-val { font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: right; text-shadow: 0 0 3px var(--neon); }
+        .c-code { font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .c-name-inline { font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; color: var(--text2); }
+        .unit-val { font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: right; text-shadow: 0 0 3px var(--neon); }
         .rate-val {
-            font-size: calc(0.9rem * var(--font-scale)); font-weight: 700; color: #12B76A;
+            font-size: calc(1rem * var(--font-scale)); font-weight: 700; color: #12B76A;
             font-variant-numeric: tabular-nums; text-align: right;
             text-shadow: 0 0 3px var(--neon);
         }
-        .rate-val.preorder-val { color: #F5B942; font-size: calc(0.66rem * var(--font-scale)); letter-spacing: 0.3px; text-shadow: 0 0 3px #F5B942; }
+        .rate-val.preorder-val { color: #F5B942; font-size: calc(0.72rem * var(--font-scale)); letter-spacing: 0.3px; text-shadow: 0 0 3px #F5B942; }
 
         /* ── Right panel: 4 secondary currencies at once, no header label ── */
         /* ── Right panel: rotates through the secondary currencies (10 at a
            time), with a small mobile-number strip above the grid. ── */
         .right-panel {
-            width: 300px;
+            width: 240px;
             flex-shrink: 0;
             display: flex;
             background: var(--panel-bg);
@@ -215,8 +233,9 @@
         .sec-card-top { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
         .sec-flag { width: 18px; height: 12px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
         .sec-code { font-size: calc(0.8rem * var(--font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sec-rates { display: flex; flex-wrap: nowrap; gap: 3px; width: 100%; }
-        .sec-rate-box { flex: 1 0 0 ; min-width: 0; text-align: center; }
+        .sec-rates { display: flex; flex-wrap: nowrap; gap: 0; width: 100%; justify-content: center; }
+        .sec-rate-box { flex: 0 1 auto; min-width: 0; text-align: center; padding: 0 10px; }
+        .sec-rate-box + .sec-rate-box { border-left: 1px solid var(--divider); }
         .sec-lbl { font-size: calc(8px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
         .sec-val { font-size: calc(0.82rem * var(--font-scale)); font-weight: 700; color: #12B76A; font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--neon); }
         .sec-val.preorder-val {  font-size: calc(0.56rem * var(--font-scale));  color: #F5B942 !important;  }
@@ -276,16 +295,12 @@
 
     <div class="board-body">
         <div class="left-panel">
-            <div class="subtitle-bar">
-                <span>Today's Rates</span>
-                <span id="rateCount"></span>
-            </div>
             <div class="col-header">
                 <div class="col-header-half">
-                    <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
+                    <span>Currency</span><span class="r">Unit</span><div class="rate-group"><span>We Buy</span><span>We Sell</span></div>
                 </div>
                 <div class="col-header-half">
-                    <span>Currency</span><span class="r">Unit</span><span class="r">We Buy</span><span class="r">We Sell</span>
+                    <span>Currency</span><span class="r">Unit</span><div class="rate-group"><span>We Buy</span><span>We Sell</span></div>
                 </div>
             </div>
             <div class="primary-wrap">
@@ -311,7 +326,7 @@
 // and-drop order = sort_order from the server). The first PRIMARY_DISPLAY_COUNT
 // in that order fill the always-on left grid; everything after that rotates
 // through the right panel, 4 at a time, in the same saved order.
-const PRIMARY_DISPLAY_COUNT = 24;
+let PRIMARY_DISPLAY_COUNT = 22;
 const SECONDARY_GROUP_SIZE = 10;
 const SECONDARY_ROTATE_MS = 7000;
 
@@ -447,38 +462,38 @@ function rateCell(rate, decimals, isPreorder) {
 }
 
 // ── Auto-fit: the admin's font-size slider is a target, not a guarantee.
-// Rather than let oversized text overflow into a scrollbar, shrink the
-// applied scale just enough that everything (left grid + right panel)
-// fits the screen with no scrolling. Never scales up past what the admin
-// picked — only down, and only as far as needed.
+// Rather than let oversized text overflow into a scrollbar, binary-search
+// for the largest scale (up to what the admin picked) that fits both the
+// left grid and right panel with no scrolling. Never scales up past what
+// the admin picked — only down, and only as far as needed. Binary search
+// (rather than a fixed few multiplicative shrink-steps) always converges
+// to the true best fit, however far the desired scale is from what fits —
+// a large desired value never overshoots to something smaller than a
+// modest one would have landed on.
 let desiredFontScale = 1;
 
 function applyFitScale(desired) {
     desiredFontScale = desired || 1;
-    let scale = desiredFontScale;
     const primaryWrap = document.querySelector(".primary-wrap");
     const rightPanel   = document.querySelector(".right-panel");
     const root = document.documentElement.style;
 
-    root.setProperty("--font-scale", scale);
-
-    for (let i = 0; i < 5; i++) {
-        // Force layout so scrollHeight/clientHeight reflect the current scale.
+    function fitsAt(scale) {
+        root.setProperty("--font-scale", scale);
         void primaryWrap.offsetHeight;
         void rightPanel.offsetHeight;
-
-        const primaryOverflow = primaryWrap.scrollHeight - primaryWrap.clientHeight;
-        const rightOverflow   = rightPanel.scrollHeight - rightPanel.clientHeight;
-
-        if (primaryOverflow <= 0 && rightOverflow <= 0) break;
-
-        let ratio = 1;
-        if (primaryOverflow > 0) ratio = Math.min(ratio, primaryWrap.clientHeight / primaryWrap.scrollHeight);
-        if (rightOverflow   > 0) ratio = Math.min(ratio, rightPanel.clientHeight / rightPanel.scrollHeight);
-
-        scale = Math.max(0.5, scale * ratio * 0.985);
-        root.setProperty("--font-scale", scale);
+        return primaryWrap.scrollHeight <= primaryWrap.clientHeight
+            && rightPanel.scrollHeight <= rightPanel.clientHeight;
     }
+
+    if (fitsAt(desiredFontScale)) return; // fits as-is, no shrink needed
+
+    let lo = 0.5, hi = desiredFontScale, best = lo;
+    for (let i = 0; i < 14; i++) {
+        const mid = (lo + hi) / 2;
+        if (fitsAt(mid)) { best = mid; lo = mid; } else { hi = mid; }
+    }
+    root.setProperty("--font-scale", best * 0.99); // small safety margin
 }
 
 let fitResizeTimer = null;
@@ -516,11 +531,12 @@ async function loadRates() {
         boardColor = board.boardColor || "#1a1a2e";
         applyPalette();
 
+        PRIMARY_DISPLAY_COUNT = board.primaryDisplayCount || 22;
         const data = board.currencies || [];
         renderPrimary(data);
         renderSecondary(data);
         applyFitScale(board.fontScale || 1);
-        document.getElementById("rateCount").textContent = data.length + " Currencies";
+
     } catch {
         document.getElementById("primaryGrid").innerHTML =
             `<div class="board-empty">Unable to load rates</div>`;
@@ -559,13 +575,14 @@ function renderPrimary(data) {
             <div class="currency-name-cell">
                 <img class="flag-img" src="${flagUrl(c.currency)}" alt="${c.currency}" onerror="this.style.display='none'">
                 <div class="c-text">
-                    <div class="c-code">${c.currency}</div>
-                    <div class="c-name">${info.name}</div>
+                    <div class="c-code">${c.currency} <span class="c-name-inline">${info.name}</span></div>
                 </div>
             </div>
             <div class="unit-val">${c.unit || 1}</div>
-            ${rateCell(c.buyingRate, c.decimals, c.buyPreorder)}
-            ${rateCell(c.sellingRate, c.decimals, c.sellPreorder)}
+            <div class="rate-group">
+                ${rateCell(c.buyingRate, c.decimals, c.buyPreorder)}
+                ${rateCell(c.sellingRate, c.decimals, c.sellPreorder)}
+            </div>
         </div>`;
     }).join("");
 }

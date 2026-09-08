@@ -94,10 +94,18 @@
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Board Font Size</label>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <input type="range" id="fontScaleInput" min="80" max="160" step="10" value="100" style="width:160px;">
+                    <input type="range" id="fontScaleInput" min="80" max="500" step="10" value="100" style="width:220px;">
                     <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
                 </div>
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size on the live board — layout reflows automatically</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Currencies on Main Board</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="primaryCountInput" min="6" max="60" step="2" value="22" style="width:160px;">
+                    <span id="primaryCountLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">22</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">How many show on the always-visible grid — the rest rotate through the side panel</div>
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Your Logo</label>
@@ -420,8 +428,23 @@ const BOARD_COLOR_PRESETS = [
     { name: "Ivory Cream",    hex: "#FBF3E3", glow: "#B8860B" },
 ];
 
+function isColorDark(hex) {
+    hex = (hex || "").replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const r = parseInt(hex.substr(0, 2), 16) || 0;
+    const g = parseInt(hex.substr(2, 2), 16) || 0;
+    const b = parseInt(hex.substr(4, 2), 16) || 0;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness < 140;
+}
+
 function applyBoardColor(color) {
     document.body.style.background = color;
+    const heading = document.querySelector(".page-header-text h2");
+    const subtext = document.querySelector(".page-header-text p");
+    const dark = isColorDark(color);
+    if (heading) heading.style.color = dark ? "#ffffff" : "#1a1a2e";
+    if (subtext) subtext.style.color = dark ? "#c8ccdc" : "#666";
 }
 
 function renderColorSwatches() {
@@ -465,6 +488,10 @@ async function loadBoardSettings() {
         document.getElementById("fontScaleInput").value = pct;
         document.getElementById("fontScaleLabel").textContent = pct + "%";
 
+        const primaryCount = data.primaryDisplayCount || 22;
+        document.getElementById("primaryCountInput").value = primaryCount;
+        document.getElementById("primaryCountLabel").textContent = primaryCount;
+
         if (data.logo) {
             document.getElementById("logoPreview").src = data.logo;
         }
@@ -495,6 +522,24 @@ document.getElementById("fontScaleInput").addEventListener("change", async (e) =
         notifyBoardUpdate();
     } catch {
         showError("Could not save font size.");
+    }
+});
+
+document.getElementById("primaryCountInput").addEventListener("input", (e) => {
+    document.getElementById("primaryCountLabel").textContent = e.target.value;
+});
+document.getElementById("primaryCountInput").addEventListener("change", async (e) => {
+    const primaryDisplayCount = parseInt(e.target.value);
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ primaryDisplayCount })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save currency count.");
     }
 });
 
