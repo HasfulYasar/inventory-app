@@ -467,15 +467,14 @@ function rateCell(rate, decimals, isPreorder) {
 // left grid and right panel with no scrolling. Never scales up past what
 // the admin picked — only down, and only as far as needed. Binary search
 // (rather than a fixed few multiplicative shrink-steps) always converges
-// to the true best fit, however far the desired scale is from what fits —
-// a large desired value never overshoots to something smaller than a
-// modest one would have landed on.
+// Font scale: find the largest scale that still fits on screen,
+// searching up to the desired value (max 5.0 = 500%).
 let desiredFontScale = 1;
 
 function applyFitScale(desired) {
-    desiredFontScale = desired || 1;
+    desiredFontScale = Math.min(desired || 1, 1.2);
     const primaryWrap = document.querySelector(".primary-wrap");
-    const rightPanel   = document.querySelector(".right-panel");
+    const rightPanel  = document.querySelector(".right-panel");
     const root = document.documentElement.style;
 
     function fitsAt(scale) {
@@ -483,17 +482,20 @@ function applyFitScale(desired) {
         void primaryWrap.offsetHeight;
         void rightPanel.offsetHeight;
         return primaryWrap.scrollHeight <= primaryWrap.clientHeight
-            && rightPanel.scrollHeight <= rightPanel.clientHeight;
+            && rightPanel.scrollHeight  <= rightPanel.clientHeight;
     }
 
-    if (fitsAt(desiredFontScale)) return; // fits as-is, no shrink needed
+    // Always try the desired scale first — if it fits, use it directly
+    if (fitsAt(desiredFontScale)) return;
 
-    let lo = 0.5, hi = desiredFontScale, best = lo;
-    for (let i = 0; i < 14; i++) {
+    // Binary search between 0.4 and desiredFontScale to find the largest
+    // scale that still fits (now works all the way up to 5.0 = 500%)
+    let lo = 0.4, hi = desiredFontScale, best = lo;
+    for (let i = 0; i < 18; i++) {
         const mid = (lo + hi) / 2;
         if (fitsAt(mid)) { best = mid; lo = mid; } else { hi = mid; }
     }
-    root.setProperty("--font-scale", best * 0.99); // small safety margin
+    root.setProperty("--font-scale", best * 0.98); // tiny safety margin
 }
 
 let fitResizeTimer = null;

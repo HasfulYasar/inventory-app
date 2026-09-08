@@ -94,8 +94,8 @@
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Board Font Size</label>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <input type="range" id="fontScaleInput" min="80" max="500" step="10" value="100" style="width:220px;">
-                    <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
+                    <input type="range" id="fontScaleInput" min="80" max="500" step="10" value="120" style="width:160px;">
+                    <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">120%</span>
                 </div>
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size on the live board — layout reflows automatically</div>
             </div>
@@ -428,23 +428,8 @@ const BOARD_COLOR_PRESETS = [
     { name: "Ivory Cream",    hex: "#FBF3E3", glow: "#B8860B" },
 ];
 
-function isColorDark(hex) {
-    hex = (hex || "").replace("#", "");
-    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
-    const r = parseInt(hex.substr(0, 2), 16) || 0;
-    const g = parseInt(hex.substr(2, 2), 16) || 0;
-    const b = parseInt(hex.substr(4, 2), 16) || 0;
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness < 140;
-}
-
 function applyBoardColor(color) {
     document.body.style.background = color;
-    const heading = document.querySelector(".page-header-text h2");
-    const subtext = document.querySelector(".page-header-text p");
-    const dark = isColorDark(color);
-    if (heading) heading.style.color = dark ? "#ffffff" : "#1a1a2e";
-    if (subtext) subtext.style.color = dark ? "#c8ccdc" : "#666";
 }
 
 function renderColorSwatches() {
