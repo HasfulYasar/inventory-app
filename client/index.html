@@ -327,6 +327,13 @@ async function loadPageMeta() {
 
 loadCurrencies();
 loadPageMeta();
+
+// If the user clicked "Edit" from another page, jump straight into edit
+// mode once currencies have loaded (navbar.js sets this flag).
+if (sessionStorage.getItem("showcash_enter_edit") === "1") {
+    sessionStorage.removeItem("showcash_enter_edit");
+    setTimeout(() => { if (typeof window.toggleEditMode === "function") window.toggleEditMode(); }, 300);
+}
 </script>
 </body>
 </html>

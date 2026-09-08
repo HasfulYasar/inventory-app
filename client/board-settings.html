@@ -58,6 +58,10 @@
         <a id="viewBoardBtn" href="#" target="_blank" rel="noopener" class="btn btn-gold">📺 View Live Board</a>
     </div>
 
+    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.8rem;">
+        <button class="btn btn-gold" id="saveSettingsBtn" type="button">💾 Save</button>
+    </div>
+
     <div id="error-msg" class="error-msg" style="display:none;"></div>
 
     <div class="card">
@@ -322,6 +326,40 @@ wireTextBoardField("boardTitleInput",    "boardName",     "board title");
 wireTextBoardField("boardSubtitleInput", "boardSubtitle", "board subtitle");
 wireTextBoardField("boardLicenseInput",  "boardLicense",  "license text");
 wireTextBoardField("mobileNumberInput",  "mobileNumber",  "mobile number");
+
+document.getElementById("saveSettingsBtn").addEventListener("click", async (e) => {
+    const btn = e.target;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    try {
+        fontScale = parseInt(document.getElementById("fontScaleInput").value) / 100;
+        const primaryDisplayCount = parseInt(document.getElementById("primaryCountInput").value);
+        const res = await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                boardColor,
+                fontScale,
+                primaryDisplayCount,
+                boardName:     document.getElementById("boardTitleInput").value.trim(),
+                boardSubtitle: document.getElementById("boardSubtitleInput").value.trim(),
+                boardLicense:  document.getElementById("boardLicenseInput").value.trim(),
+                mobileNumber:  document.getElementById("mobileNumberInput").value.trim()
+            })
+        });
+        if (!res.ok) throw new Error();
+        notifyBoardUpdate();
+        hideError();
+        btn.textContent = "✓ Saved";
+        setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 1500);
+    } catch {
+        showError("Could not save board settings. Please try again.");
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+});
 
 loadBoardSettings();
 </script>

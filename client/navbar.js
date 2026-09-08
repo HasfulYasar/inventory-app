@@ -18,7 +18,7 @@ async function initPage() {
                 <a href="/add-currency.html" class="nav-link${path === "/add-currency.html" ? " active" : ""}">+ Add Currency</a>
                 <a href="/board-settings.html" class="nav-link${path === "/board-settings.html" ? " active" : ""}">⚙ Board Settings</a>
                 <a href="/boards.html?user=${data.id}" class="nav-link" target="_blank" rel="noopener">📺 Boards</a>
-                <button class="btn btn-small btn-gold" id="navEditBtn" style="display:none;">✎ Edit</button>
+                <button class="btn btn-small btn-gold" id="navEditBtn">✎ Edit</button>
             </div>
             <div class="nav-right">
                 <a href="/account.html" class="nav-link${path === "/account.html" ? " active" : ""}">👤 Account</a>
@@ -29,9 +29,18 @@ async function initPage() {
         document.body.prepend(nav);
 
         const editBtn = document.getElementById("navEditBtn");
-        if (editBtn && typeof window.toggleEditMode === "function") {
-            editBtn.style.display = "inline-flex";
-            editBtn.onclick = window.toggleEditMode;
+        if (editBtn) {
+            if (typeof window.toggleEditMode === "function") {
+                // Already on the home page — toggle edit mode directly.
+                editBtn.onclick = window.toggleEditMode;
+            } else {
+                // On another page — go home and ask it to enter edit mode
+                // as soon as it loads.
+                editBtn.onclick = () => {
+                    sessionStorage.setItem("showcash_enter_edit", "1");
+                    window.location.href = "/";
+                };
+            }
         }
     } catch {
         window.location.href = "/login";
