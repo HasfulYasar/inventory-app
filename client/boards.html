@@ -196,7 +196,7 @@
         /* ── Right panel: rotates through the secondary currencies (10 at a
            time), with a small mobile-number strip above the grid. ── */
         .right-panel {
-            width: 300px;
+            width: 340px;
             flex-shrink: 0;
             display: flex;
             background: var(--panel-bg);
@@ -232,13 +232,13 @@
         }
         .sec-card-top { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
         .sec-flag { width: 18px; height: 12px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
-        .sec-code { font-size: calc(0.8rem * var(--font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sec-code { font-size: calc(0.95rem * var(--font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sec-rates { display: flex; flex-wrap: nowrap; gap: 0; width: 100%; justify-content: center; }
         .sec-rate-box { flex: 0 1 auto; min-width: 0; text-align: center; padding: 0 10px; }
         .sec-rate-box + .sec-rate-box { border-left: 1px solid var(--divider); }
-        .sec-lbl { font-size: calc(8px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
-        .sec-val { font-size: calc(0.82rem * var(--font-scale)); font-weight: 700; color: #12B76A; font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--neon); }
-        .sec-val.preorder-val {  font-size: calc(0.56rem * var(--font-scale));  color: #F5B942 !important;  }
+        .sec-lbl { font-size: calc(9px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
+        .sec-val { font-size: calc(0.95rem * var(--font-scale)); font-weight: 700; color: #12B76A; font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--neon); }
+        .sec-val.preorder-val {  font-size: calc(0.65rem * var(--font-scale));  color: #F5B942 !important;  }
 
         /* ── Footer ── */
         .board-footer {
@@ -472,30 +472,8 @@ function rateCell(rate, decimals, isPreorder) {
 let desiredFontScale = 1;
 
 function applyFitScale(desired) {
-    desiredFontScale = Math.min(desired || 1, 1.2);
-    const primaryWrap = document.querySelector(".primary-wrap");
-    const rightPanel  = document.querySelector(".right-panel");
-    const root = document.documentElement.style;
-
-    function fitsAt(scale) {
-        root.setProperty("--font-scale", scale);
-        void primaryWrap.offsetHeight;
-        void rightPanel.offsetHeight;
-        return primaryWrap.scrollHeight <= primaryWrap.clientHeight
-            && rightPanel.scrollHeight  <= rightPanel.clientHeight;
-    }
-
-    // Always try the desired scale first — if it fits, use it directly
-    if (fitsAt(desiredFontScale)) return;
-
-    // Binary search between 0.4 and desiredFontScale to find the largest
-    // scale that still fits (now works all the way up to 5.0 = 500%)
-    let lo = 0.4, hi = desiredFontScale, best = lo;
-    for (let i = 0; i < 18; i++) {
-        const mid = (lo + hi) / 2;
-        if (fitsAt(mid)) { best = mid; lo = mid; } else { hi = mid; }
-    }
-    root.setProperty("--font-scale", best * 0.98); // tiny safety margin
+    desiredFontScale = desired || 1;
+    document.documentElement.style.setProperty("--font-scale", desiredFontScale);
 }
 
 let fitResizeTimer = null;

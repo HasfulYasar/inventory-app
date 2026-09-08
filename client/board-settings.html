@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Settings — SHOWCASH</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .board-settings-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.1rem 1.8rem;
+            align-items: start;
+        }
+        .board-settings-row .field { min-width: 0; }
+        .board-settings-row .field .input,
+        .board-settings-row .field input[type="range"] { width: 100%; }
+        .card { padding: 1.1rem 1.4rem; }
+        .page-header { margin-bottom: 0.9rem; }
+        .field-label { margin-bottom: 4px; }
+        .color-swatch-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 300px;
+        }
+        .color-swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+        }
+        .color-swatch:hover { transform: translateY(-2px); }
+        .color-swatch.selected {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px #1a1a2e, 0 0 16px 2px var(--glow);
+        }
+        .logo-upload-row { display: flex; align-items: center; gap: 10px; }
+        .logo-preview {
+            height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+            background: #1a1a2e;
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <div class="page-header-text">
+            <h2>Board Settings</h2>
+            <p>Customize how your live board looks</p>
+        </div>
+        <a id="viewBoardBtn" href="#" target="_blank" rel="noopener" class="btn btn-gold">📺 View Live Board</a>
+    </div>
+
+    <div id="error-msg" class="error-msg" style="display:none;"></div>
+
+    <div class="card">
+        <div class="board-settings-row">
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Color</label>
+                <div class="color-swatch-grid" id="colorSwatchGrid"></div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Pick a shade — saves and updates the live board instantly</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Font Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="fontScaleInput" min="80" max="500" step="10" value="120" style="width:100%;">
+                    <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">120%</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size on the live board — layout reflows automatically</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Currencies on Main Board</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="primaryCountInput" min="6" max="60" step="2" value="22" style="width:100%;">
+                    <span id="primaryCountLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">22</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">How many show on the always-visible grid — the rest rotate through the side panel</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Your Logo</label>
+                <div class="logo-upload-row">
+                    <img id="logoPreview" class="logo-preview" src="/logo.png" alt="logo preview">
+                    <label class="btn btn-secondary btn-small" for="logoFileInput" style="cursor:pointer;">Upload</label>
+                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                    <button class="btn btn-secondary btn-small" id="logoResetBtn" type="button">Reset</button>
+                </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Title</label>
+                <input class="input" type="text" id="boardTitleInput" placeholder="e.g. CURRENCY EXCHANGE" maxlength="80" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">The big heading at the top of the board</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Subtitle</label>
+                <input class="input" type="text" id="boardSubtitleInput" placeholder="e.g. Currency Exchange" maxlength="120" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Smaller line shown under the title</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">License Text</label>
+                <input class="input" type="text" id="boardLicenseInput" placeholder="e.g. Perniagaan Perkhidmatan Wang Berlesen" maxlength="120" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown under the subtitle on the board</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Mobile Number</label>
+                <input class="input" type="text" id="mobileNumberInput" placeholder="e.g. +60 12-345 6789" maxlength="40" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown above the clock, top-right of the board</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="navbar.js"></script>
+<script>
+const errorMsg = document.getElementById("error-msg");
+function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
+function hideError() { errorMsg.style.display = "none"; }
+
+let boardColor = "#1a1a2e";
+let fontScale = 1;
+
+// Instantly notifies any open /boards.html tab (e.g. on a TV screen) to
+// refresh the moment board settings change here.
+const boardUpdateChannel = "BroadcastChannel" in window ? new BroadcastChannel("showcash-board-updates") : null;
+function notifyBoardUpdate() {
+    if (boardUpdateChannel) boardUpdateChannel.postMessage("refresh");
+}
+
+// Curated dark shades, plus a few light ones — each carries a matching neon
+// glow color so the picker previews roughly what the TV board's accent will
+// look like.
+const BOARD_COLOR_PRESETS = [
+    { name: "Midnight Navy",  hex: "#1a1a2e", glow: "#f0c040" },
+    { name: "Onyx Black",     hex: "#111214", glow: "#ffffff" },
+    { name: "Deep Purple",    hex: "#241b3f", glow: "#c084fc" },
+    { name: "Emerald Night",  hex: "#0f2e22", glow: "#34d399" },
+    { name: "Wine Red",       hex: "#2b0f1c", glow: "#f87171" },
+    { name: "Ocean Teal",     hex: "#0d2b33", glow: "#22d3ee" },
+    { name: "Royal Indigo",   hex: "#161b3d", glow: "#818cf8" },
+    { name: "Espresso Brown", hex: "#2a1c12", glow: "#fbbf24" },
+    { name: "Midnight Blue",  hex: "#0B1F3A", glow: "#2F80ED" },
+    { name: "Navy Gold",      hex: "#12355B", glow: "#C9A227" },
+    { name: "Teal Blue",      hex: "#00A6A6", glow: "#155EEF" },
+    { name: "Charcoal Green", hex: "#202124", glow: "#12B76A" },
+    { name: "Forest Gold",    hex: "#14532D", glow: "#D4AF37" },
+    { name: "Navy Amber",     hex: "#172B4D", glow: "#EAB308" },
+    { name: "Light Blue",     hex: "#D6ECFF", glow: "#1D74C9" },
+    { name: "Light Green",    hex: "#DFF6E3", glow: "#1D8A4A" },
+    { name: "Light Grey",     hex: "#EDEEF1", glow: "#3A3F4B" },
+    { name: "Ivory Cream",    hex: "#FBF3E3", glow: "#B8860B" },
+];
+
+function applyBoardColor(color) {
+    document.body.style.background = color;
+}
+
+function renderColorSwatches() {
+    const grid = document.getElementById("colorSwatchGrid");
+    grid.innerHTML = BOARD_COLOR_PRESETS.map(p => `
+        <div class="color-swatch${boardColor.toLowerCase() === p.hex ? ' selected' : ''}"
+             style="background:${p.hex}; --glow:${p.glow};"
+             title="${p.name}"
+             onclick="pickBoardColor('${p.hex}')"></div>
+    `).join("");
+}
+
+async function pickBoardColor(hex) {
+    boardColor = hex;
+    applyBoardColor(hex);
+    renderColorSwatches();
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardColor })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save board color.");
+    }
+}
+
+async function loadBoardSettings() {
+    try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        boardColor = data.boardColor || "#1a1a2e";
+        applyBoardColor(boardColor);
+        renderColorSwatches();
+
+        fontScale = data.fontScale || 1;
+        const pct = Math.round(fontScale * 100);
+        document.getElementById("fontScaleInput").value = pct;
+        document.getElementById("fontScaleLabel").textContent = pct + "%";
+
+        const primaryCount = data.primaryDisplayCount || 22;
+        document.getElementById("primaryCountInput").value = primaryCount;
+        document.getElementById("primaryCountLabel").textContent = primaryCount;
+
+        if (data.logo) {
+            document.getElementById("logoPreview").src = data.logo;
+        }
+        document.getElementById("boardTitleInput").value    = data.boardName     || "";
+        document.getElementById("boardSubtitleInput").value = data.boardSubtitle || "";
+        document.getElementById("boardLicenseInput").value  = data.boardLicense  || "";
+        document.getElementById("mobileNumberInput").value  = data.mobileNumber  || "";
+
+        const viewBoardBtn = document.getElementById("viewBoardBtn");
+        if (viewBoardBtn && data.id) {
+            viewBoardBtn.href = `/boards.html?user=${data.id}`;
+        }
+    } catch { /* non-fatal */ }
+}
+
+document.getElementById("fontScaleInput").addEventListener("input", (e) => {
+    document.getElementById("fontScaleLabel").textContent = e.target.value + "%";
+});
+document.getElementById("fontScaleInput").addEventListener("change", async (e) => {
+    fontScale = parseInt(e.target.value) / 100;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ fontScale })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save font size.");
+    }
+});
+
+document.getElementById("primaryCountInput").addEventListener("input", (e) => {
+    document.getElementById("primaryCountLabel").textContent = e.target.value;
+});
+document.getElementById("primaryCountInput").addEventListener("change", async (e) => {
+    const primaryDisplayCount = parseInt(e.target.value);
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ primaryDisplayCount })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save currency count.");
+    }
+});
+
+document.getElementById("logoFileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+        showError("Logo image should be under 500KB.");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const dataUrl = reader.result;
+        document.getElementById("logoPreview").src = dataUrl;
+        try {
+            await fetch("/api/board", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ boardColor, logo: dataUrl })
+            });
+            const navLogo = document.querySelector(".nav-logo");
+            if (navLogo) navLogo.src = dataUrl;
+            notifyBoardUpdate();
+        } catch {
+            showError("Could not upload logo. Please try again.");
+        }
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById("logoResetBtn").addEventListener("click", async () => {
+    document.getElementById("logoPreview").src = "/logo.png";
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ boardColor, logo: "" })
+        });
+        const navLogo = document.querySelector(".nav-logo");
+        if (navLogo) navLogo.src = "/logo.png";
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not reset logo.");
+    }
+});
+
+// Board title / subtitle / license text / mobile number — free-text board
+// content, saved the moment the admin leaves the field.
+function wireTextBoardField(inputId, payloadKey, errorLabel) {
+    document.getElementById(inputId).addEventListener("change", async (e) => {
+        try {
+            await fetch("/api/board", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ [payloadKey]: e.target.value.trim() })
+            });
+            notifyBoardUpdate();
+        } catch {
+            showError(`Could not save ${errorLabel}.`);
+        }
+    });
+}
+wireTextBoardField("boardTitleInput",    "boardName",     "board title");
+wireTextBoardField("boardSubtitleInput", "boardSubtitle", "board subtitle");
+wireTextBoardField("boardLicenseInput",  "boardLicense",  "license text");
+wireTextBoardField("mobileNumberInput",  "mobileNumber",  "mobile number");
+
+loadBoardSettings();
+</script>
+</body>
+</html>
