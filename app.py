@@ -161,6 +161,7 @@ def init_db():
                 ("updated_at",    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"),
                 ("currency_name", "TEXT NOT NULL DEFAULT ''"),
                 ("currency_flag", "TEXT NOT NULL DEFAULT ''"),
+                ("row_color",     "TEXT NOT NULL DEFAULT ''"),
             ]:
                 db.execute(f"ALTER TABLE currencies ADD COLUMN IF NOT EXISTS {col} {defn}")
             for col, defn in [
@@ -173,6 +174,7 @@ def init_db():
                 ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+                ("board_register_no", "TEXT NOT NULL DEFAULT ''"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
@@ -218,6 +220,7 @@ def init_db():
                 ("updated_at",    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"),
                 ("currency_name", "TEXT NOT NULL DEFAULT ''"),
                 ("currency_flag", "TEXT NOT NULL DEFAULT ''"),
+                ("row_color",     "TEXT NOT NULL DEFAULT ''"),
             ]:
                 if col not in currency_cols:
                     db.execute(f"ALTER TABLE currencies ADD COLUMN {col} {defn}")
@@ -233,6 +236,7 @@ def init_db():
                 ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+                ("board_register_no", "TEXT NOT NULL DEFAULT ''"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
@@ -355,6 +359,7 @@ def me():
             "fontScale": user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
             "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
             "boardLicense": user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+            "boardRegisterNo": user["board_register_no"] if user["board_register_no"] else "",
             "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
             "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
             "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE
@@ -416,6 +421,7 @@ def update_board():
     font_scale = data.get("fontScale", None)  # None = leave unchanged
     subtitle   = data.get("boardSubtitle", None)  # None = leave unchanged
     license_txt= data.get("boardLicense", None)   # None = leave unchanged
+    register_no= data.get("boardRegisterNo", None)  # None = leave unchanged
     mobile     = data.get("mobileNumber", None)   # None = leave unchanged
     primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
     secondary_group_size = data.get("secondaryGroupSize", None)  # None = leave unchanged
@@ -432,6 +438,8 @@ def update_board():
         return jsonify({"error": "Subtitle is too long"}), 400
     if license_txt is not None and len(license_txt) > MAX_TEXT_FIELD_LEN:
         return jsonify({"error": "License text is too long"}), 400
+    if register_no is not None and len(register_no) > MAX_TEXT_FIELD_LEN:
+        return jsonify({"error": "Register no. is too long"}), 400
     if mobile is not None and len(mobile) > 40:
         return jsonify({"error": "Mobile number is too long"}), 400
     if font_scale is not None:
@@ -479,6 +487,9 @@ def update_board():
     if license_txt is not None:
         sets.append("board_license=?")
         params.append(license_txt.strip())
+    if register_no is not None:
+        sets.append("board_register_no=?")
+        params.append(register_no.strip())
     if mobile is not None:
         sets.append("mobile_number=?")
         params.append(mobile.strip())
@@ -512,6 +523,7 @@ def row_to_dict(row, i=None):
         "sellPreorder":  bool(row["sell_preorder"]),
         "currencyName":  row["currency_name"] if row["currency_name"] else "",
         "currencyFlag":  row["currency_flag"] if row["currency_flag"] else "",
+        "rowColor":      row["row_color"] if row["row_color"] else "",
     }
     if i is not None:
         d["serialNumber"] = i + 1
@@ -595,12 +607,15 @@ def update_currency(cid):
     decimals = data.get("decimals", 2)
     currency_name = (data.get("currencyName") or "").strip()
     currency_flag = (data.get("currencyFlag") or "").strip().lower()
+    row_color     = (data.get("rowColor") or "").strip()
 
     buying_rate,  buy_preorder  = parse_rate_field(data, "buyingRate",  "buyPreorder")
     selling_rate, sell_preorder = parse_rate_field(data, "sellingRate", "sellPreorder")
 
     if not currency or buying_rate is None or selling_rate is None:
         return jsonify({"error": "All fields are required"}), 400
+    if row_color and not (row_color.startswith("#") and len(row_color) in (4, 7)):
+        return jsonify({"error": "Invalid row color"}), 400
     try:
         unit = int(unit); decimals = int(decimals)
     except (ValueError, TypeError):
@@ -613,8 +628,8 @@ def update_currency(cid):
     if dupe:
         return jsonify({"error": f"{currency} already exists on your board"}), 409
     db.execute(
-        "UPDATE currencies SET currency=?, buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=?, currency_name=?, currency_flag=?, updated_at=? WHERE id=? AND user_id=?",
-        (currency, buying_rate, selling_rate, decimals, unit, bool(buy_preorder), bool(sell_preorder), currency_name, currency_flag, utc_now_naive(), cid, current_user_id())
+        "UPDATE currencies SET currency=?, buying_rate=?, selling_rate=?, decimals=?, unit=?, buy_preorder=?, sell_preorder=?, currency_name=?, currency_flag=?, row_color=?, updated_at=? WHERE id=? AND user_id=?",
+        (currency, buying_rate, selling_rate, decimals, unit, bool(buy_preorder), bool(sell_preorder), currency_name, currency_flag, row_color, utc_now_naive(), cid, current_user_id())
     )
     db.commit()
     return jsonify({"message": "Updated"})
@@ -714,6 +729,7 @@ def public_board():
         "fontScale":  user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
         "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
         "boardLicense":  user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+        "boardRegisterNo": user["board_register_no"] if user["board_register_no"] else "",
         "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
         "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
         "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,

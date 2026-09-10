@@ -36,7 +36,78 @@
         }
         .edit-row.dragging { opacity: 0.4; }
         tr.dragging td { background: #fffbeb !important; }
+
+        .custom-currency-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 150px;
+        }
+        .custom-currency-display .ccd-flag { font-size: 18px; }
+        .custom-currency-display .ccd-text { display: flex; flex-direction: column; line-height: 1.25; }
+        .custom-currency-display .ccd-code { font-weight: 700; }
+        .custom-currency-display .ccd-name { font-size: 11px; color: #888; }
+        .pen-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 2px 4px;
+            color: #b8860b;
+            flex-shrink: 0;
+        }
+        .pen-btn:hover { color: #f0c040; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 10px;
+            padding: 22px;
+            width: 320px;
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .modal-box h3 { margin-bottom: 14px; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .color-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .color-cell select.input {
+            min-width: 110px;
+        }
+        .color-cell option {
+            font-weight: 700;
+        }
+        .color-custom-input {
+            width: 28px;
+            height: 26px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
     </style>
+
 </head>
 <body>
 <div class="container">
@@ -61,6 +132,7 @@
                         <th>Buying Rate</th>
                         <th>Selling Rate</th>
                         <th class="edit-only" style="display:none;">Decimals</th>
+                        <th class="edit-only" style="display:none;">Color</th>
                         <th>Status</th>
                         <th class="edit-only" style="display:none;">Actions</th>
                     </tr>
@@ -75,8 +147,317 @@
 
 <button class="floating-save" id="floatingSave" style="display:none;" onclick="saveAllChanges()">💾 Save All</button>
 
+<div class="modal-overlay" id="customEditOverlay">
+    <div class="modal-box">
+        <h3>Edit Currency</h3>
+        <div id="modal-error" class="error-msg" style="display:none;"></div>
+        <div class="field">
+            <label class="field-label">Currency Code</label>
+            <input class="input" id="modal-code" type="text" maxlength="3" placeholder="e.g. XAF"
+                style="text-transform:uppercase;"
+                oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')">
+        </div>
+        <div class="field">
+            <label class="field-label">Currency Name</label>
+            <input class="input" id="modal-name" type="text" maxlength="80" placeholder="e.g. Central African CFA Franc">
+        </div>
+        <div class="field">
+            <label class="field-label">Country / Flag</label>
+            <select class="input" id="modal-flag" onchange="updateModalFlagPreview()">
+                        <option value="af">🇦🇫 Afghanistan</option>
+                        <option value="al">🇦🇱 Albania</option>
+                        <option value="dz">🇩🇿 Algeria</option>
+                        <option value="as">🇦🇸 American Samoa</option>
+                        <option value="ad">🇦🇩 Andorra</option>
+                        <option value="ao">🇦🇴 Angola</option>
+                        <option value="ai">🇦🇮 Anguilla</option>
+                        <option value="aq">🇦🇶 Antarctica</option>
+                        <option value="ag">🇦🇬 Antigua and Barbuda</option>
+                        <option value="ar">🇦🇷 Argentina</option>
+                        <option value="am">🇦🇲 Armenia</option>
+                        <option value="aw">🇦🇼 Aruba</option>
+                        <option value="au">🇦🇺 Australia</option>
+                        <option value="at">🇦🇹 Austria</option>
+                        <option value="az">🇦🇿 Azerbaijan</option>
+
+                        <option value="bs">🇧🇸 Bahamas</option>
+                        <option value="bh">🇧🇭 Bahrain</option>
+                        <option value="bd">🇧🇩 Bangladesh</option>
+                        <option value="bb">🇧🇧 Barbados</option>
+                        <option value="by">🇧🇾 Belarus</option>
+                        <option value="be">🇧🇪 Belgium</option>
+                        <option value="bz">🇧🇿 Belize</option>
+                        <option value="bj">🇧🇯 Benin</option>
+                        <option value="bm">🇧🇲 Bermuda</option>
+                        <option value="bt">🇧🇹 Bhutan</option>
+                        <option value="bo">🇧🇴 Bolivia</option>
+                        <option value="ba">🇧🇦 Bosnia and Herzegovina</option>
+                        <option value="bw">🇧🇼 Botswana</option>
+                        <option value="br">🇧🇷 Brazil</option>
+                        <option value="io">🇮🇴 British Indian Ocean Territory</option>
+                        <option value="vg">🇻🇬 British Virgin Islands</option>
+                        <option value="bn">🇧🇳 Brunei</option>
+                        <option value="bg">🇧🇬 Bulgaria</option>
+                        <option value="bf">🇧🇫 Burkina Faso</option>
+                        <option value="bi">🇧🇮 Burundi</option>
+
+                        <option value="cv">🇨🇻 Cabo Verde</option>
+                        <option value="kh">🇰🇭 Cambodia</option>
+                        <option value="cm">🇨🇲 Cameroon</option>
+                        <option value="ca">🇨🇦 Canada</option>
+                        <option value="ky">🇰🇾 Cayman Islands</option>
+                        <option value="cf">🇨🇫 Central African Republic</option>
+                        <option value="td">🇹🇩 Chad</option>
+                        <option value="cl">🇨🇱 Chile</option>
+                        <option value="cn">🇨🇳 China</option>
+                        <option value="cx">🇨🇽 Christmas Island</option>
+                        <option value="cc">🇨🇨 Cocos Islands</option>
+                        <option value="co">🇨🇴 Colombia</option>
+                        <option value="km">🇰🇲 Comoros</option>
+                        <option value="cg">🇨🇬 Congo</option>
+                        <option value="cd">🇨🇩 Democratic Republic of the Congo</option>
+                        <option value="ck">🇨🇰 Cook Islands</option>
+                        <option value="cr">🇨🇷 Costa Rica</option>
+                        <option value="ci">🇨🇮 Côte d'Ivoire</option>
+                        <option value="hr">🇭🇷 Croatia</option>
+                        <option value="cu">🇨🇺 Cuba</option>
+                        <option value="cw">🇨🇼 Curaçao</option>
+                        <option value="cy">🇨🇾 Cyprus</option>
+                        <option value="cz">🇨🇿 Czechia</option>
+
+                        <option value="dk">🇩🇰 Denmark</option>
+                        <option value="dj">🇩🇯 Djibouti</option>
+                        <option value="dm">🇩🇲 Dominica</option>
+                        <option value="do">🇩🇴 Dominican Republic</option>
+
+                        <option value="ec">🇪🇨 Ecuador</option>
+                        <option value="eg">🇪🇬 Egypt</option>
+                        <option value="sv">🇸🇻 El Salvador</option>
+                        <option value="gq">🇬🇶 Equatorial Guinea</option>
+                        <option value="er">🇪🇷 Eritrea</option>
+                        <option value="ee">🇪🇪 Estonia</option>
+                        <option value="sz">🇸🇿 Eswatini</option>
+                        <option value="et">🇪🇹 Ethiopia</option>
+
+                        <option value="fk">🇫🇰 Falkland Islands</option>
+                        <option value="fo">🇫🇴 Faroe Islands</option>
+                        <option value="fj">🇫🇯 Fiji</option>
+                        <option value="fi">🇫🇮 Finland</option>
+                        <option value="fr">🇫🇷 France</option>
+                        <option value="gf">🇬🇫 French Guiana</option>
+                        <option value="pf">🇵🇫 French Polynesia</option>
+                        <option value="tf">🇹🇫 French Southern Territories</option>
+
+                        <option value="ga">🇬🇦 Gabon</option>
+                        <option value="gm">🇬🇲 Gambia</option>
+                        <option value="ge">🇬🇪 Georgia</option>
+                        <option value="de">🇩🇪 Germany</option>
+                        <option value="gh">🇬🇭 Ghana</option>
+                        <option value="gi">🇬🇮 Gibraltar</option>
+                        <option value="gr">🇬🇷 Greece</option>
+                        <option value="gl">🇬🇱 Greenland</option>
+                        <option value="gd">🇬🇩 Grenada</option>
+                        <option value="gp">🇬🇵 Guadeloupe</option>
+                        <option value="gu">🇬🇺 Guam</option>
+                        <option value="gt">🇬🇹 Guatemala</option>
+                        <option value="gg">🇬🇬 Guernsey</option>
+                        <option value="gn">🇬🇳 Guinea</option>
+                        <option value="gw">🇬🇼 Guinea-Bissau</option>
+                        <option value="gy">🇬🇾 Guyana</option>
+
+                        <option value="ht">🇭🇹 Haiti</option>
+                        <option value="hm">🇭🇲 Heard Island and McDonald Islands</option>
+                        <option value="va">🇻🇦 Vatican City</option>
+                        <option value="hn">🇭🇳 Honduras</option>
+                        <option value="hk">🇭🇰 Hong Kong</option>
+                        <option value="hu">🇭🇺 Hungary</option>
+
+                        <option value="is">🇮🇸 Iceland</option>
+                        <option value="in">🇮🇳 India</option>
+                        <option value="id">🇮🇩 Indonesia</option>
+                        <option value="ir">🇮🇷 Iran</option>
+                        <option value="iq">🇮🇶 Iraq</option>
+                        <option value="ie">🇮🇪 Ireland</option>
+                        <option value="im">🇮🇲 Isle of Man</option>
+                        <option value="il">🇮🇱 Israel</option>
+                        <option value="it">🇮🇹 Italy</option>
+
+                        <option value="jm">🇯🇲 Jamaica</option>
+                        <option value="jp">🇯🇵 Japan</option>
+                        <option value="je">🇯🇪 Jersey</option>
+                        <option value="jo">🇯🇴 Jordan</option>
+
+                        <option value="kz">🇰🇿 Kazakhstan</option>
+                        <option value="ke">🇰🇪 Kenya</option>
+                        <option value="ki">🇰🇮 Kiribati</option>
+                        <option value="kp">🇰🇵 North Korea</option>
+                        <option value="kr">🇰🇷 South Korea</option>
+                        <option value="kw">🇰🇼 Kuwait</option>
+                        <option value="kg">🇰🇬 Kyrgyzstan</option>
+
+                        <option value="la">🇱🇦 Laos</option>
+                        <option value="lv">🇱🇻 Latvia</option>
+                        <option value="lb">🇱🇧 Lebanon</option>
+                        <option value="ls">🇱🇸 Lesotho</option>
+                        <option value="lr">🇱🇷 Liberia</option>
+                        <option value="ly">🇱🇾 Libya</option>
+                        <option value="li">🇱🇮 Liechtenstein</option>
+                        <option value="lt">🇱🇹 Lithuania</option>
+                        <option value="lu">🇱🇺 Luxembourg</option>
+
+                        <option value="mo">🇲🇴 Macao</option>
+                        <option value="mg">🇲🇬 Madagascar</option>
+                        <option value="mw">🇲🇼 Malawi</option>
+                        <option value="my">🇲🇾 Malaysia</option>
+                        <option value="mv">🇲🇻 Maldives</option>
+                        <option value="ml">🇲🇱 Mali</option>
+                        <option value="mt">🇲🇹 Malta</option>
+                        <option value="mh">🇲🇭 Marshall Islands</option>
+                        <option value="mq">🇲🇶 Martinique</option>
+                        <option value="mr">🇲🇷 Mauritania</option>
+                        <option value="mu">🇲🇺 Mauritius</option>
+                        <option value="yt">🇾🇹 Mayotte</option>
+                        <option value="mx">🇲🇽 Mexico</option>
+                        <option value="fm">🇫🇲 Micronesia</option>
+                        <option value="md">🇲🇩 Moldova</option>
+                        <option value="mc">🇲🇨 Monaco</option>
+                        <option value="mn">🇲🇳 Mongolia</option>
+                        <option value="me">🇲🇪 Montenegro</option>
+                        <option value="ms">🇲🇸 Montserrat</option>
+                        <option value="ma">🇲🇦 Morocco</option>
+                        <option value="mz">🇲🇿 Mozambique</option>
+                        <option value="mm">🇲🇲 Myanmar</option>
+
+                        <option value="na">🇳🇦 Namibia</option>
+                        <option value="nr">🇳🇷 Nauru</option>
+                        <option value="np">🇳🇵 Nepal</option>
+                        <option value="nl">🇳🇱 Netherlands</option>
+                        <option value="nc">🇳🇨 New Caledonia</option>
+                        <option value="nz">🇳🇿 New Zealand</option>
+                        <option value="ni">🇳🇮 Nicaragua</option>
+                        <option value="ne">🇳🇪 Niger</option>
+                        <option value="ng">🇳🇬 Nigeria</option>
+                        <option value="nu">🇳🇺 Niue</option>
+                        <option value="nf">🇳🇫 Norfolk Island</option>
+                        <option value="mk">🇲🇰 North Macedonia</option>
+                        <option value="mp">🇲🇵 Northern Mariana Islands</option>
+                        <option value="no">🇳🇴 Norway</option>
+
+                        <option value="om">🇴🇲 Oman</option>
+
+                        <option value="pk">🇵🇰 Pakistan</option>
+                        <option value="pw">🇵🇼 Palau</option>
+                        <option value="ps">🇵🇸 Palestine</option>
+                        <option value="pa">🇵🇦 Panama</option>
+                        <option value="pg">🇵🇬 Papua New Guinea</option>
+                        <option value="py">🇵🇾 Paraguay</option>
+                        <option value="pe">🇵🇪 Peru</option>
+                        <option value="ph">🇵🇭 Philippines</option>
+                        <option value="pn">🇵🇳 Pitcairn</option>
+                        <option value="pl">🇵🇱 Poland</option>
+                        <option value="pt">🇵🇹 Portugal</option>
+                        <option value="pr">🇵🇷 Puerto Rico</option>
+
+                        <option value="qa">🇶🇦 Qatar</option>
+
+                        <option value="re">🇷🇪 Réunion</option>
+                        <option value="ro">🇷🇴 Romania</option>
+                        <option value="ru">🇷🇺 Russia</option>
+                        <option value="rw">🇷🇼 Rwanda</option>
+
+                        <option value="bl">🇧🇱 Saint Barthélemy</option>
+                        <option value="sh">🇸🇭 Saint Helena</option>
+                        <option value="kn">🇰🇳 Saint Kitts and Nevis</option>
+                        <option value="lc">🇱🇨 Saint Lucia</option>
+                        <option value="mf">🇲🇫 Saint Martin</option>
+                        <option value="pm">🇵🇲 Saint Pierre and Miquelon</option>
+                        <option value="vc">🇻🇨 Saint Vincent and the Grenadines</option>
+                        <option value="ws">🇼🇸 Samoa</option>
+                        <option value="sm">🇸🇲 San Marino</option>
+                        <option value="st">🇸🇹 São Tomé and Príncipe</option>
+                        <option value="sa">🇸🇦 Saudi Arabia</option>
+                        <option value="sn">🇸🇳 Senegal</option>
+                        <option value="rs">🇷🇸 Serbia</option>
+                        <option value="sc">🇸🇨 Seychelles</option>
+                        <option value="sl">🇸🇱 Sierra Leone</option>
+                        <option value="sg">🇸🇬 Singapore</option>
+                        <option value="sx">🇸🇽 Sint Maarten</option>
+                        <option value="sk">🇸🇰 Slovakia</option>
+                        <option value="si">🇸🇮 Slovenia</option>
+                        <option value="sb">🇸🇧 Solomon Islands</option>
+                        <option value="so">🇸🇴 Somalia</option>
+                        <option value="za">🇿🇦 South Africa</option>
+                        <option value="gs">🇬🇸 South Georgia and South Sandwich Islands</option>
+                        <option value="ss">🇸🇸 South Sudan</option>
+                        <option value="es">🇪🇸 Spain</option>
+                        <option value="lk">🇱🇰 Sri Lanka</option>
+                        <option value="sd">🇸🇩 Sudan</option>
+                        <option value="sr">🇸🇷 Suriname</option>
+                        <option value="sj">🇸🇯 Svalbard and Jan Mayen</option>
+                        <option value="se">🇸🇪 Sweden</option>
+                        <option value="ch">🇨🇭 Switzerland</option>
+                        <option value="sy">🇸🇾 Syria</option>
+
+                        <option value="tw">🇹🇼 Taiwan</option>
+                        <option value="tj">🇹🇯 Tajikistan</option>
+                        <option value="tz">🇹🇿 Tanzania</option>
+                        <option value="th">🇹🇭 Thailand</option>
+                        <option value="tl">🇹🇱 Timor-Leste</option>
+                        <option value="tg">🇹🇬 Togo</option>
+                        <option value="tk">🇹🇰 Tokelau</option>
+                        <option value="to">🇹🇴 Tonga</option>
+                        <option value="tt">🇹🇹 Trinidad and Tobago</option>
+                        <option value="tn">🇹🇳 Tunisia</option>
+                        <option value="tr">🇹🇷 Türkiye</option>
+                        <option value="tm">🇹🇲 Turkmenistan</option>
+                        <option value="tc">🇹🇨 Turks and Caicos Islands</option>
+                        <option value="tv">🇹🇻 Tuvalu</option>
+
+                        <option value="ug">🇺🇬 Uganda</option>
+                        <option value="ua">🇺🇦 Ukraine</option>
+                        <option value="ae">🇦🇪 United Arab Emirates</option>
+                        <option value="gb">🇬🇧 United Kingdom</option>
+                        <option value="us">🇺🇸 United States</option>
+                        <option value="uy">🇺🇾 Uruguay</option>
+                        <option value="uz">🇺🇿 Uzbekistan</option>
+
+                        <option value="vu">🇻🇺 Vanuatu</option>
+                        <option value="ve">🇻🇪 Venezuela</option>
+                        <option value="vn">🇻🇳 Vietnam</option>
+                        <option value="vi">🇻🇮 U.S. Virgin Islands</option>
+
+                        <option value="wf">🇼🇫 Wallis and Futuna</option>
+                        <option value="eh">🇪🇭 Western Sahara</option>
+
+                        <option value="ye">🇾🇪 Yemen</option>
+
+                        <option value="zm">🇿🇲 Zambia</option>
+                        <option value="zw">🇿🇼 Zimbabwe</option>
+            </select>
+            <div id="modal-flag-preview" style="display:none;margin-top:8px;font-size:28px;"></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeCustomEditModal()">Cancel</button>
+            <button type="button" class="btn btn-gold" onclick="saveCustomEditModal()">Save</button>
+        </div>
+    </div>
+</div>
+
 <script src="navbar.js"></script>
 <script>
+// Suggested row-highlight colors — curated to read well against the board's
+// dark background. Admins can still pick any custom color via the dropdown.
+const ROW_COLOR_PRESETS = [
+    { name: "Gold",   color: "#F0C040" },
+    { name: "Green",  color: "#12B76A" },
+    { name: "Red",    color: "#F04438" },
+    { name: "Blue",   color: "#2E90FA" },
+    { name: "Purple", color: "#9E77ED" },
+    { name: "Orange", color: "#FD853A" },
+    { name: "Teal",   color: "#15B79E" },
+    { name: "Pink",   color: "#EE46BC" }
+];
+
 const CURRENCY_COUNTRY = {
     USD:"us",GBP:"gb",JPY:"jp",EUR:"eu",AUD:"au",SGD:"sg",HKD:"hk",
     CAD:"ca",CHF:"ch",NZD:"nz",TWD:"tw",KRW:"kr",INR:"in",THB:"th",
@@ -98,6 +479,8 @@ let allData = [];
 let editModeActive = false;
 let reorderDirty = false;
 let draggedId = null;
+let customEdits = {};   // id -> { currency, currencyName, currencyFlag } — pending edits for "other" currencies
+let modalEditingId = null;
 
 function showError(msg) { errorMsg.textContent = msg; errorMsg.style.display = "block"; }
 function hideError() { errorMsg.style.display = "none"; }
@@ -134,7 +517,7 @@ async function loadCurrencies() {
 
 function renderTable() {
     const tbody = document.getElementById("tableBody");
-    const colspan = editModeActive ? 9 : 5;
+    const colspan = editModeActive ? 10 : 5;
 
     if (allData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">No currencies yet.</td></tr>`;
@@ -145,20 +528,15 @@ function renderTable() {
     allData.forEach((c, i) => {
         if (editModeActive) {
             const isCustom = isCustomCurrency(c.currency);
+            const custom = customEdits[c.id] || { currency: c.currency, currencyName: c.currencyName || "", currencyFlag: c.currencyFlag || "" };
             const currencyCell = isCustom ? `
-                <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;">
-                    <div style="display:flex;gap:4px;align-items:center;">
-                        <span style="font-size:18px;" id="e-flagpreview-${c.id}">${ccToFlagEmoji(c.currencyFlag)}</span>
-                        <input class="input" id="e-code-${c.id}" type="text" value="${c.currency}" maxlength="3"
-                            placeholder="Code" style="text-transform:uppercase;width:64px;padding:5px 8px;font-size:13px;margin-bottom:0;"
-                            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')">
-                        <input class="input" id="e-flag-${c.id}" type="text" value="${c.currencyFlag||''}" maxlength="2"
-                            placeholder="cc" title="2-letter country code, e.g. us"
-                            style="width:44px;padding:5px 8px;font-size:13px;margin-bottom:0;"
-                            oninput="this.value=this.value.toLowerCase().replace(/[^a-z]/g,''); document.getElementById('e-flagpreview-${c.id}').textContent=ccToFlagEmoji(this.value);">
+                <div class="custom-currency-display">
+                    <span class="ccd-flag">${ccToFlagEmoji(custom.currencyFlag)}</span>
+                    <div class="ccd-text">
+                        <span class="ccd-code">${custom.currency}</span>
+                        <span class="ccd-name">${custom.currencyName}</span>
                     </div>
-                    <input class="input" id="e-name-${c.id}" type="text" value="${c.currencyName||''}"
-                        placeholder="Currency name" style="padding:5px 8px;font-size:13px;margin-bottom:0;">
+                    <button type="button" class="pen-btn" title="Edit currency details" onclick="openCustomEditModal(${c.id})">✎</button>
                 </div>` : flagCell(c);
 
             rows += `
@@ -187,6 +565,7 @@ function renderTable() {
                         ${[0,1,2,3,4,6,7,8,9].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
+                <td>${colorDropdownHtml(c)}</td>
                 <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
                 <td>
                     <div class="actions-cell">
@@ -234,9 +613,101 @@ function onDragOverRow(e, overId) {
     renderTable();
 }
 
+// ── Custom ("other") currency edit popup ──
+// Only currencies not in CURRENCY_COUNTRY (i.e. custom ones) show the pen
+// icon in edit mode; clicking it opens this popup instead of editing inline.
+
+function openCustomEditModal(id) {
+    const c = allData.find(x => x.id === id);
+    if (!c) return;
+    const edit = customEdits[id] || { currency: c.currency, currencyName: c.currencyName || "", currencyFlag: c.currencyFlag || "" };
+    modalEditingId = id;
+    document.getElementById("modal-code").value = edit.currency;
+    document.getElementById("modal-name").value = edit.currencyName;
+    const flagSelect = document.getElementById("modal-flag");
+    flagSelect.value = edit.currencyFlag || "";
+    if (flagSelect.value !== (edit.currencyFlag || "")) flagSelect.selectedIndex = 0; // fall back if code isn't in the list
+    updateModalFlagPreview();
+    document.getElementById("modal-error").style.display = "none";
+    document.getElementById("customEditOverlay").classList.add("open");
+}
+
+function updateModalFlagPreview() {
+    const flagSelect = document.getElementById("modal-flag");
+    const preview = document.getElementById("modal-flag-preview");
+    const selected = flagSelect.options[flagSelect.selectedIndex];
+    if (selected) {
+        preview.textContent = selected.textContent.split(" ")[0];
+        preview.style.display = "block";
+    } else {
+        preview.textContent = "";
+        preview.style.display = "none";
+    }
+}
+
+function closeCustomEditModal() {
+    document.getElementById("customEditOverlay").classList.remove("open");
+    modalEditingId = null;
+}
+
+function saveCustomEditModal() {
+    const modalError = document.getElementById("modal-error");
+    const code = document.getElementById("modal-code").value.trim().toUpperCase();
+    const name = document.getElementById("modal-name").value.trim();
+    const flag = document.getElementById("modal-flag").value;
+
+    if (!/^[A-Z]{3}$/.test(code)) {
+        modalError.textContent = "Currency code must be exactly 3 letters, e.g. XAF.";
+        modalError.style.display = "block";
+        return;
+    }
+    if (!name) {
+        modalError.textContent = "Please enter a currency name.";
+        modalError.style.display = "block";
+        return;
+    }
+    if (!flag) {
+        modalError.textContent = "Please select a country / flag.";
+        modalError.style.display = "block";
+        return;
+    }
+
+    customEdits[modalEditingId] = { currency: code, currencyName: name, currencyFlag: flag };
+    closeCustomEditModal();
+    renderTable();
+}
+
 function onPreorderToggle(id, which) {
     const checked = document.getElementById(`e-${which}preorder-${id}`).checked;
     document.getElementById(`e-${which}-${id}`).disabled = checked;
+}
+
+function colorDropdownHtml(c) {
+    const current = (c.rowColor || "").toUpperCase();
+    const preset = ROW_COLOR_PRESETS.find(p => p.color.toUpperCase() === current);
+    const isCustom = !!current && !preset;
+    const selectedValue = !current ? "" : (preset ? preset.color : "custom");
+
+    const presetOptions = ROW_COLOR_PRESETS.map(p => `
+        <option value="${p.color}" style="color:${p.color};" ${selectedValue === p.color ? 'selected' : ''}>⬤ ${p.name}</option>`).join('');
+
+    return `
+        <div class="color-cell">
+            <select class="input" id="e-rowcolor-${c.id}" onchange="onRowColorSelect(${c.id})">
+                <option value="" ${selectedValue === "" ? 'selected' : ''}>No color</option>
+                ${presetOptions}
+                <option value="custom" ${selectedValue === "custom" ? 'selected' : ''}>Custom…</option>
+            </select>
+            <input type="color" class="color-custom-input" id="e-rowcolor-custom-${c.id}"
+                value="${isCustom ? c.rowColor : '#f0c040'}" title="Custom color"
+                style="${selectedValue === 'custom' ? '' : 'display:none;'}">
+        </div>`;
+}
+
+function onRowColorSelect(id) {
+    const select = document.getElementById(`e-rowcolor-${id}`);
+    const customInput = document.getElementById(`e-rowcolor-custom-${id}`);
+    customInput.style.display = select.value === "custom" ? "inline-block" : "none";
 }
 
 // ── Edit mode ──
@@ -250,6 +721,7 @@ window.toggleEditMode = function () {
 
     if (!editModeActive) {
         reorderDirty = false;
+        customEdits = {};
         loadCurrencies();
     } else {
         renderTable();
@@ -264,16 +736,18 @@ async function saveAllChanges() {
         const sellingRate  = sellPreorder ? 0 : parseFloat(document.getElementById(`e-selling-${c.id}`).value);
         const decimals     = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
         const unit         = parseInt(document.getElementById(`e-unit-${c.id}`).value) || 1;
+        const rowColorSelect = document.getElementById(`e-rowcolor-${c.id}`).value;
+        const rowColor     = rowColorSelect === "custom"
+            ? document.getElementById(`e-rowcolor-custom-${c.id}`).value
+            : rowColorSelect;
 
-        const codeInput = document.getElementById(`e-code-${c.id}`);
-        const nameInput = document.getElementById(`e-name-${c.id}`);
-        const flagInput = document.getElementById(`e-flag-${c.id}`);
-        const currency      = codeInput ? codeInput.value.trim().toUpperCase() : c.currency;
-        const currencyName  = nameInput ? nameInput.value.trim() : (c.currencyName || "");
-        const currencyFlag  = flagInput ? flagInput.value.trim().toLowerCase() : (c.currencyFlag || "");
-        const isCustomEdit  = !!codeInput;
+        const isCustomEdit  = isCustomCurrency(c.currency);
+        const edit          = customEdits[c.id];
+        const currency      = edit ? edit.currency : c.currency;
+        const currencyName  = edit ? edit.currencyName : (c.currencyName || "");
+        const currencyFlag  = edit ? edit.currencyFlag : (c.currencyFlag || "");
 
-        return { id: c.id, currency, currencyName, currencyFlag, unit, buyingRate, sellingRate, decimals, buyPreorder, sellPreorder, isCustomEdit };
+        return { id: c.id, currency, currencyName, currencyFlag, unit, buyingRate, sellingRate, decimals, buyPreorder, sellPreorder, rowColor, isCustomEdit };
     });
 
     if (updates.some(u => isNaN(u.buyingRate) || isNaN(u.sellingRate))) {
@@ -303,7 +777,7 @@ async function saveAllChanges() {
                     currency: u.currency, unit: u.unit,
                     currencyName: u.currencyName, currencyFlag: u.currencyFlag,
                     buyingRate: u.buyingRate, sellingRate: u.sellingRate, decimals: u.decimals,
-                    buyPreorder: u.buyPreorder, sellPreorder: u.sellPreorder
+                    buyPreorder: u.buyPreorder, sellPreorder: u.sellPreorder, rowColor: u.rowColor
                 })
             })
         ));
@@ -328,6 +802,7 @@ async function saveAllChanges() {
         }
 
         editModeActive = false;
+        customEdits = {};
         document.getElementById("floatingSave").style.display = "none";
         document.querySelectorAll(".edit-only").forEach(el => el.style.display = "none");
         const navBtn = document.getElementById("navEditBtn");

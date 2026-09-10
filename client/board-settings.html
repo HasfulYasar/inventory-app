@@ -125,6 +125,11 @@
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown under the subtitle on the board</div>
             </div>
             <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Register No.</label>
+                <input class="input" type="text" id="boardRegisterNoInput" placeholder="e.g. 202601012345" maxlength="60" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown just under the board title</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Mobile Number</label>
                 <input class="input" type="text" id="mobileNumberInput" placeholder="e.g. +60 12-345 6789" maxlength="40" style="margin-bottom:0;">
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown above the clock, top-right of the board</div>
@@ -275,6 +280,7 @@ async function loadBoardSettings() {
         document.getElementById("boardTitleInput").value    = data.boardName     || "";
         document.getElementById("boardSubtitleInput").value = data.boardSubtitle || "";
         document.getElementById("boardLicenseInput").value  = data.boardLicense  || "";
+        document.getElementById("boardRegisterNoInput").value = data.boardRegisterNo || "";
         document.getElementById("mobileNumberInput").value  = data.mobileNumber  || "";
 
         const viewBoardBtn = document.getElementById("viewBoardBtn");
@@ -400,6 +406,7 @@ function wireTextBoardField(inputId, payloadKey, errorLabel) {
 wireTextBoardField("boardTitleInput",    "boardName",     "board title");
 wireTextBoardField("boardSubtitleInput", "boardSubtitle", "board subtitle");
 wireTextBoardField("boardLicenseInput",  "boardLicense",  "license text");
+wireTextBoardField("boardRegisterNoInput", "boardRegisterNo", "register no.");
 wireTextBoardField("mobileNumberInput",  "mobileNumber",  "mobile number");
 
 document.getElementById("saveSettingsBtn").addEventListener("click", async (e) => {
@@ -424,6 +431,7 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
                 boardName:     document.getElementById("boardTitleInput").value.trim(),
                 boardSubtitle: document.getElementById("boardSubtitleInput").value.trim(),
                 boardLicense:  document.getElementById("boardLicenseInput").value.trim(),
+                boardRegisterNo: document.getElementById("boardRegisterNoInput").value.trim(),
                 mobileNumber:  document.getElementById("mobileNumberInput").value.trim()
             })
         });

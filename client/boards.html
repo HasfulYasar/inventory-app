@@ -75,7 +75,17 @@
             font-size: calc(30px * var(--font-scale)); font-weight: 800; color: #F5B942;
             letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             text-shadow: 0 0 5px var(--neon);
+            flex-shrink: 0;
         }
+        .title-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+        .board-register {
+            font-size: calc(15px * var(--font-scale)); font-weight: 600; letter-spacing: 0.5px;
+            color: #F5B942; opacity: 0.85;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex-shrink: 1; min-width: 0; display: none;
+        }
+        .board-register.has-value { display: block; }
+
         .subtitle-license-row {
             display: flex; align-items: center; gap: 6px;
             margin-top: 2px; min-width: 0;
@@ -158,10 +168,10 @@
             min-width: 0;
         }
         .rate-group > * { flex: 1 1 0; min-width: 0; }
-        .rate-group > *:first-child { text-align: right; padding-right: 10px; }
+        .rate-group > *:first-child { text-align: right; padding-right: 25px; }
         .rate-group > *:last-child {
-            text-align: left;
-            padding-left: 10px;
+            text-align: right;
+            paddding-right: 15px;
             border-left: 1px solid var(--divider);
         }
 
@@ -279,6 +289,7 @@
         body.light-theme .board-title,
         body.light-theme .board-subtitle,
         body.light-theme .board-license,
+        body.light-theme .board-register,
         body.light-theme .header-mobile,
         body.light-theme .board-clock {
             color: var(--neon);
@@ -299,7 +310,10 @@
         <div class="header-left">
             <img src="/logo.png" alt="Logo" class="board-logo" id="boardLogoImg">
             <div class="title-block">
-                <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
+                <div class="title-row">
+                    <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
+                    <div class="board-register" id="boardRegister"></div>
+                </div>
                 <div class="subtitle-license-row">
                     <span class="board-subtitle" id="boardSubtitle">Currency Exchange</span>
                     <span class="subtitle-divider">|</span>
@@ -518,6 +532,9 @@ async function loadRates() {
         document.getElementById("boardTitle").textContent = board.boardName || "CURRENCY EXCHANGE";
         document.getElementById("boardSubtitle").textContent = board.boardSubtitle || "Currency Exchange";
         document.getElementById("boardLicense").textContent = board.boardLicense || "Perniagaan Perkhidmatan Wang Berlesen";
+        const registerEl = document.getElementById("boardRegister");
+        registerEl.textContent = board.boardRegisterNo || "";
+        registerEl.classList.toggle("has-value", !!board.boardRegisterNo);
         if (board.logo) document.getElementById("boardLogoImg").src = board.logo;
 
         const mobileEl = document.getElementById("headerMobile");
@@ -585,8 +602,9 @@ function renderPrimary(data) {
         const info = CURRENCY_INFO[c.currency] || { name: c.currencyName || c.currency };
         const isLeft = i % 2 === 0;
         const isGBP = c.currency === "GBP";
+        const rowStyle = c.rowColor ? ` style="background:${c.rowColor};"` : "";
         return `
-        <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}">
+        <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}"${rowStyle}>
             <div class="currency-name-cell">
                 <img class="flag-img" src="${flagUrl(c)}" alt="${c.currency}" onerror="this.style.display='none'">
                 <div class="c-text">
@@ -641,8 +659,9 @@ function secCard(c) {
     const sellHtml = c.sellPreorder
         ? `<span class="sec-val preorder-val">PRE-ORDER</span>`
         : `<span class="sec-val">${c.sellingRate.toFixed(c.decimals)}</span>`;
+    const cardStyle = c.rowColor ? ` style="background:${c.rowColor};"` : "";
     return `
-    <div class="sec-card">
+    <div class="sec-card"${cardStyle}>
         <div class="sec-card-top">
             <img class="sec-flag" src="${flagUrl(c)}" alt="${c.currency}" onerror="this.style.display='none'">
             <div class="sec-code">${c.currency}</div>
