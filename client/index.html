@@ -106,6 +106,46 @@
             cursor: pointer;
             flex-shrink: 0;
         }
+
+        /* ── Keep the white card/table background painted across the full
+           scrollable width, not just the visible viewport, so scrolling
+           right doesn't reveal the page background behind the table. ── */
+        .table-wrap {
+            background: #fff;
+        }
+        .table-wrap table {
+            background: #fff;
+        }
+
+        /* ── Compact edit mode: tighten every column so all 10 fit side by
+           side within the screen width, no horizontal scrolling needed. ── */
+        body.edit-mode #tableBody tr.edit-row td {
+            padding: 6px 5px;
+            font-size: 12.5px;
+        }
+        body.edit-mode .col-num { width: 24px; text-align: center; }
+        body.edit-mode .col-currency .currency-cell,
+        body.edit-mode .col-currency .custom-currency-display { min-width: 0; gap: 4px; }
+        body.edit-mode .col-currency strong { font-size: 12.5px; }
+        body.edit-mode .col-unit .input { width: 42px !important; padding: 4px !important; }
+        body.edit-mode .col-rate .input { width: 68px !important; padding: 4px !important; margin-bottom: 3px; }
+        body.edit-mode .preorder-lbl {
+            display: flex; align-items: center; gap: 3px;
+            font-size: 9.5px; color: #888; font-weight: 500; white-space: nowrap;
+        }
+        body.edit-mode .col-decimals .input { min-width: 44px !important; padding: 4px !important; }
+        body.edit-mode .col-color .color-cell { gap: 3px; }
+        body.edit-mode .col-color select.input { min-width: 74px !important; font-size: 11.5px !important; padding: 4px !important; }
+        body.edit-mode .col-color .color-custom-input { width: 20px; height: 20px; }
+        body.edit-mode .col-actions .actions-cell { display: flex; gap: 4px; }
+        body.edit-mode .col-actions .btn { padding: 4px 7px !important; font-size: 11px !important; white-space: nowrap; }
+        body.edit-mode .col-actions .del-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            color: #c0392b;
+        }
+        body.edit-mode .col-actions .del-btn svg { flex-shrink: 0; }
     </style>
 
 </head>
@@ -545,32 +585,35 @@ function renderTable() {
                 ondragend="onDragEnd(event)"
                 ondragover="onDragOverRow(event, ${c.id})">
                 <td class="drag-handle" title="Drag to reorder">⠿</td>
-                <td>${i + 1}</td>
-                <td>${currencyCell}</td>
-                <td><input class="input" id="e-unit-${c.id}" type="number" min="1" step="1" value="${c.unit}" style="width:64px;"></td>
-                <td>
-                    <input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0" ${c.buyPreorder?'disabled':''} style="margin-bottom:4px;">
-                    <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:500;white-space:nowrap;">
+                <td class="col-num" data-label="#">${i + 1}</td>
+                <td class="col-currency" data-label="Currency">${currencyCell}</td>
+                <td class="col-unit" data-label="Unit"><input class="input" id="e-unit-${c.id}" type="number" min="1" step="1" value="${c.unit}"></td>
+                <td class="col-rate" data-label="Buying Rate">
+                    <input class="input" id="e-buying-${c.id}" type="number" value="${c.buyingRate}" step="any" min="0" ${c.buyPreorder?'disabled':''}>
+                    <label class="preorder-lbl">
                         <input type="checkbox" id="e-buypreorder-${c.id}" ${c.buyPreorder?'checked':''} onchange="onPreorderToggle(${c.id},'buy')"> Pre-order
                     </label>
                 </td>
-                <td>
-                    <input class="input" id="e-selling-${c.id}" type="number" value="${c.sellingRate}" step="any" min="0" ${c.sellPreorder?'disabled':''} style="margin-bottom:4px;">
-                    <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:500;white-space:nowrap;">
+                <td class="col-rate" data-label="Selling Rate">
+                    <input class="input" id="e-selling-${c.id}" type="number" value="${c.sellingRate}" step="any" min="0" ${c.sellPreorder?'disabled':''}>
+                    <label class="preorder-lbl">
                         <input type="checkbox" id="e-sellpreorder-${c.id}" ${c.sellPreorder?'checked':''} onchange="onPreorderToggle(${c.id},'sell')"> Pre-order
                     </label>
                 </td>
-                <td>
-                    <select id="e-decimals-${c.id}" class="input" style="min-width:65px;">
+                <td class="col-decimals" data-label="Decimals">
+                    <select id="e-decimals-${c.id}" class="input">
                         ${[0,1,2,3,4,6,7,8,9].map(d=>`<option value="${d}" ${c.decimals===d?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
-                <td>${colorDropdownHtml(c)}</td>
-                <td><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
-                <td>
+                <td class="col-color" data-label="Color">${colorDropdownHtml(c)}</td>
+                <td class="col-status" data-label="Status"><span class="${c.active?'badge-on':'badge-off'}">${c.active?'ON':'OFF'}</span></td>
+                <td class="col-actions" data-label="Actions">
                     <div class="actions-cell">
-                        <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" onclick="toggleCurrency(${c.id})">${c.active?'Turn OFF':'Turn ON'}</button>
-                        <button class="btn btn-danger btn-xs" onclick="deleteCurrency(${c.id})">Delete</button>
+                        <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" title="${c.active?'Turn OFF':'Turn ON'}" onclick="toggleCurrency(${c.id})">${c.active?'Off':'On'}</button>
+                        <button class="btn btn-danger btn-xs del-btn" title="Delete" onclick="deleteCurrency(${c.id})">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                            Delete
+                        </button>
                     </div>
                 </td>
             </tr>`;
@@ -716,8 +759,15 @@ window.toggleEditMode = function () {
     editModeActive = !editModeActive;
     document.getElementById("floatingSave").style.display = editModeActive ? "block" : "none";
     document.querySelectorAll(".edit-only").forEach(el => el.style.display = editModeActive ? "" : "none");
+    document.body.classList.toggle("edit-mode", editModeActive);
     const navBtn = document.getElementById("navEditBtn");
     if (navBtn) navBtn.textContent = editModeActive ? "✕ Cancel" : "✎ Edit";
+
+    if (editModeActive) {
+        // Scroll the newly-expanded edit table into view so the person
+        // isn't left staring at whatever they'd scrolled to before.
+        setTimeout(() => document.querySelector(".table-wrap")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    }
 
     if (!editModeActive) {
         reorderDirty = false;
