@@ -43,7 +43,11 @@
             gap: 8px;
             min-width: 150px;
         }
-        .custom-currency-display .ccd-flag { font-size: 18px; }
+        .custom-currency-display .ccd-flag-img {
+            width: 22px; height: 15px; border-radius: 2px;
+            object-fit: cover; flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
         .custom-currency-display .ccd-text { display: flex; flex-direction: column; line-height: 1.25; }
         .custom-currency-display .ccd-code { font-weight: 700; }
         .custom-currency-display .ccd-name { font-size: 11px; color: #888; }
@@ -474,7 +478,7 @@
                         <option value="zm">🇿🇲 Zambia</option>
                         <option value="zw">🇿🇼 Zimbabwe</option>
             </select>
-            <div id="modal-flag-preview" style="display:none;margin-top:8px;font-size:28px;"></div>
+            <img id="modal-flag-preview" style="display:none;margin-top:8px;width:44px;height:30px;border-radius:3px;object-fit:cover;box-shadow:0 1px 4px rgba(0,0,0,0.3);" alt="Selected flag">
         </div>
         <div class="modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeCustomEditModal()">Cancel</button>
@@ -535,11 +539,6 @@ function flagCell(c) {
 function isCustomCurrency(code) {
     return !(code in CURRENCY_COUNTRY);
 }
-function ccToFlagEmoji(cc) {
-    if (!cc || cc.length !== 2) return "🏳️";
-    return cc.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)));
-}
-
 // ── Currencies ──
 
 async function loadCurrencies() {
@@ -556,6 +555,33 @@ async function loadCurrencies() {
 }
 
 function renderTable() {
+    // renderTable() gets called mid-edit for reasons that have nothing to do
+    // with the user's pending changes (dragging a row to reorder, toggling
+    // a currency on/off, saving the custom-currency name popup). Each of
+    // those rebuilds every row's HTML from `allData`, which still holds
+    // whatever was last loaded from the server — so without this sync,
+    // any color/rate/decimals edit sitting only in the DOM (not yet saved)
+    // would silently be thrown away the instant any of those side actions
+    // fired, even for rows the user never touched.
+    if (editModeActive) {
+        allData.forEach(c => {
+            const buyEl = document.getElementById(`e-buypreorder-${c.id}`);
+            if (!buyEl) return; // this row's edit inputs aren't on the page yet
+            c.buyPreorder  = buyEl.checked;
+            c.sellPreorder = document.getElementById(`e-sellpreorder-${c.id}`).checked;
+            const buying  = parseFloat(document.getElementById(`e-buying-${c.id}`).value);
+            const selling = parseFloat(document.getElementById(`e-selling-${c.id}`).value);
+            if (!isNaN(buying))  c.buyingRate  = buying;
+            if (!isNaN(selling)) c.sellingRate = selling;
+            c.decimals = parseInt(document.getElementById(`e-decimals-${c.id}`).value);
+            c.unit     = parseInt(document.getElementById(`e-unit-${c.id}`).value) || c.unit;
+            const rowColorSelect = document.getElementById(`e-rowcolor-${c.id}`).value;
+            c.rowColor = rowColorSelect === "custom"
+                ? document.getElementById(`e-rowcolor-custom-${c.id}`).value
+                : rowColorSelect;
+        });
+    }
+
     const tbody = document.getElementById("tableBody");
     const colspan = editModeActive ? 10 : 5;
 
@@ -571,12 +597,11 @@ function renderTable() {
             const custom = customEdits[c.id] || { currency: c.currency, currencyName: c.currencyName || "", currencyFlag: c.currencyFlag || "" };
             const currencyCell = isCustom ? `
                 <div class="custom-currency-display">
-                    <span class="ccd-flag">${ccToFlagEmoji(custom.currencyFlag)}</span>
+                    <img class="ccd-flag-img" src="https://flagcdn.com/w40/${custom.currencyFlag || 'un'}.png" alt="${custom.currency}" onerror="this.style.display='none'">
                     <div class="ccd-text">
                         <span class="ccd-code">${custom.currency}</span>
                         <span class="ccd-name">${custom.currencyName}</span>
                     </div>
-                    <button type="button" class="pen-btn" title="Edit currency details" onclick="openCustomEditModal(${c.id})">✎</button>
                 </div>` : flagCell(c);
 
             rows += `
@@ -610,6 +635,7 @@ function renderTable() {
                 <td class="col-actions" data-label="Actions">
                     <div class="actions-cell">
                         <button class="btn btn-xs toggle-btn ${c.active?'on':'off'}" title="${c.active?'Turn OFF':'Turn ON'}" onclick="toggleCurrency(${c.id})">${c.active?'Off':'On'}</button>
+                        ${isCustom ? `<button type="button" class="btn btn-xs pen-btn" title="Edit currency details" onclick="openCustomEditModal(${c.id})">✎</button>` : ''}
                         <button class="btn btn-danger btn-xs del-btn" title="Delete" onclick="deleteCurrency(${c.id})">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
                             Delete
@@ -679,11 +705,11 @@ function updateModalFlagPreview() {
     const flagSelect = document.getElementById("modal-flag");
     const preview = document.getElementById("modal-flag-preview");
     const selected = flagSelect.options[flagSelect.selectedIndex];
-    if (selected) {
-        preview.textContent = selected.textContent.split(" ")[0];
+    if (selected && selected.value) {
+        preview.src = `https://flagcdn.com/w80/${selected.value}.png`;
         preview.style.display = "block";
     } else {
-        preview.textContent = "";
+        preview.src = "";
         preview.style.display = "none";
     }
 }
@@ -851,14 +877,17 @@ async function saveAllChanges() {
             hideError();
         }
 
-        editModeActive = false;
+        // Stay in edit mode after saving — just refresh the underlying data
+        // (which now has the saved values baked in) and re-render the
+        // still-open edit table, instead of dropping back to view mode.
         customEdits = {};
-        document.getElementById("floatingSave").style.display = "none";
-        document.querySelectorAll(".edit-only").forEach(el => el.style.display = "none");
-        const navBtn = document.getElementById("navEditBtn");
-        if (navBtn) navBtn.textContent = "✎ Edit";
-        loadCurrencies();
+        await loadCurrencies();
         notifyBoardUpdate();
+
+        const saveBtn = document.getElementById("floatingSave");
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = "✓ Saved";
+        setTimeout(() => { saveBtn.textContent = originalText; }, 1500);
     } catch {
         showError("Could not reach server. Please try again.");
     }

@@ -202,17 +202,62 @@
 
         .flag-img {
             width: 22px; height: 15px; border-radius: 2px;
-            object-fit: cover; flex-shrink: 0;
+            flex-shrink: 0; display: flex; overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* ── Optional waving-flag effect, toggled by the admin's Flag Style
+           setting (Normal / Animated). A real cloth-wave can't be faked by
+           rotating the whole flag as one rigid piece — instead the flag is
+           sliced into thin vertical strips (see flagWaveHtml() in JS). Each
+           strip both bobs vertically AND shears (skewX) + compresses
+           (scaleY), which is what actually reads as "fabric" rather than
+           "venetian blinds" — a strip catching the wind leans and
+           foreshortens, it doesn't just slide up and down. Strips carry
+           their own inline animation-delay (set in JS) so the ripple
+           travels left-to-right continuously, and a soft diagonal sheen
+           sweeps across on top to sell the light catching the cloth. ── */
+        .flag-img span, .sec-flag span {
+            flex: 1 0 12.5%;
+            height: 100%;
+            background-size: 800% 100%;
+            background-repeat: no-repeat;
+            transform-origin: center;
+        }
+        @keyframes flagStripWave {
+            0%, 100% { transform: translateY(0)      scaleY(1);    }
+            50%      { transform: translateY(-1.2px) scaleY(0.92); }
+        }
+        body.flag-animated .flag-img span,
+        body.flag-animated .sec-flag span {
+            animation: flagStripWave 4s ease-in-out infinite;
+        }
+        @keyframes flagSheenSweep {
+            0%, 100% { background-position: 0% 0; }
+            50%      { background-position: 100% 0; }
+        }
+        body.flag-animated .flag-img::after,
+        body.flag-animated .sec-flag::after {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(100deg,
+                transparent 0%, rgba(255,255,255,0.35) 12%, transparent 26%,
+                rgba(0,0,0,0.22) 42%, transparent 58%,
+                rgba(255,255,255,0.22) 74%, transparent 88%);
+            background-size: 260% 100%;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            animation: flagSheenSweep 4s ease-in-out infinite;
         }
         .c-text { min-width: 0; overflow: hidden; }
-        .c-code { font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-        .c-name-inline { font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; color: var(--text2); }
-        .unit-val { font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: left; text-shadow: 0 0 3px var(--neon); }
+        .c-code { font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--text)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .c-name-inline { font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; color: var(--row-color, var(--text2)); }
+        .unit-val { font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: var(--row-color, #ffffff); text-align: left; text-shadow: 0 0 3px var(--neon); }
         .rate-val {
-            font-size: calc(1rem * var(--font-scale)); font-weight: 700; color: var(--rate-color);
+            font-size: calc(1rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--rate-color));
             font-variant-numeric: tabular-nums; text-align: right;
-            text-shadow: 0 0 3px var(--rate-color);
+            text-shadow: 0 0 3px var(--row-color, var(--rate-color));
         }
         .rate-val.preorder-val { color: #F5B942; font-size: calc(0.72rem * var(--font-scale)); letter-spacing: 0.3px; text-shadow: 0 0 3px #F5B942; }
 
@@ -256,13 +301,13 @@
             min-width: 0;
         }
         .sec-card-top { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-        .sec-flag { width: 18px; height: 12px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
-        .sec-code { font-size: calc(0.95rem * var(--font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sec-flag { width: 18px; height: 12px; border-radius: 2px; flex-shrink: 0; display: flex; overflow: hidden; position: relative; }
+        .sec-code { font-size: calc(0.95rem * var(--font-scale)); font-weight: 800; color: var(--row-color, var(--text)); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sec-rates { display: flex; flex-wrap: nowrap; gap: 0; width: 100%; justify-content: center; }
         .sec-rate-box { flex: 0 1 auto; min-width: 0; text-align: center; padding: 0 10px; }
         .sec-rate-box + .sec-rate-box { border-left: 1px solid var(--divider); }
         .sec-lbl { font-size: calc(9px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
-        .sec-val { font-size: calc(0.95rem * var(--font-scale)); font-weight: 700; color: var(--rate-color); font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--rate-color); }
+        .sec-val { font-size: calc(0.95rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--rate-color)); font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--row-color, var(--rate-color)); }
         .sec-val.preorder-val {  font-size: calc(0.65rem * var(--font-scale));  color: #F5B942 !important;  }
 
         /* ── Footer ── */
@@ -277,6 +322,31 @@
         }
         .footer-note { grid-column: 2; text-align: center; font-size: calc(11px * var(--font-scale)); color: var(--text3); font-weight: 500; }
         .footer-time { grid-column: 3; justify-self: end; font-size: calc(11px * var(--font-scale)); color: var(--text2); font-weight: 600; }
+
+        /* ── Layout modes ──
+           "split" (default): today's layout, no overrides needed.
+           "list": static full list, no rotating panel — hide the right
+           panel entirely and let the left grid take the full width.
+           "rotate": whole board IS the rotating panel — hide the left
+           grid and let the right panel take the full width. Since it now
+           has much more room, it switches from a fixed pixel width /
+           1-or-2-column grid to an auto-filling grid so groups spread
+           out nicely instead of staying cramped in a narrow strip. ── */
+        .board-body.layout-list .right-panel { display: none; }
+
+        .board-body.layout-rotate .left-panel { display: none; }
+        .board-body.layout-rotate .right-panel {
+            width: auto;
+            flex: 1;
+            border-left: none;
+            box-shadow: none;
+            padding: 0.8rem 1.2rem;
+        }
+        .board-body.layout-rotate .secondary-grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-auto-rows: minmax(calc(4.5em * var(--font-scale)), 1fr);
+            gap: 0.6rem;
+        }
 
         .board-empty {
             grid-column: 1/-1; display: flex; align-items: center;
@@ -296,11 +366,11 @@
             text-shadow: none;
         }
         body.light-theme .board-logo { filter: none; }
-        body.light-theme .unit-val { color: var(--text); text-shadow: none; }
+        body.light-theme .unit-val { color: var(--row-color, var(--text)); text-shadow: none; }
         body.light-theme .rate-val { text-shadow: none; }
-        body.light-theme .sec-code { color: var(--text); text-shadow: none; }
+        body.light-theme .sec-code { color: var(--row-color, var(--text)); text-shadow: none; }
         body.light-theme .sec-val { text-shadow: none; }
-        body.light-theme .c-code { color: var(--text); }
+        body.light-theme .c-code { color: var(--row-color, var(--text)); }
     </style>
 </head>
 <body>
@@ -359,10 +429,12 @@
 // Currencies are shown in the exact order saved on the admin's board (drag-
 // and-drop order = sort_order from the server). The first PRIMARY_DISPLAY_COUNT
 // in that order fill the always-on left grid; everything after that rotates
-// through the right panel, 4 at a time, in the same saved order.
+// through the right panel, using the configured group size, in the same saved order.
+// Every currency returned by the API is included in the board order; future-added currencies join automatically when active. The final group can contain fewer currencies.
 let PRIMARY_DISPLAY_COUNT = 22;
-let SECONDARY_GROUP_SIZE = 10;
-const SECONDARY_ROTATE_MS = 7000;
+let SECONDARY_GROUP_SIZE = 4;
+let SECONDARY_ROTATE_MS = 6000;
+let layoutMode = "split"; // "split" | "list" | "rotate"
 
 const CURRENCY_INFO = {
     USD:{name:"US Dollar",cc:"us"},       GBP:{name:"British Pound",cc:"gb"},
@@ -484,6 +556,32 @@ function applyPalette() {
 
 applyPalette();
 
+// Builds a flag as 8 vertical strips of the same image (each shifted via
+// background-position, all sharing one background-size) so CSS can animate
+// each strip on its own delay for a traveling ripple. Delay is set inline
+// per strip (rather than via CSS nth-child rules) so the stagger scales
+// cleanly with strip count. Delays only span a FRACTION of the animation
+// cycle (not the full loop) — otherwise, at any given instant, the strips
+// are scattered across every phase of the animation (some compressed,
+// some not) with no coordination, which reads as the flag falling apart
+// rather than one wave travelling across it. A hidden real <img> tags
+// along purely so onerror can still hide the whole thing if the flag URL
+// 404s, same as the old plain-<img> version did.
+const FLAG_STRIP_COUNT = 8;
+const FLAG_WAVE_DURATION_S = 4;
+const FLAG_WAVE_PHASE_SPREAD = 0.25; // fraction of the cycle the delays span
+
+function flagWaveHtml(url, alt, sizeClass) {
+    const n = FLAG_STRIP_COUNT;
+    const spread = FLAG_WAVE_DURATION_S * FLAG_WAVE_PHASE_SPREAD;
+    const strips = Array.from({ length: n }, (_, i) => {
+        const pos = (i / (n - 1)) * 100;
+        const delay = (i / (n - 1)) * spread;
+        return `<span style="background-image:url('${url}');background-position:${pos}% 0;animation-delay:${delay.toFixed(2)}s;"></span>`;
+    }).join("");
+    return `<div class="${sizeClass}">${strips}<img src="${url}" alt="${alt}" style="display:none" onerror="this.parentElement.style.display='none'"></div>`;
+}
+
 function flagUrl(c) {
     const info = CURRENCY_INFO[c.currency];
     const cc = info ? info.cc : (c.currencyFlag || "un");
@@ -505,10 +603,53 @@ function rateCell(rate, decimals, isPreorder) {
 // Font scale: find the largest scale that still fits on screen,
 // searching up to the desired value (max 5.0 = 500%).
 let desiredFontScale = 1;
+const MIN_FIT_SCALE = 0.4; // never shrink further than this, even if still overflowing
 
+// Everything on this board lives inside overflow:hidden containers (it's a
+// TV display — no scrollbars), so if the rendered rows are taller than the
+// available space they don't get a scrollbar, they just get silently
+// clipped off and the currencies "disappear". This checks whichever panels
+// are actually visible in the current layout mode and reports whether
+// their content is taller than the space available for it.
+function fitContentOverflows() {
+    const bodyClasses = document.querySelector(".board-body").classList;
+    const checks = [];
+    if (!bodyClasses.contains("layout-rotate")) {
+        checks.push(document.querySelector(".primary-wrap"));
+    }
+    if (!bodyClasses.contains("layout-list")) {
+        checks.push(document.querySelector(".right-panel"));
+    }
+    return checks.some(el => el && el.scrollHeight > el.clientHeight + 1);
+}
+
+// Binary-search for the largest scale, up to what the admin picked, that
+// lets every row fit on screen with no clipping. Only ever scales DOWN from
+// the admin's chosen value — never up past it.
 function applyFitScale(desired) {
     desiredFontScale = desired || 1;
-    document.documentElement.style.setProperty("--font-scale", desiredFontScale);
+    let lo = MIN_FIT_SCALE;
+    let hi = desiredFontScale;
+    let best = lo;
+
+    document.documentElement.style.setProperty("--font-scale", hi);
+    void document.body.offsetHeight; // force reflow before measuring
+    if (!fitContentOverflows()) {
+        return; // the admin's chosen size already fits — nothing to shrink
+    }
+
+    for (let i = 0; i < 10; i++) {
+        const mid = (lo + hi) / 2;
+        document.documentElement.style.setProperty("--font-scale", mid);
+        void document.body.offsetHeight;
+        if (fitContentOverflows()) {
+            hi = mid;
+        } else {
+            best = mid;
+            lo = mid;
+        }
+    }
+    document.documentElement.style.setProperty("--font-scale", best);
 }
 
 let fitResizeTimer = null;
@@ -549,14 +690,35 @@ async function loadRates() {
         boardColor = board.boardColor || "#1a1a2e";
         applyPalette();
         document.documentElement.style.setProperty("--rate-color", board.rateColor || "#12B76A");
-        SECONDARY_GROUP_SIZE = board.secondaryGroupSize || 10;
+        document.body.classList.toggle("flag-animated", board.flagStyle === "animated");
+        SECONDARY_GROUP_SIZE = (Number(board.secondaryGroupSize) > 0)
+            ? Number(board.secondaryGroupSize)
+            : 4;
+        // Rotation time is fixed at 6 seconds; ignore any legacy saved value.
+        SECONDARY_ROTATE_MS = 6000;
         document.documentElement.style.setProperty("--sec-cols", SECONDARY_GROUP_SIZE > 5 ? 2 : 1);
         document.documentElement.style.setProperty("--panel-width", SECONDARY_GROUP_SIZE > 5 ? "300px" : "180px");
 
         PRIMARY_DISPLAY_COUNT = board.primaryDisplayCount || 22;
+        layoutMode = board.layoutMode || "split";
+        const bodyEl = document.querySelector(".board-body");
+        bodyEl.classList.remove("layout-split", "layout-list", "layout-rotate");
+        bodyEl.classList.add("layout-" + layoutMode);
+
         const data = board.currencies || [];
-        renderPrimary(data);
-        renderSecondary(data);
+        if (layoutMode === "list") {
+            // Static full list, full width — every active currency, no rotation.
+            renderPrimary(data, true);
+            clearInterval(secondaryTimer);
+            secondaryTimer = null;
+        } else if (layoutMode === "rotate") {
+            // Whole board is the rotating panel — cycle through every
+            // active currency in groups, nothing pinned to a static grid.
+            renderSecondary(data, true);
+        } else {
+            renderPrimary(data);
+            renderSecondary(data);
+        }
         applyFitScale(board.fontScale || 1);
 
         const lastUpdatedEl = document.getElementById("lastUpdated");
@@ -575,8 +737,8 @@ async function loadRates() {
     }
 }
 
-function renderPrimary(data) {
-    const primary = data.slice(0, PRIMARY_DISPLAY_COUNT);
+function renderPrimary(data, showAll) {
+    const primary = showAll ? data : data.slice(0, PRIMARY_DISPLAY_COUNT);
 
     const grid = document.getElementById("primaryGrid");
     if (primary.length === 0) {
@@ -602,11 +764,11 @@ function renderPrimary(data) {
         const info = CURRENCY_INFO[c.currency] || { name: c.currencyName || c.currency };
         const isLeft = i % 2 === 0;
         const isGBP = c.currency === "GBP";
-        const rowStyle = c.rowColor ? ` style="background:${c.rowColor};"` : "";
+        const rowStyle = c.rowColor ? ` style="--row-color:${c.rowColor};"` : "";
         return `
         <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}"${rowStyle}>
             <div class="currency-name-cell">
-                <img class="flag-img" src="${flagUrl(c)}" alt="${c.currency}" onerror="this.style.display='none'">
+                ${flagWaveHtml(flagUrl(c), c.currency, "flag-img")}
                 <div class="c-text">
                     <div class="c-code">${c.currency} <span class="c-name-inline">${info.name}</span></div>
                 </div>
@@ -620,35 +782,54 @@ function renderPrimary(data) {
     }).join("");
 }
 
-// ── Right panel: shows 4 secondary currencies at once, rotating through
+// ── Right panel: shows the configured number of secondary currencies at once, rotating through
 // the full list in groups so nothing needs one-at-a-time scrolling ──
 let secondaryGroups = [];
 let secondaryGroupIdx = 0;
 let secondaryTimer = null;
 
-function renderSecondary(data) {
-    const list = data.slice(PRIMARY_DISPLAY_COUNT);
+function renderSecondary(data, showAll) {
+    const list = showAll ? data : data.slice(PRIMARY_DISPLAY_COUNT);
 
     secondaryGroups = [];
     for (let i = 0; i < list.length; i += SECONDARY_GROUP_SIZE) {
         secondaryGroups.push(list.slice(i, i + SECONDARY_GROUP_SIZE));
     }
-    secondaryGroupIdx = 0;
-    clearInterval(secondaryTimer);
 
     const grid = document.getElementById("secondaryGrid");
     if (secondaryGroups.length === 0) {
+        secondaryGroupIdx = 0;
+        clearInterval(secondaryTimer);
+        secondaryTimer = null;
         grid.innerHTML = `<div class="board-empty">No additional rates yet</div>`;
         return;
     }
 
+    // Keep the current rotation position across data refreshes — only clamp
+    // it if the group count shrank underneath us (e.g. a currency was
+    // deactivated). We deliberately never reset to group 0 here: loadRates()
+    // polls every 15s (and the settings page can also trigger a refresh at
+    // any time), far more often than the 10s rotation, and the API isn't
+    // guaranteed to return currencies in a stable order between calls. Tying
+    // a reset to "did the data change" was still fragile — the ONLY thing
+    // allowed to move secondaryGroupIdx forward is the interval tick below.
+    if (secondaryGroupIdx >= secondaryGroups.length) {
+        secondaryGroupIdx = 0;
+    }
+
     renderSecondaryGroup();
 
-    if (secondaryGroups.length > 1) {
+    // Start the rotation timer once and leave it running across every future
+    // data refresh, so later groups actually get their turn on screen instead
+    // of the cycle being torn down and restarted from 0 before it gets there.
+    if (secondaryGroups.length > 1 && !secondaryTimer) {
         secondaryTimer = setInterval(() => {
             secondaryGroupIdx = (secondaryGroupIdx + 1) % secondaryGroups.length;
             renderSecondaryGroup();
         }, SECONDARY_ROTATE_MS);
+    } else if (secondaryGroups.length <= 1 && secondaryTimer) {
+        clearInterval(secondaryTimer);
+        secondaryTimer = null;
     }
 }
 
@@ -659,11 +840,11 @@ function secCard(c) {
     const sellHtml = c.sellPreorder
         ? `<span class="sec-val preorder-val">PRE-ORDER</span>`
         : `<span class="sec-val">${c.sellingRate.toFixed(c.decimals)}</span>`;
-    const cardStyle = c.rowColor ? ` style="background:${c.rowColor};"` : "";
+    const cardStyle = c.rowColor ? ` style="--row-color:${c.rowColor};"` : "";
     return `
     <div class="sec-card"${cardStyle}>
         <div class="sec-card-top">
-            <img class="sec-flag" src="${flagUrl(c)}" alt="${c.currency}" onerror="this.style.display='none'">
+            ${flagWaveHtml(flagUrl(c), c.currency, "sec-flag")}
             <div class="sec-code">${c.currency}</div>
         </div>
         <div class="sec-rates">
@@ -681,6 +862,10 @@ function renderSecondaryGroup() {
     grid.style.animation = "none";
     void grid.offsetWidth;
     grid.style.animation = "";
+    // Different rotation groups can render at slightly different heights
+    // (e.g. a shorter final group) — re-check the fit each time so nothing
+    // silently gets clipped after the first group.
+    applyFitScale(desiredFontScale);
 }
 
 function updateClock() {

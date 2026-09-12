@@ -37,6 +37,23 @@
             border-color: #fff;
             box-shadow: 0 0 0 2px #1a1a2e, 0 0 16px 2px var(--glow);
         }
+        .color-swatch-custom {
+            display: inline-block;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+        }
+        .color-swatch-custom input[type="color"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+        }
         .logo-upload-row { display: flex; align-items: center; gap: 10px; }
         .logo-preview {
             height: 40px;
@@ -94,11 +111,28 @@
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Currencies per Rotation</label>
-                <select class="input" id="secondaryGroupSizeInput" style="margin-bottom:0;">
-                    <option value="5">5 (single column)</option>
-                    <option value="10">10 (two columns)</option>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="secondaryGroupSizeInput" min="1" max="60" step="1" value="10" style="width:100%;">
+                    <span id="secondaryGroupSizeLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">10</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">How many currencies show at once in the rotating side panel — also applies to "Rotating only" board layout. Set this to your total currency count to show them all at once with no rotation.</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Board Layout</label>
+                <select class="input" id="layoutModeInput" style="margin-bottom:0;">
+                    <option value="split">List + Rotating (default)</option>
+                    <option value="list">List only — full width, no rotation</option>
+                    <option value="rotate">Rotating only — whole board cycles</option>
                 </select>
-                <div style="font-size:11px;color:#aaa;margin-top:6px;">How many currencies show at once in the rotating side panel</div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">How the main board and rotating panel are arranged</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Flag Style</label>
+                <select class="input" id="flagStyleInput" style="margin-bottom:0;">
+                    <option value="normal">Normal (static)</option>
+                    <option value="animated">Animated (waving)</option>
+                </select>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">How country flags appear on the live board</div>
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Your Logo</label>
@@ -147,7 +181,10 @@ function hideError() { errorMsg.style.display = "none"; }
 let boardColor = "#1a1a2e";
 let rateColor = "#12B76A";
 let fontScale = 1;
-let secondaryGroupSize = 10;
+let secondaryGroupSize = 4;
+let secondaryRotateSeconds = 10;
+let flagStyle = "normal";
+let layoutMode = "split";
 
 // Instantly notifies any open /boards.html tab (e.g. on a TV screen) to
 // refresh the moment board settings change here.
@@ -184,14 +221,32 @@ function applyBoardColor(color) {
     document.body.style.background = color;
 }
 
+// Fires on every drag tick inside the native color picker. Must NEVER touch
+// the swatch grid's DOM (no renderColorSwatches here) — replacing the
+// <input> mid-drag is what was killing the native picker's drag-to-select.
+// Just update the live board-background preview and the swatch's glow ring.
+function previewBoardColor(hex) {
+    applyBoardColor(hex);
+    const swatch = document.getElementById("boardColorCustomSwatch").parentElement;
+    swatch.style.setProperty("--glow", hex);
+}
+
 function renderColorSwatches() {
     const grid = document.getElementById("colorSwatchGrid");
+    const isCustom = !BOARD_COLOR_PRESETS.some(p => p.hex.toLowerCase() === boardColor.toLowerCase());
     grid.innerHTML = BOARD_COLOR_PRESETS.map(p => `
-        <div class="color-swatch${boardColor.toLowerCase() === p.hex ? ' selected' : ''}"
+        <div class="color-swatch${boardColor.toLowerCase() === p.hex.toLowerCase() ? ' selected' : ''}"
              style="background:${p.hex}; --glow:${p.glow};"
              title="${p.name}"
              onclick="pickBoardColor('${p.hex}')"></div>
-    `).join("");
+    `).join("") + `
+        <label class="color-swatch color-swatch-custom${isCustom ? ' selected' : ''}"
+               title="Custom color"
+               style="--glow:${isCustom ? boardColor : '#f0c040'};">
+            <input type="color" id="boardColorCustomSwatch" value="${isCustom ? boardColor : '#1a1a2e'}"
+                   oninput="previewBoardColor(this.value)" onchange="pickBoardColor(this.value)">
+        </label>
+    `;
 }
 
 async function pickBoardColor(hex) {
@@ -226,12 +281,27 @@ const RATE_COLOR_PRESETS = [
 
 function renderRateColorSwatches() {
     const grid = document.getElementById("rateColorSwatchGrid");
+    const isCustom = !RATE_COLOR_PRESETS.some(p => p.hex.toLowerCase() === rateColor.toLowerCase());
     grid.innerHTML = RATE_COLOR_PRESETS.map(p => `
         <div class="color-swatch${rateColor.toLowerCase() === p.hex.toLowerCase() ? ' selected' : ''}"
              style="background:${p.hex}; --glow:${p.hex};"
              title="${p.name}"
              onclick="pickRateColor('${p.hex}')"></div>
-    `).join("");
+    `).join("") + `
+        <label class="color-swatch color-swatch-custom${isCustom ? ' selected' : ''}"
+               title="Custom color"
+               style="--glow:${isCustom ? rateColor : '#12B76A'};">
+            <input type="color" id="rateColorCustomSwatch" value="${isCustom ? rateColor : '#12B76A'}"
+                   oninput="previewRateColor(this.value)" onchange="pickRateColor(this.value)">
+        </label>
+    `;
+}
+
+// Same reasoning as previewBoardColor: never rebuild the grid on every drag
+// tick, or the native color picker loses its <input> mid-drag.
+function previewRateColor(hex) {
+    const swatch = document.getElementById("rateColorCustomSwatch").parentElement;
+    swatch.style.setProperty("--glow", hex);
 }
 
 async function pickRateColor(hex) {
@@ -271,8 +341,18 @@ async function loadBoardSettings() {
         document.getElementById("primaryCountInput").value = primaryCount;
         document.getElementById("primaryCountLabel").textContent = primaryCount;
 
-        secondaryGroupSize = data.secondaryGroupSize || 10;
+        secondaryGroupSize = data.secondaryGroupSize || 4;
         document.getElementById("secondaryGroupSizeInput").value = String(secondaryGroupSize);
+        document.getElementById("secondaryGroupSizeLabel").textContent = String(secondaryGroupSize);
+
+        // Rotation time is fixed at 10 seconds.
+        secondaryRotateSeconds = 10;
+
+        flagStyle = data.flagStyle || "normal";
+        document.getElementById("flagStyleInput").value = flagStyle;
+
+        layoutMode = data.layoutMode || "split";
+        document.getElementById("layoutModeInput").value = layoutMode;
 
         if (data.logo) {
             document.getElementById("logoPreview").src = data.logo;
@@ -326,6 +406,9 @@ document.getElementById("primaryCountInput").addEventListener("change", async (e
     }
 });
 
+document.getElementById("secondaryGroupSizeInput").addEventListener("input", (e) => {
+    document.getElementById("secondaryGroupSizeLabel").textContent = e.target.value;
+});
 document.getElementById("secondaryGroupSizeInput").addEventListener("change", async (e) => {
     secondaryGroupSize = parseInt(e.target.value);
     try {
@@ -338,6 +421,37 @@ document.getElementById("secondaryGroupSizeInput").addEventListener("change", as
         notifyBoardUpdate();
     } catch {
         showError("Could not save rotation count.");
+    }
+});
+
+
+document.getElementById("flagStyleInput").addEventListener("change", async (e) => {
+    flagStyle = e.target.value;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ flagStyle })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save flag style.");
+    }
+});
+
+document.getElementById("layoutModeInput").addEventListener("change", async (e) => {
+    layoutMode = e.target.value;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ layoutMode })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save board layout.");
     }
 });
 
@@ -418,6 +532,9 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
         fontScale = parseInt(document.getElementById("fontScaleInput").value) / 100;
         const primaryDisplayCount = parseInt(document.getElementById("primaryCountInput").value);
         secondaryGroupSize = parseInt(document.getElementById("secondaryGroupSizeInput").value);
+        secondaryRotateSeconds = 10;
+        flagStyle = document.getElementById("flagStyleInput").value;
+        layoutMode = document.getElementById("layoutModeInput").value;
         const res = await fetch("/api/board", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -428,6 +545,9 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
                 fontScale,
                 primaryDisplayCount,
                 secondaryGroupSize,
+                secondaryRotateSeconds,
+                flagStyle,
+                layoutMode,
                 boardName:     document.getElementById("boardTitleInput").value.trim(),
                 boardSubtitle: document.getElementById("boardSubtitleInput").value.trim(),
                 boardLicense:  document.getElementById("boardLicenseInput").value.trim(),

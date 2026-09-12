@@ -51,7 +51,15 @@ DEFAULT_PRIMARY_DISPLAY_COUNT = 22
 MIN_PRIMARY_DISPLAY_COUNT = 6
 MAX_PRIMARY_DISPLAY_COUNT = 60
 DEFAULT_SECONDARY_GROUP_SIZE = 10
-ALLOWED_SECONDARY_GROUP_SIZES = (5, 10)
+MIN_SECONDARY_GROUP_SIZE = 1
+MAX_SECONDARY_GROUP_SIZE = 60
+DEFAULT_FLAG_STYLE = "normal"
+ALLOWED_FLAG_STYLES = ("normal", "animated")
+DEFAULT_LAYOUT_MODE = "split"
+# "list"   = static full-width list of every currency, no rotating panel
+# "rotate" = whole board is the rotating panel, cycling group by group
+# "split"  = today's layout — static list on one side, rotating panel on the other
+ALLOWED_LAYOUT_MODES = ("list", "rotate", "split")
 
 PRIMARY_CURRENCIES = [
     "USD","GBP","JPY","EUR","AUD","SGD","HKD","CAD","CHF","NZD",
@@ -178,6 +186,8 @@ def init_db():
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
+                ("flag_style", f"TEXT NOT NULL DEFAULT '{DEFAULT_FLAG_STYLE}'"),
+                ("layout_mode", f"TEXT NOT NULL DEFAULT '{DEFAULT_LAYOUT_MODE}'"),
             ]:
                 db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
         else:
@@ -240,6 +250,8 @@ def init_db():
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
+                ("flag_style", f"TEXT NOT NULL DEFAULT '{DEFAULT_FLAG_STYLE}'"),
+                ("layout_mode", f"TEXT NOT NULL DEFAULT '{DEFAULT_LAYOUT_MODE}'"),
             ]:
                 if col not in user_cols:
                     db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -362,7 +374,9 @@ def me():
             "boardRegisterNo": user["board_register_no"] if user["board_register_no"] else "",
             "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
             "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
-            "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE
+            "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
+            "flagStyle": user["flag_style"] if user["flag_style"] else DEFAULT_FLAG_STYLE,
+            "layoutMode": user["layout_mode"] if user["layout_mode"] else DEFAULT_LAYOUT_MODE
         })
     return jsonify({"error": "Not logged in"}), 401
 
@@ -425,6 +439,8 @@ def update_board():
     mobile     = data.get("mobileNumber", None)   # None = leave unchanged
     primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
     secondary_group_size = data.get("secondaryGroupSize", None)  # None = leave unchanged
+    flag_style = data.get("flagStyle", None)  # None = leave unchanged
+    layout_mode = data.get("layoutMode", None)  # None = leave unchanged
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
@@ -461,8 +477,12 @@ def update_board():
             secondary_group_size = int(secondary_group_size)
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid rotation count"}), 400
-        if secondary_group_size not in ALLOWED_SECONDARY_GROUP_SIZES:
-            return jsonify({"error": "Rotation count must be 5 or 10"}), 400
+        if secondary_group_size < MIN_SECONDARY_GROUP_SIZE or secondary_group_size > MAX_SECONDARY_GROUP_SIZE:
+            return jsonify({"error": f"Rotation count must be between {MIN_SECONDARY_GROUP_SIZE} and {MAX_SECONDARY_GROUP_SIZE}"}), 400
+    if flag_style is not None and flag_style not in ALLOWED_FLAG_STYLES:
+        return jsonify({"error": "Flag style must be normal or animated"}), 400
+    if layout_mode is not None and layout_mode not in ALLOWED_LAYOUT_MODES:
+        return jsonify({"error": "Layout must be list, rotate, or split"}), 400
 
     db = get_db()
     sets, params = [], []
@@ -499,6 +519,12 @@ def update_board():
     if secondary_group_size is not None:
         sets.append("secondary_group_size=?")
         params.append(secondary_group_size)
+    if flag_style is not None:
+        sets.append("flag_style=?")
+        params.append(flag_style)
+    if layout_mode is not None:
+        sets.append("layout_mode=?")
+        params.append(layout_mode)
     if not sets:
         return jsonify({"message": "Nothing to update"})
     params.append(current_user_id())
@@ -733,6 +759,8 @@ def public_board():
         "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
         "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
         "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
+        "flagStyle": user["flag_style"] if user["flag_style"] else DEFAULT_FLAG_STYLE,
+        "layoutMode": user["layout_mode"] if user["layout_mode"] else DEFAULT_LAYOUT_MODE,
         "lastUpdated": last_updated,
         "currencies": [row_to_dict(r) for r in rows]
     })
