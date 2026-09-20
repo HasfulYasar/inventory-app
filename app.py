@@ -44,6 +44,18 @@ DEFAULT_RATE_COLOR = "#12B76A"
 DEFAULT_FONT_SCALE = 1.0
 MIN_FONT_SCALE = 0.8
 MAX_FONT_SCALE = 5.0
+DEFAULT_SECONDARY_FONT_SCALE = 1.0
+MIN_SECONDARY_FONT_SCALE = 0.8
+MAX_SECONDARY_FONT_SCALE = 5.0
+DEFAULT_LOGO_SCALE = 1.0
+MIN_LOGO_SCALE = 0.5
+MAX_LOGO_SCALE = 3.0
+DEFAULT_FLAG_SCALE = 1.0
+MIN_FLAG_SCALE = 0.5
+MAX_FLAG_SCALE = 3.0
+DEFAULT_SHOW_CURRENCY_CODE = True
+DEFAULT_ANIMATE_FLAGS = True
+DEFAULT_ROTATION_ENABLED = True
 DEFAULT_BOARD_SUBTITLE = "Currency Exchange"
 DEFAULT_BOARD_LICENSE = "Perniagaan Perkhidmatan Wang Berlesen"
 MAX_TEXT_FIELD_LEN = 120
@@ -180,14 +192,27 @@ def init_db():
                 ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
                 ("board_name",   "TEXT NOT NULL DEFAULT ''"),
                 ("font_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+                ("secondary_font_scale", f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_SECONDARY_FONT_SCALE}"),
+                ("logo_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_LOGO_SCALE}"),
+                ("flag_scale",   f"DOUBLE PRECISION NOT NULL DEFAULT {DEFAULT_FLAG_SCALE}"),
+                ("show_currency_code", f"BOOLEAN NOT NULL DEFAULT {'TRUE' if DEFAULT_SHOW_CURRENCY_CODE else 'FALSE'}"),
+                ("animate_flags", f"BOOLEAN NOT NULL DEFAULT {'TRUE' if DEFAULT_ANIMATE_FLAGS else 'FALSE'}"),
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+<<<<<<< HEAD
                 ("board_register_no", "TEXT NOT NULL DEFAULT ''"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
                 ("flag_style", f"TEXT NOT NULL DEFAULT '{DEFAULT_FLAG_STYLE}'"),
                 ("layout_mode", f"TEXT NOT NULL DEFAULT '{DEFAULT_LAYOUT_MODE}'"),
+=======
+                ("board_reg_no",   "TEXT NOT NULL DEFAULT ''"),
+                ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+                ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
+                ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
+                ("rotation_enabled", f"BOOLEAN NOT NULL DEFAULT {'TRUE' if DEFAULT_ROTATION_ENABLED else 'FALSE'}"),
+>>>>>>> 3b468a2 (changes of boards)
             ]:
                 db.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {defn}")
         else:
@@ -244,14 +269,27 @@ def init_db():
                 ("logo_data",    "TEXT NOT NULL DEFAULT ''"),
                 ("board_name",   "TEXT NOT NULL DEFAULT ''"),
                 ("font_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FONT_SCALE}"),
+                ("secondary_font_scale", f"REAL NOT NULL DEFAULT {DEFAULT_SECONDARY_FONT_SCALE}"),
+                ("logo_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_LOGO_SCALE}"),
+                ("flag_scale",   f"REAL NOT NULL DEFAULT {DEFAULT_FLAG_SCALE}"),
+                ("show_currency_code", f"BOOLEAN NOT NULL DEFAULT {1 if DEFAULT_SHOW_CURRENCY_CODE else 0}"),
+                ("animate_flags", f"BOOLEAN NOT NULL DEFAULT {1 if DEFAULT_ANIMATE_FLAGS else 0}"),
                 ("board_subtitle", f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_SUBTITLE}'"),
                 ("board_license",  f"TEXT NOT NULL DEFAULT '{DEFAULT_BOARD_LICENSE}'"),
+<<<<<<< HEAD
                 ("board_register_no", "TEXT NOT NULL DEFAULT ''"),
                 ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
                 ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
                 ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
                 ("flag_style", f"TEXT NOT NULL DEFAULT '{DEFAULT_FLAG_STYLE}'"),
                 ("layout_mode", f"TEXT NOT NULL DEFAULT '{DEFAULT_LAYOUT_MODE}'"),
+=======
+                ("board_reg_no",   "TEXT NOT NULL DEFAULT ''"),
+                ("mobile_number",  "TEXT NOT NULL DEFAULT ''"),
+                ("primary_display_count", f"INTEGER NOT NULL DEFAULT {DEFAULT_PRIMARY_DISPLAY_COUNT}"),
+                ("secondary_group_size", f"INTEGER NOT NULL DEFAULT {DEFAULT_SECONDARY_GROUP_SIZE}"),
+                ("rotation_enabled", f"BOOLEAN NOT NULL DEFAULT {1 if DEFAULT_ROTATION_ENABLED else 0}"),
+>>>>>>> 3b468a2 (changes of boards)
             ]:
                 if col not in user_cols:
                     db.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -369,14 +407,27 @@ def me():
             "logo": user["logo_data"] if user["logo_data"] else "",
             "boardName": user["board_name"] if user["board_name"] else "",
             "fontScale": user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
+            "secondaryFontScale": user["secondary_font_scale"] if user["secondary_font_scale"] else DEFAULT_SECONDARY_FONT_SCALE,
+            "logoScale": user["logo_scale"] if user["logo_scale"] else DEFAULT_LOGO_SCALE,
+            "flagScale": user["flag_scale"] if user["flag_scale"] else DEFAULT_FLAG_SCALE,
+            "showCurrencyCode": bool(user["show_currency_code"]) if user["show_currency_code"] is not None else DEFAULT_SHOW_CURRENCY_CODE,
+            "animateFlags": bool(user["animate_flags"]) if user["animate_flags"] is not None else DEFAULT_ANIMATE_FLAGS,
             "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
             "boardLicense": user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+<<<<<<< HEAD
             "boardRegisterNo": user["board_register_no"] if user["board_register_no"] else "",
             "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
             "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
             "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
             "flagStyle": user["flag_style"] if user["flag_style"] else DEFAULT_FLAG_STYLE,
             "layoutMode": user["layout_mode"] if user["layout_mode"] else DEFAULT_LAYOUT_MODE
+=======
+            "boardRegNo": user["board_reg_no"] if user["board_reg_no"] else "",
+            "mobileNumber": user["mobile_number"] if user["mobile_number"] else "",
+            "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
+            "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
+            "rotationEnabled": bool(user["rotation_enabled"]) if user["rotation_enabled"] is not None else DEFAULT_ROTATION_ENABLED
+>>>>>>> 3b468a2 (changes of boards)
         })
     return jsonify({"error": "Not logged in"}), 401
 
@@ -433,14 +484,27 @@ def update_board():
     logo       = data.get("logo", None)  # None = leave unchanged, "" = clear, data URL = set
     board_name = data.get("boardName", None)  # None = leave unchanged
     font_scale = data.get("fontScale", None)  # None = leave unchanged
+    secondary_font_scale = data.get("secondaryFontScale", None)  # None = leave unchanged
+    logo_scale = data.get("logoScale", None)  # None = leave unchanged
+    flag_scale = data.get("flagScale", None)  # None = leave unchanged
+    show_currency_code = data.get("showCurrencyCode", None)  # None = leave unchanged
+    animate_flags = data.get("animateFlags", None)  # None = leave unchanged
     subtitle   = data.get("boardSubtitle", None)  # None = leave unchanged
     license_txt= data.get("boardLicense", None)   # None = leave unchanged
+<<<<<<< HEAD
     register_no= data.get("boardRegisterNo", None)  # None = leave unchanged
     mobile     = data.get("mobileNumber", None)   # None = leave unchanged
     primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
     secondary_group_size = data.get("secondaryGroupSize", None)  # None = leave unchanged
     flag_style = data.get("flagStyle", None)  # None = leave unchanged
     layout_mode = data.get("layoutMode", None)  # None = leave unchanged
+=======
+    reg_no     = data.get("boardRegNo", None)      # None = leave unchanged
+    mobile     = data.get("mobileNumber", None)   # None = leave unchanged
+    primary_count = data.get("primaryDisplayCount", None)  # None = leave unchanged
+    secondary_group_size = data.get("secondaryGroupSize", None)  # None = leave unchanged
+    rotation_enabled = data.get("rotationEnabled", None)  # None = leave unchanged
+>>>>>>> 3b468a2 (changes of boards)
 
     if color and not (color.startswith("#") and len(color) in (4, 7)):
         return jsonify({"error": "Invalid color"}), 400
@@ -454,8 +518,13 @@ def update_board():
         return jsonify({"error": "Subtitle is too long"}), 400
     if license_txt is not None and len(license_txt) > MAX_TEXT_FIELD_LEN:
         return jsonify({"error": "License text is too long"}), 400
+<<<<<<< HEAD
     if register_no is not None and len(register_no) > MAX_TEXT_FIELD_LEN:
         return jsonify({"error": "Register no. is too long"}), 400
+=======
+    if reg_no is not None and len(reg_no) > 40:
+        return jsonify({"error": "Registration number is too long"}), 400
+>>>>>>> 3b468a2 (changes of boards)
     if mobile is not None and len(mobile) > 40:
         return jsonify({"error": "Mobile number is too long"}), 400
     if font_scale is not None:
@@ -465,6 +534,27 @@ def update_board():
             return jsonify({"error": "Invalid font size"}), 400
         if font_scale < MIN_FONT_SCALE or font_scale > MAX_FONT_SCALE:
             return jsonify({"error": "Font size out of range"}), 400
+    if secondary_font_scale is not None:
+        try:
+            secondary_font_scale = float(secondary_font_scale)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid secondary font size"}), 400
+        if secondary_font_scale < MIN_SECONDARY_FONT_SCALE or secondary_font_scale > MAX_SECONDARY_FONT_SCALE:
+            return jsonify({"error": "Secondary font size out of range"}), 400
+    if logo_scale is not None:
+        try:
+            logo_scale = float(logo_scale)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid logo size"}), 400
+        if logo_scale < MIN_LOGO_SCALE or logo_scale > MAX_LOGO_SCALE:
+            return jsonify({"error": "Logo size out of range"}), 400
+    if flag_scale is not None:
+        try:
+            flag_scale = float(flag_scale)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid flag size"}), 400
+        if flag_scale < MIN_FLAG_SCALE or flag_scale > MAX_FLAG_SCALE:
+            return jsonify({"error": "Flag size out of range"}), 400
     if primary_count is not None:
         try:
             primary_count = int(primary_count)
@@ -501,15 +591,36 @@ def update_board():
     if font_scale is not None:
         sets.append("font_scale=?")
         params.append(font_scale)
+    if secondary_font_scale is not None:
+        sets.append("secondary_font_scale=?")
+        params.append(secondary_font_scale)
+    if logo_scale is not None:
+        sets.append("logo_scale=?")
+        params.append(logo_scale)
+    if flag_scale is not None:
+        sets.append("flag_scale=?")
+        params.append(flag_scale)
+    if show_currency_code is not None:
+        sets.append("show_currency_code=?")
+        params.append(bool(show_currency_code))
+    if animate_flags is not None:
+        sets.append("animate_flags=?")
+        params.append(bool(animate_flags))
     if subtitle is not None:
         sets.append("board_subtitle=?")
         params.append(subtitle.strip())
     if license_txt is not None:
         sets.append("board_license=?")
         params.append(license_txt.strip())
+<<<<<<< HEAD
     if register_no is not None:
         sets.append("board_register_no=?")
         params.append(register_no.strip())
+=======
+    if reg_no is not None:
+        sets.append("board_reg_no=?")
+        params.append(reg_no.strip())
+>>>>>>> 3b468a2 (changes of boards)
     if mobile is not None:
         sets.append("mobile_number=?")
         params.append(mobile.strip())
@@ -519,12 +630,18 @@ def update_board():
     if secondary_group_size is not None:
         sets.append("secondary_group_size=?")
         params.append(secondary_group_size)
+<<<<<<< HEAD
     if flag_style is not None:
         sets.append("flag_style=?")
         params.append(flag_style)
     if layout_mode is not None:
         sets.append("layout_mode=?")
         params.append(layout_mode)
+=======
+    if rotation_enabled is not None:
+        sets.append("rotation_enabled=?")
+        params.append(bool(rotation_enabled))
+>>>>>>> 3b468a2 (changes of boards)
     if not sets:
         return jsonify({"message": "Nothing to update"})
     params.append(current_user_id())
@@ -753,14 +870,27 @@ def public_board():
         "rateColor":  user["rate_color"] if user["rate_color"] else DEFAULT_RATE_COLOR,
         "logo":       user["logo_data"] if user["logo_data"] else "",
         "fontScale":  user["font_scale"] if user["font_scale"] else DEFAULT_FONT_SCALE,
+        "secondaryFontScale": user["secondary_font_scale"] if user["secondary_font_scale"] else DEFAULT_SECONDARY_FONT_SCALE,
+        "logoScale":  user["logo_scale"] if user["logo_scale"] else DEFAULT_LOGO_SCALE,
+        "flagScale":  user["flag_scale"] if user["flag_scale"] else DEFAULT_FLAG_SCALE,
+        "showCurrencyCode": bool(user["show_currency_code"]) if user["show_currency_code"] is not None else DEFAULT_SHOW_CURRENCY_CODE,
+        "animateFlags": bool(user["animate_flags"]) if user["animate_flags"] is not None else DEFAULT_ANIMATE_FLAGS,
         "boardSubtitle": user["board_subtitle"] if user["board_subtitle"] else DEFAULT_BOARD_SUBTITLE,
         "boardLicense":  user["board_license"] if user["board_license"] else DEFAULT_BOARD_LICENSE,
+<<<<<<< HEAD
         "boardRegisterNo": user["board_register_no"] if user["board_register_no"] else "",
         "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
         "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
         "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
         "flagStyle": user["flag_style"] if user["flag_style"] else DEFAULT_FLAG_STYLE,
         "layoutMode": user["layout_mode"] if user["layout_mode"] else DEFAULT_LAYOUT_MODE,
+=======
+        "boardRegNo":    user["board_reg_no"] if user["board_reg_no"] else "",
+        "mobileNumber":  user["mobile_number"] if user["mobile_number"] else "",
+        "primaryDisplayCount": user["primary_display_count"] if user["primary_display_count"] else DEFAULT_PRIMARY_DISPLAY_COUNT,
+        "secondaryGroupSize": user["secondary_group_size"] if user["secondary_group_size"] else DEFAULT_SECONDARY_GROUP_SIZE,
+        "rotationEnabled": bool(user["rotation_enabled"]) if user["rotation_enabled"] is not None else DEFAULT_ROTATION_ENABLED,
+>>>>>>> 3b468a2 (changes of boards)
         "lastUpdated": last_updated,
         "currencies": [row_to_dict(r) for r in rows]
     })

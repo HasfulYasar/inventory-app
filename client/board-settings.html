@@ -63,6 +63,136 @@
             border-radius: 6px;
             padding: 4px 8px;
         }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc;
+            border-radius: 999px;
+            transition: background 0.2s ease;
+        }
+        .toggle-track::before {
+            content: "";
+            position: absolute;
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle-switch input:checked + .toggle-track { background: #f0c040; }
+        .toggle-switch input:checked + .toggle-track::before { transform: translateX(20px); }
+        .toggle-row { display: flex; align-items: center; gap: 12px; }
+
+        /* ── Custom color picker: "+" tile that opens a gold-glow popover,
+           distinct from a stock OS/browser picker to match the board's
+           neon-on-dark aesthetic used everywhere else in the app. ── */
+        .swatch-custom {
+            display: flex; align-items: center; justify-content: center;
+            border: 2px dashed #c9ccd4;
+            background: #f7f7f9;
+        }
+        .swatch-custom:hover { border-color: #f0c040; }
+        .swatch-custom .swatch-plus {
+            font-size: 18px; font-weight: 700; color: #9297a3; line-height: 1;
+        }
+        .swatch-custom:hover .swatch-plus { color: #f0c040; }
+        .swatch-custom.selected .swatch-plus { display: none; }
+
+        .cp-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(10, 8, 20, 0.55);
+            backdrop-filter: blur(2px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cp-card {
+            width: 320px;
+            background: #17141f;
+            border-radius: 18px;
+            border: 1px solid rgba(240, 192, 64, 0.35);
+            box-shadow: 0 0 0 1px rgba(240,192,64,0.08), 0 20px 60px -12px rgba(0,0,0,0.6), 0 0 40px -10px rgba(240,192,64,0.25);
+            padding: 1.1rem 1.2rem 1.3rem;
+            color: #f2f0f7;
+        }
+        .cp-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.9rem;
+        }
+        .cp-card-header h3 {
+            font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+            background: linear-gradient(90deg, #f5d47a, #f0c040);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .cp-close {
+            width: 26px; height: 26px; border-radius: 50%;
+            border: none; background: rgba(255,255,255,0.08); color: #cfd0d8;
+            cursor: pointer; font-size: 14px; line-height: 1;
+        }
+        .cp-close:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+        .cp-square {
+            position: relative;
+            width: 100%; height: 170px;
+            border-radius: 12px;
+            cursor: crosshair;
+            touch-action: none;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+        }
+        .cp-square-white { position: absolute; inset: 0; background: linear-gradient(to right, #fff, rgba(255,255,255,0)); }
+        .cp-square-black { position: absolute; inset: 0; background: linear-gradient(to top, #000, rgba(0,0,0,0)); }
+        .cp-square-thumb {
+            position: absolute; width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 0 8px rgba(240,192,64,0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .cp-hue-row { display: flex; align-items: center; gap: 12px; margin-top: 0.9rem; }
+        .cp-hue-slider {
+            flex: 1; -webkit-appearance: none; appearance: none;
+            height: 12px; border-radius: 999px; outline: none;
+            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        }
+        .cp-hue-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; border: 2px solid #17141f;
+            box-shadow: 0 0 0 1px rgba(240,192,64,0.8), 0 0 6px rgba(240,192,64,0.6);
+            cursor: pointer;
+        }
+        .cp-hue-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; border: 2px solid #17141f;
+            box-shadow: 0 0 0 1px rgba(240,192,64,0.8), 0 0 6px rgba(240,192,64,0.6);
+            cursor: pointer;
+        }
+        .cp-preview-dot {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.25);
+            box-shadow: 0 0 10px -2px var(--cp-glow, transparent);
+            flex-shrink: 0;
+        }
+
+        .cp-hex-row { display: flex; align-items: center; gap: 10px; margin-top: 0.9rem; }
+        .cp-hex-row input {
+            flex: 1; background: #0f0d16; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px; color: #f2f0f7; font-family: monospace; font-size: 14px;
+            padding: 8px 10px; text-transform: uppercase;
+        }
+        .cp-hex-row input:focus { outline: none; border-color: #f0c040; }
+
+        .cp-actions {
+            display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.1rem;
+        }
+        .cp-actions .btn { padding: 7px 16px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -100,6 +230,63 @@
                     <span id="fontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">120%</span>
                 </div>
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size on the live board — layout reflows automatically</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Rotating Panel Font Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="secondaryFontScaleInput" min="80" max="500" step="10" value="100" style="width:100%;">
+                    <span id="secondaryFontScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts text size in the side panel only, independent of the main board</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Logo Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="logoScaleInput" min="50" max="300" step="10" value="100" style="width:100%;">
+                    <span id="logoScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts the size of your logo in the board header</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Flag Size</label>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="range" id="flagScaleInput" min="50" max="300" step="10" value="100" style="width:100%;">
+                    <span id="flagScaleLabel" style="font-size:13px;font-weight:700;color:#444;min-width:38px;">100%</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Adjusts the size of the country flags shown next to each currency</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Currency Code</label>
+                <div class="toggle-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="showCurrencyCodeInput" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                    <span id="showCurrencyCodeLabel" style="font-size:13px;font-weight:700;color:#444;">Shown</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Hides the 3-letter code (e.g. USD) on the main board — the rotating side panel always shows both code and name</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Animate Flags</label>
+                <div class="toggle-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="animateFlagsInput" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                    <span id="animateFlagsLabel" style="font-size:13px;font-weight:700;color:#444;">On</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Gives every flag on the board a gentle waving motion</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Rotating Panel</label>
+                <div class="toggle-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="rotationEnabledInput" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                    <span id="rotationEnabledLabel" style="font-size:13px;font-weight:700;color:#444;">On</span>
+                </div>
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Turns off cycling in the side panel — it stays on the first group of currencies</div>
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Currencies on Main Board</label>
@@ -149,6 +336,11 @@
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">The big heading at the top of the board</div>
             </div>
             <div class="field" style="margin-bottom:0;">
+                <label class="field-label">Registration Number</label>
+                <input class="input" type="text" id="boardRegNoInput" placeholder="e.g. I-8686" maxlength="40" style="margin-bottom:0;">
+                <div style="font-size:11px;color:#aaa;margin-top:6px;">Shown right next to the board title</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
                 <label class="field-label">Board Subtitle</label>
                 <input class="input" type="text" id="boardSubtitleInput" placeholder="e.g. Currency Exchange" maxlength="120" style="margin-bottom:0;">
                 <div style="font-size:11px;color:#aaa;margin-top:6px;">Smaller line shown under the title</div>
@@ -172,6 +364,32 @@
     </div>
 </div>
 
+<!-- Custom color picker popover, shared by Board Color and Rate Color -->
+<div class="cp-overlay" id="cpOverlay" style="display:none;">
+    <div class="cp-card">
+        <div class="cp-card-header">
+            <h3 id="cpTitle">Custom Color</h3>
+            <button class="cp-close" type="button" id="cpCloseBtn">✕</button>
+        </div>
+        <div class="cp-square" id="cpSquare">
+            <div class="cp-square-white"></div>
+            <div class="cp-square-black"></div>
+            <div class="cp-square-thumb" id="cpThumb"></div>
+        </div>
+        <div class="cp-hue-row">
+            <input type="range" class="cp-hue-slider" id="cpHueSlider" min="0" max="360" value="0">
+            <div class="cp-preview-dot" id="cpPreviewDot"></div>
+        </div>
+        <div class="cp-hex-row">
+            <input type="text" id="cpHexInput" maxlength="7" spellcheck="false">
+        </div>
+        <div class="cp-actions">
+            <button class="btn btn-secondary" type="button" id="cpCancelBtn">Cancel</button>
+            <button class="btn btn-gold" type="button" id="cpApplyBtn">Apply</button>
+        </div>
+    </div>
+</div>
+
 <script src="navbar.js"></script>
 <script>
 const errorMsg = document.getElementById("error-msg");
@@ -181,10 +399,20 @@ function hideError() { errorMsg.style.display = "none"; }
 let boardColor = "#1a1a2e";
 let rateColor = "#12B76A";
 let fontScale = 1;
+<<<<<<< HEAD
 let secondaryGroupSize = 4;
 let secondaryRotateSeconds = 10;
 let flagStyle = "normal";
 let layoutMode = "split";
+=======
+let secondaryFontScale = 1;
+let logoScale = 1;
+let flagScale = 1;
+let showCurrencyCode = true;
+let animateFlags = true;
+let secondaryGroupSize = 10;
+let rotationEnabled = true;
+>>>>>>> 3b468a2 (changes of boards)
 
 // Instantly notifies any open /boards.html tab (e.g. on a TV screen) to
 // refresh the moment board settings change here.
@@ -233,19 +461,30 @@ function previewBoardColor(hex) {
 
 function renderColorSwatches() {
     const grid = document.getElementById("colorSwatchGrid");
+<<<<<<< HEAD
     const isCustom = !BOARD_COLOR_PRESETS.some(p => p.hex.toLowerCase() === boardColor.toLowerCase());
+=======
+    const isPreset = BOARD_COLOR_PRESETS.some(p => p.hex === boardColor.toLowerCase());
+>>>>>>> 3b468a2 (changes of boards)
     grid.innerHTML = BOARD_COLOR_PRESETS.map(p => `
         <div class="color-swatch${boardColor.toLowerCase() === p.hex.toLowerCase() ? ' selected' : ''}"
              style="background:${p.hex}; --glow:${p.glow};"
              title="${p.name}"
              onclick="pickBoardColor('${p.hex}')"></div>
     `).join("") + `
+<<<<<<< HEAD
         <label class="color-swatch color-swatch-custom${isCustom ? ' selected' : ''}"
                title="Custom color"
                style="--glow:${isCustom ? boardColor : '#f0c040'};">
             <input type="color" id="boardColorCustomSwatch" value="${isCustom ? boardColor : '#1a1a2e'}"
                    oninput="previewBoardColor(this.value)" onchange="pickBoardColor(this.value)">
         </label>
+=======
+        <div class="color-swatch swatch-custom${!isPreset ? ' selected' : ''}"
+             style="${!isPreset ? `background:${boardColor}; --glow:${boardColor};` : ''}"
+             title="${!isPreset ? 'Custom: ' + boardColor : 'Custom color'}"
+             onclick="openColorPicker('board')"><span class="swatch-plus">+</span></div>
+>>>>>>> 3b468a2 (changes of boards)
     `;
 }
 
@@ -281,13 +520,18 @@ const RATE_COLOR_PRESETS = [
 
 function renderRateColorSwatches() {
     const grid = document.getElementById("rateColorSwatchGrid");
+<<<<<<< HEAD
     const isCustom = !RATE_COLOR_PRESETS.some(p => p.hex.toLowerCase() === rateColor.toLowerCase());
+=======
+    const isPreset = RATE_COLOR_PRESETS.some(p => p.hex.toLowerCase() === rateColor.toLowerCase());
+>>>>>>> 3b468a2 (changes of boards)
     grid.innerHTML = RATE_COLOR_PRESETS.map(p => `
         <div class="color-swatch${rateColor.toLowerCase() === p.hex.toLowerCase() ? ' selected' : ''}"
              style="background:${p.hex}; --glow:${p.hex};"
              title="${p.name}"
              onclick="pickRateColor('${p.hex}')"></div>
     `).join("") + `
+<<<<<<< HEAD
         <label class="color-swatch color-swatch-custom${isCustom ? ' selected' : ''}"
                title="Custom color"
                style="--glow:${isCustom ? rateColor : '#12B76A'};">
@@ -302,6 +546,13 @@ function renderRateColorSwatches() {
 function previewRateColor(hex) {
     const swatch = document.getElementById("rateColorCustomSwatch").parentElement;
     swatch.style.setProperty("--glow", hex);
+=======
+        <div class="color-swatch swatch-custom${!isPreset ? ' selected' : ''}"
+             style="${!isPreset ? `background:${rateColor}; --glow:${rateColor};` : ''}"
+             title="${!isPreset ? 'Custom: ' + rateColor : 'Custom color'}"
+             onclick="openColorPicker('rate')"><span class="swatch-plus">+</span></div>
+    `;
+>>>>>>> 3b468a2 (changes of boards)
 }
 
 async function pickRateColor(hex) {
@@ -337,6 +588,29 @@ async function loadBoardSettings() {
         document.getElementById("fontScaleInput").value = pct;
         document.getElementById("fontScaleLabel").textContent = pct + "%";
 
+        secondaryFontScale = data.secondaryFontScale || 1;
+        const secPct = Math.round(secondaryFontScale * 100);
+        document.getElementById("secondaryFontScaleInput").value = secPct;
+        document.getElementById("secondaryFontScaleLabel").textContent = secPct + "%";
+
+        logoScale = data.logoScale || 1;
+        const logoPct = Math.round(logoScale * 100);
+        document.getElementById("logoScaleInput").value = logoPct;
+        document.getElementById("logoScaleLabel").textContent = logoPct + "%";
+
+        flagScale = data.flagScale || 1;
+        const flagPct = Math.round(flagScale * 100);
+        document.getElementById("flagScaleInput").value = flagPct;
+        document.getElementById("flagScaleLabel").textContent = flagPct + "%";
+
+        showCurrencyCode = data.showCurrencyCode !== false;
+        document.getElementById("showCurrencyCodeInput").checked = showCurrencyCode;
+        document.getElementById("showCurrencyCodeLabel").textContent = showCurrencyCode ? "Shown" : "Hidden";
+
+        animateFlags = data.animateFlags !== false;
+        document.getElementById("animateFlagsInput").checked = animateFlags;
+        document.getElementById("animateFlagsLabel").textContent = animateFlags ? "On" : "Off";
+
         const primaryCount = data.primaryDisplayCount || 22;
         document.getElementById("primaryCountInput").value = primaryCount;
         document.getElementById("primaryCountLabel").textContent = primaryCount;
@@ -354,10 +628,15 @@ async function loadBoardSettings() {
         layoutMode = data.layoutMode || "split";
         document.getElementById("layoutModeInput").value = layoutMode;
 
+        rotationEnabled = data.rotationEnabled !== false;
+        document.getElementById("rotationEnabledInput").checked = rotationEnabled;
+        document.getElementById("rotationEnabledLabel").textContent = rotationEnabled ? "On" : "Off";
+
         if (data.logo) {
             document.getElementById("logoPreview").src = data.logo;
         }
         document.getElementById("boardTitleInput").value    = data.boardName     || "";
+        document.getElementById("boardRegNoInput").value    = data.boardRegNo    || "";
         document.getElementById("boardSubtitleInput").value = data.boardSubtitle || "";
         document.getElementById("boardLicenseInput").value  = data.boardLicense  || "";
         document.getElementById("boardRegisterNoInput").value = data.boardRegisterNo || "";
@@ -385,6 +664,108 @@ document.getElementById("fontScaleInput").addEventListener("change", async (e) =
         notifyBoardUpdate();
     } catch {
         showError("Could not save font size.");
+    }
+});
+
+document.getElementById("secondaryFontScaleInput").addEventListener("input", (e) => {
+    document.getElementById("secondaryFontScaleLabel").textContent = e.target.value + "%";
+});
+document.getElementById("secondaryFontScaleInput").addEventListener("change", async (e) => {
+    secondaryFontScale = parseInt(e.target.value) / 100;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ secondaryFontScale })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save rotating panel font size.");
+    }
+});
+
+document.getElementById("logoScaleInput").addEventListener("input", (e) => {
+    document.getElementById("logoScaleLabel").textContent = e.target.value + "%";
+});
+document.getElementById("logoScaleInput").addEventListener("change", async (e) => {
+    logoScale = parseInt(e.target.value) / 100;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ logoScale })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save logo size.");
+    }
+});
+
+document.getElementById("flagScaleInput").addEventListener("input", (e) => {
+    document.getElementById("flagScaleLabel").textContent = e.target.value + "%";
+});
+document.getElementById("flagScaleInput").addEventListener("change", async (e) => {
+    flagScale = parseInt(e.target.value) / 100;
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ flagScale })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save flag size.");
+    }
+});
+
+document.getElementById("showCurrencyCodeInput").addEventListener("change", async (e) => {
+    showCurrencyCode = e.target.checked;
+    document.getElementById("showCurrencyCodeLabel").textContent = showCurrencyCode ? "Shown" : "Hidden";
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ showCurrencyCode })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save currency code setting.");
+    }
+});
+
+document.getElementById("animateFlagsInput").addEventListener("change", async (e) => {
+    animateFlags = e.target.checked;
+    document.getElementById("animateFlagsLabel").textContent = animateFlags ? "On" : "Off";
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ animateFlags })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save flag animation setting.");
+    }
+});
+
+document.getElementById("rotationEnabledInput").addEventListener("change", async (e) => {
+    rotationEnabled = e.target.checked;
+    document.getElementById("rotationEnabledLabel").textContent = rotationEnabled ? "On" : "Off";
+    try {
+        await fetch("/api/board", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ rotationEnabled })
+        });
+        notifyBoardUpdate();
+    } catch {
+        showError("Could not save rotating panel setting.");
     }
 });
 
@@ -518,6 +899,7 @@ function wireTextBoardField(inputId, payloadKey, errorLabel) {
     });
 }
 wireTextBoardField("boardTitleInput",    "boardName",     "board title");
+wireTextBoardField("boardRegNoInput",    "boardRegNo",    "registration number");
 wireTextBoardField("boardSubtitleInput", "boardSubtitle", "board subtitle");
 wireTextBoardField("boardLicenseInput",  "boardLicense",  "license text");
 wireTextBoardField("boardRegisterNoInput", "boardRegisterNo", "register no.");
@@ -530,6 +912,12 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
     btn.textContent = "Saving...";
     try {
         fontScale = parseInt(document.getElementById("fontScaleInput").value) / 100;
+        secondaryFontScale = parseInt(document.getElementById("secondaryFontScaleInput").value) / 100;
+        logoScale = parseInt(document.getElementById("logoScaleInput").value) / 100;
+        flagScale = parseInt(document.getElementById("flagScaleInput").value) / 100;
+        showCurrencyCode = document.getElementById("showCurrencyCodeInput").checked;
+        animateFlags = document.getElementById("animateFlagsInput").checked;
+        rotationEnabled = document.getElementById("rotationEnabledInput").checked;
         const primaryDisplayCount = parseInt(document.getElementById("primaryCountInput").value);
         secondaryGroupSize = parseInt(document.getElementById("secondaryGroupSizeInput").value);
         secondaryRotateSeconds = 10;
@@ -543,12 +931,19 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
                 boardColor,
                 rateColor,
                 fontScale,
+                secondaryFontScale,
+                logoScale,
+                flagScale,
+                showCurrencyCode,
+                animateFlags,
+                rotationEnabled,
                 primaryDisplayCount,
                 secondaryGroupSize,
                 secondaryRotateSeconds,
                 flagStyle,
                 layoutMode,
                 boardName:     document.getElementById("boardTitleInput").value.trim(),
+                boardRegNo:    document.getElementById("boardRegNoInput").value.trim(),
                 boardSubtitle: document.getElementById("boardSubtitleInput").value.trim(),
                 boardLicense:  document.getElementById("boardLicenseInput").value.trim(),
                 boardRegisterNo: document.getElementById("boardRegisterNoInput").value.trim(),
@@ -565,6 +960,131 @@ document.getElementById("saveSettingsBtn").addEventListener("click", async (e) =
         btn.textContent = originalText;
         btn.disabled = false;
     }
+});
+
+// ── Custom color picker: HSV square + hue slider + hex field, shared by
+// Board Color and Rate Color. Keeps its own small state and writes back
+// into boardColor/rateColor via the existing pick*Color() save functions
+// so it behaves exactly like picking a preset swatch. ──
+let cpTarget = null;      // "board" | "rate"
+let cpHue = 0, cpSat = 100, cpVal = 100;
+
+function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+    const n = parseInt(hex, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+}
+function rgbToHsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    let h = 0;
+    if (d !== 0) {
+        if (max === r) h = 60 * (((g - b) / d) % 6);
+        else if (max === g) h = 60 * ((b - r) / d + 2);
+        else h = 60 * ((r - g) / d + 4);
+    }
+    if (h < 0) h += 360;
+    const s = max === 0 ? 0 : d / max;
+    return { h, s: s * 100, v: max * 100 };
+}
+function hsvToRgb(h, s, v) {
+    s /= 100; v /= 100;
+    const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+    let r, g, b;
+    if (h < 60)       { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else              { r = c; g = 0; b = x; }
+    return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+}
+
+function cpCurrentHex() {
+    const { r, g, b } = hsvToRgb(cpHue, cpSat, cpVal);
+    return rgbToHex(r, g, b);
+}
+
+function cpRender() {
+    const hueRgb = hsvToRgb(cpHue, 100, 100);
+    document.getElementById("cpSquare").style.background = rgbToHex(hueRgb.r, hueRgb.g, hueRgb.b);
+    const thumb = document.getElementById("cpThumb");
+    thumb.style.left = cpSat + "%";
+    thumb.style.top = (100 - cpVal) + "%";
+    const hex = cpCurrentHex();
+    thumb.style.background = hex;
+    document.getElementById("cpHexInput").value = hex;
+    document.getElementById("cpPreviewDot").style.background = hex;
+    document.getElementById("cpPreviewDot").style.setProperty("--cp-glow", hex);
+}
+
+function openColorPicker(target) {
+    cpTarget = target;
+    const startHex = target === "board" ? boardColor : rateColor;
+    document.getElementById("cpTitle").textContent = target === "board" ? "Custom Board Color" : "Custom Rate Color";
+    const { r, g, b } = hexToRgb(startHex || "#1a1a2e");
+    const hsv = rgbToHsv(r, g, b);
+    cpHue = hsv.h; cpSat = hsv.s; cpVal = hsv.v || 100;
+    document.getElementById("cpHueSlider").value = Math.round(cpHue);
+    cpRender();
+    document.getElementById("cpOverlay").style.display = "flex";
+}
+function closeColorPicker() {
+    document.getElementById("cpOverlay").style.display = "none";
+    cpTarget = null;
+}
+
+document.getElementById("cpCloseBtn").addEventListener("click", closeColorPicker);
+document.getElementById("cpCancelBtn").addEventListener("click", closeColorPicker);
+document.getElementById("cpOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "cpOverlay") closeColorPicker();
+});
+
+document.getElementById("cpHueSlider").addEventListener("input", (e) => {
+    cpHue = parseFloat(e.target.value);
+    cpRender();
+});
+
+document.getElementById("cpHexInput").addEventListener("change", (e) => {
+    const val = e.target.value.trim();
+    if (!/^#?[0-9a-fA-F]{6}$/.test(val) && !/^#?[0-9a-fA-F]{3}$/.test(val)) return;
+    const hex = val.startsWith("#") ? val : "#" + val;
+    const { r, g, b } = hexToRgb(hex);
+    const hsv = rgbToHsv(r, g, b);
+    cpHue = hsv.h; cpSat = hsv.s; cpVal = hsv.v || 100;
+    document.getElementById("cpHueSlider").value = Math.round(cpHue);
+    cpRender();
+});
+
+function cpHandleSquarePoint(clientX, clientY) {
+    const square = document.getElementById("cpSquare");
+    const rect = square.getBoundingClientRect();
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    const y = Math.min(Math.max(clientY - rect.top, 0), rect.height);
+    cpSat = (x / rect.width) * 100;
+    cpVal = 100 - (y / rect.height) * 100;
+    cpRender();
+}
+(() => {
+    const square = document.getElementById("cpSquare");
+    let dragging = false;
+    square.addEventListener("mousedown", (e) => { dragging = true; cpHandleSquarePoint(e.clientX, e.clientY); });
+    window.addEventListener("mousemove", (e) => { if (dragging) cpHandleSquarePoint(e.clientX, e.clientY); });
+    window.addEventListener("mouseup", () => { dragging = false; });
+    square.addEventListener("touchstart", (e) => { dragging = true; const t = e.touches[0]; cpHandleSquarePoint(t.clientX, t.clientY); }, { passive: true });
+    window.addEventListener("touchmove", (e) => { if (dragging) { const t = e.touches[0]; cpHandleSquarePoint(t.clientX, t.clientY); } }, { passive: true });
+    window.addEventListener("touchend", () => { dragging = false; });
+})();
+
+document.getElementById("cpApplyBtn").addEventListener("click", () => {
+    const hex = cpCurrentHex();
+    if (cpTarget === "board") pickBoardColor(hex);
+    else if (cpTarget === "rate") pickRateColor(hex);
+    closeColorPicker();
 });
 
 loadBoardSettings();

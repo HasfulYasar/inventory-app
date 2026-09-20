@@ -10,14 +10,18 @@
             --panel-bg: #14100a;
             --row-bg: #141414;
             --row-alt: #0f0f0f;
-            --border: #262626;
-            --divider: #2a2a2a;
+            --border: #242424;
+            --divider: #2c2c2c;
+            --row-glow: rgba(240, 192, 64, 0.32);
             --neon: #f0c040;
             --rate-color: #12B76A;
             --text: #ffffff;
             --text2: #aab0c6;
             --text3: #6b6f80;
             --font-scale: 1;
+            --sec-font-scale: 1;
+            --logo-scale: 1;
+            --flag-scale: 1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,11 +67,15 @@
         .header-mobile.has-value { display: flex; }
 
         .board-logo {
-            height: 70px; width: 100px; 
+            height: 70px; width: 100px;
             object-fit: contain;
             filter: drop-shadow(0 0 3px var(--neon));
             flex-shrink: 0;
             margin-left: -15px;
+            position: relative;
+            z-index: 2;
+            transform: scale(var(--logo-scale));
+            transition: transform 0.2s ease;
         }
 
         .title-block { min-width: 0; }
@@ -77,6 +85,7 @@
             text-shadow: 0 0 5px var(--neon);
             flex-shrink: 0;
         }
+<<<<<<< HEAD
         .title-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
         .board-register {
             font-size: calc(15px * var(--font-scale)); font-weight: 600; letter-spacing: 0.5px;
@@ -86,6 +95,14 @@
         }
         .board-register.has-value { display: block; }
 
+=======
+        .board-reg-no {
+            font-size: calc(15px * var(--font-scale)); font-weight: 600;
+            color: #F5B942; opacity: 0.75; letter-spacing: 0.3px;
+            margin-left: 8px; white-space: nowrap;
+        }
+        .board-reg-no:empty { display: none; }
+>>>>>>> 3b468a2 (changes of boards)
         .subtitle-license-row {
             display: flex; align-items: center; gap: 6px;
             margin-top: 2px; min-width: 0;
@@ -157,7 +174,14 @@
             font-size: calc(8px * var(--font-scale)); font-weight: 700;
             text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2);
         }
-        .col-header span.r { text-align: left; }
+        .col-header span.r { text-align: left; border-left: 1px solid var(--divider); padding-left: 10px; }
+
+        /* ── Vertical divider lines between Currency / Unit / We Buy / We Sell ── */
+        .col-header-half > .rate-group,
+        .currency-row > .rate-group {
+            border-left: 1px solid var(--divider);
+            padding-left: 10px;
+        }
 
         /* ── Buy/Sell pair: pulled together around a shared divider line
            instead of spread across the full row width ── */
@@ -171,7 +195,11 @@
         .rate-group > *:first-child { text-align: right; padding-right: 25px; }
         .rate-group > *:last-child {
             text-align: right;
+<<<<<<< HEAD
             paddding-right: 15px;
+=======
+            padding-left: 10px;
+>>>>>>> 3b468a2 (changes of boards)
             border-left: 1px solid var(--divider);
         }
 
@@ -191,6 +219,7 @@
             align-items: center;
             padding: 0 0.8rem;
             min-width: 0;
+            position: relative;
             border-bottom: 1px solid var(--border);
             background: var(--row-bg);
         }
@@ -198,9 +227,45 @@
         .currency-row:nth-child(4n+4) { background: var(--row-alt); }
         .currency-row.left-col { border-right: 2px solid var(--divider); }
 
+        /* Glowing outline on the divider lines between currencies. A real
+           box-shadow bleeding out of a row's edge gets painted OVER by the
+           next (opaque) row's background, since that row is later in paint
+           order — so instead we draw the glow as its own thin layer with a
+           positive z-index, which always paints above the z-index:auto row
+           backgrounds regardless of DOM order. */
+        .currency-row::after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; bottom: -1px;
+            height: 2px;
+            background: var(--neon);
+            box-shadow: 0 0 6px 1px var(--neon), 0 0 2px var(--neon);
+            opacity: 0.55;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .currency-row.left-col::before {
+            content: "";
+            position: absolute;
+            top: 0; bottom: 0; right: -2px;
+            width: 2px;
+            background: var(--neon);
+            box-shadow: 0 0 6px 1px var(--neon), 0 0 2px var(--neon);
+            opacity: 0.55;
+            z-index: 3;
+            pointer-events: none;
+        }
         .currency-name-cell { display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; }
 
+        /* ── Flags: the animated source (animated-country-flags.malith.dev)
+           serves a WebP that's already waving, so no CSS trickery is
+           needed. "Animate Flags" in settings (body.animate-flags class)
+           just chooses between that animated WebP and a plain static
+           flagcdn PNG — see flagWaveHtml() in the script. ── */
+        .flag-img img, .sec-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
         .flag-img {
+<<<<<<< HEAD
             width: 22px; height: 15px; border-radius: 2px;
             flex-shrink: 0; display: flex; overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.4);
@@ -254,6 +319,52 @@
         .c-code { font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--text)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
         .c-name-inline { font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; color: var(--row-color, var(--text2)); }
         .unit-val { font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: var(--row-color, #ffffff); text-align: left; text-shadow: 0 0 3px var(--neon); }
+=======
+            width: calc(22px * var(--flag-scale)); height: calc(15px * var(--flag-scale)); border-radius: 2px;
+            flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            transition: width 0.2s ease, height 0.2s ease;
+        }
+        .c-text { min-width: 0; overflow: hidden; }
+        .c-code {
+            font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; color: var(--text);
+            display: flex; align-items: baseline; gap: 6px; min-width: 0;
+        }
+        .c-code-text { flex-shrink: 0; white-space: nowrap; }
+        /* The name gets its own fixed-width viewport; only the text inside
+           it moves. If it fits, it just sits still like normal text — the
+           marquee class (added by JS only when it's actually clipped) is
+           what starts the back-and-forth scroll so a long currency name
+           like "AUSTRALIAN DOLLAR" can still be read in full. */
+        .c-name-wrap {
+            flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap;
+            padding-left: 4px;
+            -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent 100%);
+            mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent 100%);
+        }
+        .c-name-wrap.marquee {
+            -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+        }
+        .c-name-inline {
+            display: inline-block; font-size: calc(0.75rem * var(--font-scale)); font-weight: 500;
+            color: var(--text2); text-transform: uppercase; white-space: nowrap;
+        }
+        @keyframes name-marquee {
+            0%, 12%   { transform: translateX(0); }
+            45%, 55%  { transform: translateX(var(--marquee-dist, 0)); }
+            88%, 100% { transform: translateX(0); }
+        }
+        .c-name-wrap.marquee .c-name-inline {
+            animation: name-marquee var(--marquee-duration, 6s) ease-in-out infinite;
+        }
+        /* Hides the code text on the PRIMARY grid only when the admin turns
+           the "Currency Code" setting off — the rotating side panel keeps
+           its own .sec-code untouched regardless of this class. */
+        body.hide-primary-code .c-code-text { display: none; }
+        .unit-val { font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: #ffffff; text-align: left; text-shadow: 0 0 3px var(--neon); border-left: 1px solid var(--divider); padding-left: 10px; }
+>>>>>>> 3b468a2 (changes of boards)
         .rate-val {
             font-size: calc(1rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--rate-color));
             font-variant-numeric: tabular-nums; text-align: right;
@@ -275,11 +386,15 @@
             padding: 0.5rem 0.6rem;
             overflow: hidden;
         }
+        /* When the rotating panel is turned off in Board Settings, hide it
+           entirely and let the main grid take the full width instead of
+           just leaving it visible but frozen on one group. */
+        body.hide-rotation .right-panel { display: none; }
         .secondary-grid {
             flex: 1;
             display: grid;
             grid-template-columns: repeat(var(--sec-cols, 2), 1fr);
-            grid-auto-rows: minmax(calc(3.1em * var(--font-scale)), 1fr);
+            grid-auto-rows: minmax(calc(3.6em * var(--sec-font-scale)), 1fr);
             align-content: center;
             gap: 0.35rem;
             animation: spotlightFade 0.4s ease;
@@ -299,7 +414,9 @@
             justify-content: center;
             align-items: center;
             min-width: 0;
+            overflow: hidden;
         }
+<<<<<<< HEAD
         .sec-card-top { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
         .sec-flag { width: 18px; height: 12px; border-radius: 2px; flex-shrink: 0; display: flex; overflow: hidden; position: relative; }
         .sec-code { font-size: calc(0.95rem * var(--font-scale)); font-weight: 800; color: var(--row-color, var(--text)); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -309,6 +426,24 @@
         .sec-lbl { font-size: calc(9px * var(--font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
         .sec-val { font-size: calc(0.95rem * var(--font-scale)); font-weight: 700; color: var(--row-color, var(--rate-color)); font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--row-color, var(--rate-color)); }
         .sec-val.preorder-val {  font-size: calc(0.65rem * var(--font-scale));  color: #F5B942 !important;  }
+=======
+        .sec-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .sec-flag {
+            width: calc(26px * var(--flag-scale)); height: calc(18px * var(--flag-scale)); border-radius: 2px;
+            flex-shrink: 0;
+            overflow: hidden;
+            transition: width 0.2s ease, height 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .sec-code-wrap { min-width: 0; overflow: hidden; }
+        .sec-code { font-size: calc(1.35rem * var(--sec-font-scale)); font-weight: 800; color: var(--text); text-shadow: 0 0 3px var(--neon); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.15; }
+        .sec-rates { display: flex; flex-wrap: nowrap; gap: 0; width: 100%; justify-content: center; }
+        .sec-rate-box { flex: 0 1 auto; min-width: 0; text-align: center; padding: 0 10px; }
+        .sec-rate-box + .sec-rate-box { border-left: 1px solid var(--divider); }
+        .sec-lbl { font-size: calc(10px * var(--sec-font-scale)); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text3); display: block; }
+        .sec-val { font-size: calc(1.3rem * var(--sec-font-scale)); font-weight: 700; color: var(--rate-color); font-variant-numeric: tabular-nums; display: block; text-shadow: 0 0 3px var(--rate-color); }
+        .sec-val.preorder-val {  font-size: calc(0.85rem * var(--sec-font-scale));  color: #F5B942 !important;  }
+>>>>>>> 3b468a2 (changes of boards)
 
         /* ── Footer ── */
         .board-footer {
@@ -357,6 +492,7 @@
            picked. Several elements use hardcoded gold/white colors tuned
            for the dark theme — swap those for theme-aware colors here. ── */
         body.light-theme .board-title,
+        body.light-theme .board-reg-no,
         body.light-theme .board-subtitle,
         body.light-theme .board-license,
         body.light-theme .board-register,
@@ -380,10 +516,14 @@
         <div class="header-left">
             <img src="/logo.png" alt="Logo" class="board-logo" id="boardLogoImg">
             <div class="title-block">
+<<<<<<< HEAD
                 <div class="title-row">
                     <div class="board-title" id="boardTitle">CURRENCY EXCHANGE</div>
                     <div class="board-register" id="boardRegister"></div>
                 </div>
+=======
+                <div class="board-title"><span id="boardTitle">CURRENCY EXCHANGE</span><span class="board-reg-no" id="boardRegNo"></span></div>
+>>>>>>> 3b468a2 (changes of boards)
                 <div class="subtitle-license-row">
                     <span class="board-subtitle" id="boardSubtitle">Currency Exchange</span>
                     <span class="subtitle-divider">|</span>
@@ -420,7 +560,7 @@
     </div>
 
     <div class="board-footer">
-        <span class="footer-note">All rates are indicative. Subject to change without notice.</span>
+        <span class="footer-note">All rates are subject to change without prior notice.</span>
         <span class="footer-time" id="lastUpdated"></span>
     </div>
 
@@ -514,8 +654,13 @@ function shade(h, s, l) {
     const c = hslToRgb(h, s, l);
     return rgbToHex(c.r, c.g, c.b);
 }
+function shadeRgba(h, s, l, a) {
+    const c = hslToRgb(h, s, l);
+    return `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${a})`;
+}
 
 let boardColor = "#1a1a2e";
+const clampL = (v) => Math.max(0, Math.min(100, v));
 
 function applyPalette() {
     const { r, g, b } = hexToRgb(boardColor);
@@ -523,29 +668,35 @@ function applyPalette() {
     const root = document.documentElement.style;
     const isLight = l > 55;
 
+    // The board background is the exact color the user picked — panels,
+    // rows and dividers are then layered as lighter/darker tints of that
+    // same color, so a custom color changes the whole board, not just the
+    // accent lines.
+    root.setProperty("--bg", boardColor);
+
     if (isLight) {
-        // A genuinely light background needs dark, readable text and a
-        // deeper accent color for contrast — not the neon-on-black look.
-        const neon = shade(h, Math.max(s, 45), 32);
-        root.setProperty("--bg", shade(h, Math.min(s, 35), 94));
-        root.setProperty("--panel-bg", shade(h, Math.min(s, 30), 90));
-        root.setProperty("--row-bg", shade(h, Math.min(s, 25), 97));
-        root.setProperty("--row-alt", shade(h, Math.min(s, 25), 92));
-        root.setProperty("--border", shade(h, Math.min(s, 25), 78));
-        root.setProperty("--divider", shade(h, Math.min(s, 25), 72));
+        // A light background needs dark, readable text and a deeper
+        // accent color for contrast — not the neon-on-black look.
+        const neon = shade(h, Math.max(s, 45), clampL(Math.min(32, l - 45)));
+        root.setProperty("--panel-bg", shade(h, s, clampL(l - 4)));
+        root.setProperty("--row-bg", shade(h, s, clampL(l + 3)));
+        root.setProperty("--row-alt", shade(h, s, clampL(l - 2)));
+        root.setProperty("--border", shade(h, Math.min(s, 20), clampL(l - 26)));
+        root.setProperty("--divider", shade(h, Math.min(s, 20), clampL(l - 34)));
+        root.setProperty("--row-glow", shadeRgba(h, Math.max(s, 45), clampL(Math.min(32, l - 45)), 0.28));
         root.setProperty("--text", "#1a1a1a");
         root.setProperty("--text2", "#4b4f5c");
         root.setProperty("--text3", "#6b7080");
         root.setProperty("--neon", neon);
         document.body.classList.add("light-theme");
     } else {
-        const neon = shade(h, Math.max(s, 65), 58);
-        root.setProperty("--bg", shade(h, Math.min(s, 60), 6));
-        root.setProperty("--panel-bg", shade(h, Math.min(s, 55), 9));
-        root.setProperty("--row-bg", shade(h, Math.min(s, 45), 8));
-        root.setProperty("--row-alt", shade(h, Math.min(s, 45), 6));
-        root.setProperty("--border", shade(h, Math.min(s, 30), 16));
-        root.setProperty("--divider", shade(h, Math.min(s, 30), 20));
+        const neon = shade(h, Math.max(s, 65), clampL(Math.max(58, l + 35)));
+        root.setProperty("--panel-bg", shade(h, s, clampL(l + 3)));
+        root.setProperty("--row-bg", shade(h, s, clampL(l + 2)));
+        root.setProperty("--row-alt", shade(h, s, l));
+        root.setProperty("--border", shade(h, Math.min(s, 25), clampL(l + 9)));
+        root.setProperty("--divider", shade(h, Math.min(s, 25), clampL(l + 13)));
+        root.setProperty("--row-glow", shadeRgba(h, Math.max(s, 65), clampL(Math.max(58, l + 35)), 0.35));
         root.setProperty("--text", "#ffffff");
         root.setProperty("--text2", "#aab0c6");
         root.setProperty("--text3", "#6b7080");
@@ -588,21 +739,39 @@ function flagUrl(c) {
     return `https://flagcdn.com/w80/${cc}.png`;
 }
 
+// Animated (waving) flag source — WebP format, recommended for web use.
+// Country codes there are uppercase (e.g. US, GB) unlike flagcdn's lowercase.
+function flagWebpUrl(c) {
+    const info = CURRENCY_INFO[c.currency];
+    const cc = info ? info.cc : (c.currencyFlag || "un");
+    return `https://animated-country-flags.malith.dev/webp/${cc.toUpperCase()}.webp`;
+}
+
+// "Animate Flags" in settings (body.animate-flags class) picks the animated
+// WebP; otherwise falls back to the plain static flagcdn PNG. Either way, if
+// the animated source 404s for a given country code, we drop back to the
+// static PNG automatically rather than showing a broken image.
+function flagWaveHtml(c, sizeClass) {
+    const animated = document.body.classList.contains("animate-flags");
+    const staticSrc = flagUrl(c);
+    const src = animated ? flagWebpUrl(c) : staticSrc;
+    return `<div class="${sizeClass}"><img src="${src}" alt="${c.currency}" onerror="this.onerror=null;this.src='${staticSrc}';"></div>`;
+}
+
 function rateCell(rate, decimals, isPreorder) {
     return isPreorder
         ? `<div class="rate-val preorder-val">PRE-ORDER</div>`
         : `<div class="rate-val">${rate.toFixed(decimals)}</div>`;
 }
 
-// ── Auto-fit: the admin's font-size slider is a target, not a guarantee.
+// ── Auto-fit: the admin's font-size sliders are a target, not a guarantee.
 // Rather than let oversized text overflow into a scrollbar, binary-search
-// for the largest scale (up to what the admin picked) that fits both the
-// left grid and right panel with no scrolling. Never scales up past what
-// the admin picked — only down, and only as far as needed. Binary search
-// (rather than a fixed few multiplicative shrink-steps) always converges
-// Font scale: find the largest scale that still fits on screen,
-// searching up to the desired value (max 5.0 = 500%).
+// for the largest scale (up to what the admin picked) that fits with no
+// scrolling. The main grid and rotating panel now have independent font
+// sizes, so they're fit independently — growing the rotating panel's text
+// no longer has any effect on the main grid's size, and vice versa.
 let desiredFontScale = 1;
+<<<<<<< HEAD
 const MIN_FIT_SCALE = 0.4; // never shrink further than this, even if still overflowing
 
 // Everything on this board lives inside overflow:hidden containers (it's a
@@ -650,12 +819,51 @@ function applyFitScale(desired) {
         }
     }
     document.documentElement.style.setProperty("--font-scale", best);
+=======
+let desiredSecFontScale = 1;
+const MIN_FIT_SCALE = 0.25; // absolute floor so text never fully vanishes
+
+// Both panels use overflow:hidden, so scrollHeight still reports the full
+// (possibly clipped) content height — comparing it to clientHeight is a
+// reliable way to detect "this doesn't fit" without any visible scrollbar.
+function elOverflows(selector) {
+    const el = document.querySelector(selector);
+    return el && el.scrollHeight > el.clientHeight + 1;
+}
+
+// Binary-searches downward from `desired` for the largest value of `cssVar`
+// under which `selector`'s content still fits with no overflow.
+function fitVar(cssVar, desired, selector) {
+    const root = document.documentElement.style;
+    root.setProperty(cssVar, desired);
+    if (!elOverflows(selector)) return;
+
+    let lo = MIN_FIT_SCALE, hi = desired, best = MIN_FIT_SCALE;
+    for (let i = 0; i < 14; i++) {
+        const mid = (lo + hi) / 2;
+        root.setProperty(cssVar, mid);
+        if (elOverflows(selector)) {
+            hi = mid;
+        } else {
+            best = mid;
+            lo = mid;
+        }
+    }
+    root.setProperty(cssVar, best);
+}
+
+function applyFitScale(desired, desiredSec) {
+    desiredFontScale = desired || 1;
+    desiredSecFontScale = desiredSec || 1;
+    fitVar("--font-scale", desiredFontScale, ".primary-wrap");
+    fitVar("--sec-font-scale", desiredSecFontScale, ".right-panel");
+>>>>>>> 3b468a2 (changes of boards)
 }
 
 let fitResizeTimer = null;
 window.addEventListener("resize", () => {
     clearTimeout(fitResizeTimer);
-    fitResizeTimer = setTimeout(() => applyFitScale(desiredFontScale), 200);
+    fitResizeTimer = setTimeout(() => applyFitScale(desiredFontScale, desiredSecFontScale), 200);
 });
 
 async function loadRates() {
@@ -671,6 +879,7 @@ async function loadRates() {
         const board = await res.json();
 
         document.getElementById("boardTitle").textContent = board.boardName || "CURRENCY EXCHANGE";
+        document.getElementById("boardRegNo").textContent = board.boardRegNo || "";
         document.getElementById("boardSubtitle").textContent = board.boardSubtitle || "Currency Exchange";
         document.getElementById("boardLicense").textContent = board.boardLicense || "Perniagaan Perkhidmatan Wang Berlesen";
         const registerEl = document.getElementById("boardRegister");
@@ -699,7 +908,13 @@ async function loadRates() {
         document.documentElement.style.setProperty("--sec-cols", SECONDARY_GROUP_SIZE > 5 ? 2 : 1);
         document.documentElement.style.setProperty("--panel-width", SECONDARY_GROUP_SIZE > 5 ? "300px" : "180px");
 
+        document.documentElement.style.setProperty("--logo-scale", board.logoScale || 1);
+        document.documentElement.style.setProperty("--flag-scale", board.flagScale || 1);
+        document.body.classList.toggle("hide-primary-code", board.showCurrencyCode === false);
+        document.body.classList.toggle("animate-flags", board.animateFlags !== false);
+
         PRIMARY_DISPLAY_COUNT = board.primaryDisplayCount || 22;
+<<<<<<< HEAD
         layoutMode = board.layoutMode || "split";
         const bodyEl = document.querySelector(".board-body");
         bodyEl.classList.remove("layout-split", "layout-list", "layout-rotate");
@@ -720,6 +935,15 @@ async function loadRates() {
             renderSecondary(data);
         }
         applyFitScale(board.fontScale || 1);
+=======
+        rotationEnabled = board.rotationEnabled !== false;
+        document.body.classList.toggle("hide-rotation", !rotationEnabled);
+        const data = board.currencies || [];
+        renderPrimary(data);
+        renderSecondary(data);
+        applyFitScale(board.fontScale || 1, board.secondaryFontScale || 1);
+        applyNameMarquee();
+>>>>>>> 3b468a2 (changes of boards)
 
         const lastUpdatedEl = document.getElementById("lastUpdated");
         if (board.lastUpdated) {
@@ -768,9 +992,13 @@ function renderPrimary(data, showAll) {
         return `
         <div class="currency-row ${isLeft ? 'left-col' : ''} ${isGBP ? 'gbp-row' : ''}"${rowStyle}>
             <div class="currency-name-cell">
+<<<<<<< HEAD
                 ${flagWaveHtml(flagUrl(c), c.currency, "flag-img")}
+=======
+                ${flagWaveHtml(c, "flag-img")}
+>>>>>>> 3b468a2 (changes of boards)
                 <div class="c-text">
-                    <div class="c-code">${c.currency} <span class="c-name-inline">${info.name}</span></div>
+                    <div class="c-code"><span class="c-code-text">${c.currency}</span><span class="c-name-wrap"><span class="c-name-inline">${info.name}</span></span></div>
                 </div>
             </div>
             <div class="unit-val">${c.unit || 1}</div>
@@ -780,13 +1008,47 @@ function renderPrimary(data, showAll) {
             </div>
         </div>`;
     }).join("");
+
+    applyNameMarquee();
 }
 
+<<<<<<< HEAD
 // ── Right panel: shows the configured number of secondary currencies at once, rotating through
+=======
+// Measures every currency-name cell and, only for the ones that are
+// actually clipped, turns on the back-and-forth scroll so the full name
+// stays readable. Names that already fit are left completely alone.
+function applyNameMarquee() {
+    requestAnimationFrame(() => {
+        document.querySelectorAll(".c-name-wrap").forEach(wrap => {
+            const inner = wrap.querySelector(".c-name-inline");
+            if (!inner) return;
+            const overflow = inner.scrollWidth - wrap.clientWidth;
+            if (overflow > 2) {
+                const dist = overflow + 6; // small buffer past the edge
+                wrap.style.setProperty("--marquee-dist", `-${dist}px`);
+                wrap.style.setProperty("--marquee-duration", `${Math.min(10, Math.max(3.5, dist / 18 + 2.5))}s`);
+                wrap.classList.add("marquee");
+            } else {
+                wrap.classList.remove("marquee");
+                inner.style.transform = "";
+            }
+        });
+    });
+}
+let marqueeResizeTimer = null;
+window.addEventListener("resize", () => {
+    clearTimeout(marqueeResizeTimer);
+    marqueeResizeTimer = setTimeout(applyNameMarquee, 200);
+});
+
+// ── Right panel: shows 4 secondary currencies at once, rotating through
+>>>>>>> 3b468a2 (changes of boards)
 // the full list in groups so nothing needs one-at-a-time scrolling ──
 let secondaryGroups = [];
 let secondaryGroupIdx = 0;
 let secondaryTimer = null;
+let rotationEnabled = true;
 
 function renderSecondary(data, showAll) {
     const list = showAll ? data : data.slice(PRIMARY_DISPLAY_COUNT);
@@ -819,10 +1081,16 @@ function renderSecondary(data, showAll) {
 
     renderSecondaryGroup();
 
+<<<<<<< HEAD
     // Start the rotation timer once and leave it running across every future
     // data refresh, so later groups actually get their turn on screen instead
     // of the cycle being torn down and restarted from 0 before it gets there.
     if (secondaryGroups.length > 1 && !secondaryTimer) {
+=======
+    // When rotation is turned off in Board Settings, the panel just shows
+    // its first group of currencies and stays put instead of cycling.
+    if (secondaryGroups.length > 1 && rotationEnabled) {
+>>>>>>> 3b468a2 (changes of boards)
         secondaryTimer = setInterval(() => {
             secondaryGroupIdx = (secondaryGroupIdx + 1) % secondaryGroups.length;
             renderSecondaryGroup();
@@ -833,7 +1101,7 @@ function renderSecondary(data, showAll) {
     }
 }
 
-function secCard(c) {
+function secCard(c, idx) {
     const buyHtml = c.buyPreorder
         ? `<span class="sec-val preorder-val">PRE-ORDER</span>`
         : `<span class="sec-val">${c.buyingRate.toFixed(c.decimals)}</span>`;
@@ -844,8 +1112,15 @@ function secCard(c) {
     return `
     <div class="sec-card"${cardStyle}>
         <div class="sec-card-top">
+<<<<<<< HEAD
             ${flagWaveHtml(flagUrl(c), c.currency, "sec-flag")}
             <div class="sec-code">${c.currency}</div>
+=======
+            ${flagWaveHtml(c, "sec-flag")}
+            <div class="sec-code-wrap">
+                <div class="sec-code">${c.currency}</div>
+            </div>
+>>>>>>> 3b468a2 (changes of boards)
         </div>
         <div class="sec-rates">
             <div class="sec-rate-box"><span class="sec-lbl">Buy</span>${buyHtml}</div>
